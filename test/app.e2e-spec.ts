@@ -102,6 +102,57 @@ describe('VetStock API (e2e)', () => {
       });
   });
 
+  it('POST /dispensaciones descuenta por FEFO y devuelve los lotes usados', () => {
+    return request(app.getHttpServer())
+      .post('/dispensaciones')
+      .send({
+        medicamentoId: '2',
+        cantidad: 35,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      })
+      .expect(201)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.lotesUsados).toHaveLength(2);
+      });
+  });
+
+  it('POST /dispensaciones rechaza medicamento con formula sin formula', () => {
+    return request(app.getHttpServer())
+      .post('/dispensaciones')
+      .send({
+        medicamentoId: '1',
+        cantidad: 1,
+        mascota: 'Max',
+        veterinario: 'Dra. Paola Rosero',
+      })
+      .expect(400);
+  });
+
+  it('GET /reportes/consumo devuelve el consumo por medicamento', () => {
+    return request(app.getHttpServer())
+      .get('/reportes/consumo')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.detalle.length).toBeGreaterThan(0);
+      });
+  });
+
+  it('GET /reportes/consumo rechaza fechas invalidas', () => {
+    return request(app.getHttpServer())
+      .get('/reportes/consumo?desde=ayer')
+      .expect(400);
+  });
+
+  it('GET /reportes/vencimientos calcula la perdida', () => {
+    return request(app.getHttpServer())
+      .get('/reportes/vencimientos')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.totalPerdida).toBeGreaterThan(0);
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
