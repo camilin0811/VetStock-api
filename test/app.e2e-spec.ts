@@ -54,6 +54,54 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer()).get('/medicamentos/999').expect(404);
   });
 
+  it('POST /lotes registra un lote nuevo', () => {
+    return request(app.getHttpServer())
+      .post('/lotes')
+      .send({
+        medicamentoId: '4',
+        proveedorId: '1',
+        numeroLote: 'ALB-301',
+        cantidad: 10,
+        fechaVencimiento: '2099-12-31',
+      })
+      .expect(201)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.cantidad).toBe(10);
+      });
+  });
+
+  it('POST /lotes rechaza un medicamento que no existe', () => {
+    return request(app.getHttpServer())
+      .post('/lotes')
+      .send({
+        medicamentoId: '999',
+        proveedorId: '1',
+        numeroLote: 'X-1',
+        cantidad: 1,
+        fechaVencimiento: '2099-12-31',
+      })
+      .expect(404);
+  });
+
+  it('GET /inventario/:medicamentoId separa stock disponible y vencido', () => {
+    return request(app.getHttpServer())
+      .get('/inventario/3')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.stockDisponible).toBe(10);
+        expect(respuesta.body.stockVencido).toBe(4);
+      });
+  });
+
+  it('GET /alertas devuelve las alertas del inventario', () => {
+    return request(app.getHttpServer())
+      .get('/alertas')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.length).toBeGreaterThan(0);
+      });
+  });
+
   afterEach(async () => {
     await app.close();
   });
