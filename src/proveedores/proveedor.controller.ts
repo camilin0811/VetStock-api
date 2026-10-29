@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { ProveedorDto } from './proveedor.dto';
 import { ProveedorService } from './proveedor.service';
 
@@ -12,7 +19,7 @@ export class ProveedorController {
   }
 
   @Get(':id')
-  obtener(@Param('id') id: string) {
+  obtener(@Param('id', ParseIntPipe) id: number) {
     return this.proveedorService.obtener(id);
   }
 

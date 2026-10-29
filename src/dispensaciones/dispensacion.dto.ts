@@ -1,9 +1,9 @@
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
 
 export class DispensacionRequestDto {
-  @IsString()
-  @IsNotEmpty()
-  medicamentoId: string;
+  @IsInt()
+  @Min(1)
+  medicamentoId: number;
 
   @IsInt()
   @Min(1)
@@ -24,14 +24,14 @@ export class DispensacionRequestDto {
 }
 
 export class LoteUsadoDto {
-  loteId: string;
+  loteId: number;
   numeroLote: string;
   cantidad: number;
 }
 
 export class DispensacionDto {
-  id: string;
-  medicamentoId: string;
+  id: number;
+  medicamentoId: number;
   cantidad: number;
   mascota: string;
   veterinario: string;

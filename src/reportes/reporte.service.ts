@@ -18,7 +18,7 @@ export class ReporteService {
     private readonly medicamentoService: MedicamentoService,
   ) {}
 
-  consumo(filtro: ConsumoQueryDto): ReporteConsumoDto {
+  async consumo(filtro: ConsumoQueryDto): Promise<ReporteConsumoDto> {
     const desde = filtro.desde?.slice(0, 10) ?? diasDesdeHoy(-30);
     const hasta = filtro.hasta?.slice(0, 10) ?? hoy();
     if (desde > hasta) {
@@ -27,14 +27,14 @@ export class ReporteService {
       );
     }
 
-    const detalle = new Map<string, ConsumoMedicamentoDto>();
-    for (const dispensacion of this.dispensacionService.listar()) {
+    const detalle = new Map<number, ConsumoMedicamentoDto>();
+    for (const dispensacion of await this.dispensacionService.listar()) {
       if (dispensacion.fecha < desde || dispensacion.fecha > hasta) {
         continue;
       }
 
       const consumo = detalle.get(dispensacion.medicamentoId) ?? {
-        medicamento: this.medicamentoService.obtener(
+        medicamento: await this.medicamentoService.obtener(
           dispensacion.medicamentoId,
         ),
         unidades: 0,
@@ -58,14 +58,15 @@ export class ReporteService {
     };
   }
 
-  vencimientos(): ReporteVencimientosDto {
-    const lotes = this.inventarioService
-      .listarLotes()
+  async vencimientos(): Promise<ReporteVencimientosDto> {
+    const lotes = (await this.inventarioService.listarLotes())
       .filter(
         (lote) => lote.cantidad > 0 && this.inventarioService.vencido(lote),
       )
-      .map((lote) => {
-        const medicamento = this.medicamentoService.obtener(lote.medicamentoId);
+      .map(async (lote) => {
+        const medicamento = await this.medicamentoService.obtener(
+          lote.medicamentoId,
+        );
         return {
           lote,
           medicamento,
@@ -73,9 +74,11 @@ export class ReporteService {
         };
       });
 
+    const vencidos = await Promise.all(lotes);
+
     return {
-      totalPerdida: lotes.reduce((total, lote) => total + lote.perdida, 0),
-      lotes,
+      totalPerdida: vencidos.reduce((total, lote) => total + lote.perdida, 0),
+      lotes: vencidos,
     };
   }
 }

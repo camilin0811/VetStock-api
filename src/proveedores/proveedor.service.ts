@@ -3,55 +3,44 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ProveedorDto, ProveedorResponseDto } from './proveedor.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Proveedor } from './entities/proveedor.entity';
+import { ProveedorDto } from './proveedor.dto';
 
 @Injectable()
 export class ProveedorService {
-  private proveedores: ProveedorResponseDto[] = [
-    {
-      id: '1',
-      nombre: 'Distribuidora Agrovet Narino',
-      nit: '900123456-1',
-      telefono: '3001234567',
-      ciudad: 'Pasto',
-    },
-    {
-      id: '2',
-      nombre: 'Laboratorios Pet Salud',
-      nit: '800987654-2',
-      telefono: '3109876543',
-      ciudad: 'Cali',
-    },
-  ];
+  constructor(
+    @InjectRepository(Proveedor)
+    private readonly proveedorRepository: Repository<Proveedor>,
+  ) {}
 
-  listar() {
-    return this.proveedores;
+  async listar() {
+    return this.proveedorRepository.find({ order: { id: 'ASC' } });
   }
 
-  obtener(id: string) {
-    const proveedor = this.proveedores.find((proveedor) => proveedor.id === id);
-    if (proveedor === undefined) {
+  async obtener(id: number) {
+    const proveedor = await this.proveedorRepository.findOneBy({ id });
+    if (proveedor === null) {
       throw new NotFoundException(`Proveedor con ID ${id} no existe`);
     }
 
     return proveedor;
   }
 
-  crear(datos: ProveedorDto) {
-    const existente = this.proveedores.find(
-      (proveedor) => proveedor.nit === datos.nit,
-    );
-    if (existente !== undefined) {
+  async crear(datos: ProveedorDto) {
+    const existente = await this.proveedorRepository.findOneBy({
+      nit: datos.nit,
+    });
+    if (existente !== null) {
       throw new ConflictException(
         `El proveedor con NIT ${datos.nit} ya esta registrado`,
       );
     }
 
-    const nuevoProveedor: ProveedorResponseDto = {
-      id: `${new Date().getTime()}`,
-      ...datos,
-    };
-    this.proveedores.push(nuevoProveedor);
+    const nuevoProveedor = await this.proveedorRepository.save(
+      this.proveedorRepository.create(datos),
+    );
 
     return {
       message: 'Proveedor registrado correctamente',

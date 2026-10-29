@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { ActualizarMedicamentoDto, MedicamentoDto } from './medicamento.dto';
 import { MedicamentoService } from './medicamento.service';
 
@@ -12,7 +20,7 @@ export class MedicamentoController {
   }
 
   @Get(':id')
-  obtener(@Param('id') id: string) {
+  obtener(@Param('id', ParseIntPipe) id: number) {
     return this.medicamentoService.obtener(id);
   }
 
@@ -22,7 +30,10 @@ export class MedicamentoController {
   }
 
   @Put(':id')
-  actualizar(@Param('id') id: string, @Body() datos: ActualizarMedicamentoDto) {
+  actualizar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: ActualizarMedicamentoDto,
+  ) {
     return this.medicamentoService.actualizar(id, datos);
   }
 }

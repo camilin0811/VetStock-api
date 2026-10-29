@@ -3,49 +3,27 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { diasDesdeHoy, hoy } from '../common/fechas';
-import { InventarioService } from '../inventario/inventario.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, MoreThan, Repository } from 'typeorm';
+import { hoy } from '../common/fechas';
+import { Lote } from '../inventario/entities/lote.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
-import {
-  DispensacionDto,
-  DispensacionRequestDto,
-  LoteUsadoDto,
-} from './dispensacion.dto';
+import { DispensacionRequestDto, LoteUsadoDto } from './dispensacion.dto';
+import { Dispensacion } from './entities/dispensacion.entity';
 
 @Injectable()
 export class DispensacionService {
-  private dispensaciones: DispensacionDto[] = [
-    {
-      id: '1',
-      medicamentoId: '1',
-      cantidad: 25,
-      mascota: 'Max',
-      veterinario: 'Dra. Paola Rosero',
-      formula: 'F-1001',
-      fecha: diasDesdeHoy(-30),
-      total: 450000,
-      lotesUsados: [{ loteId: '1', numeroLote: 'AMX-001', cantidad: 25 }],
-    },
-    {
-      id: '2',
-      medicamentoId: '3',
-      cantidad: 6,
-      mascota: 'Luna',
-      veterinario: 'Dr. Carlos Erazo',
-      formula: 'F-0950',
-      fecha: diasDesdeHoy(-100),
-      total: 192000,
-      lotesUsados: [{ loteId: '4', numeroLote: 'MLX-050', cantidad: 6 }],
-    },
-  ];
-
   constructor(
+    @InjectRepository(Dispensacion)
+    private readonly dispensacionRepository: Repository<Dispensacion>,
     private readonly medicamentoService: MedicamentoService,
-    private readonly inventarioService: InventarioService,
+    private readonly dataSource: DataSource,
   ) {}
 
-  dispensar(datos: DispensacionRequestDto) {
-    const medicamento = this.medicamentoService.obtener(datos.medicamentoId);
+  async dispensar(datos: DispensacionRequestDto) {
+    const medicamento = await this.medicamentoService.obtener(
+      datos.medicamentoId,
+    );
 
     if (medicamento.requiereFormula && datos.formula === undefined) {
       throw new BadRequestException(
@@ -53,56 +31,73 @@ export class DispensacionService {
       );
     }
 
-    const lotes = this.inventarioService.lotesDisponibles(medicamento.id);
-    const disponible = lotes.reduce((total, lote) => total + lote.cantidad, 0);
-    if (disponible < datos.cantidad) {
-      throw new BadRequestException(
-        `Stock insuficiente: hay ${disponible} unidades disponibles de ${medicamento.nombre}`,
-      );
-    }
+    return this.dataSource.transaction(async (manager) => {
+      // FEFO: se descuenta primero del lote que vence antes
+      const lotes = await manager.find(Lote, {
+        where: {
+          medicamentoId: medicamento.id,
+          cantidad: MoreThan(0),
+          fechaVencimiento: MoreThan(hoy()),
+        },
+        order: { fechaVencimiento: 'ASC' },
+      });
 
-    // FEFO: se descuenta primero del lote que vence antes
-    const lotesUsados: LoteUsadoDto[] = [];
-    let pendiente = datos.cantidad;
-    for (const lote of lotes) {
-      if (pendiente === 0) {
-        break;
+      const disponible = lotes.reduce(
+        (total, lote) => total + lote.cantidad,
+        0,
+      );
+      if (disponible < datos.cantidad) {
+        throw new BadRequestException(
+          `Stock insuficiente: hay ${disponible} unidades disponibles de ${medicamento.nombre}`,
+        );
       }
 
-      const cantidad = Math.min(lote.cantidad, pendiente);
-      lote.cantidad -= cantidad;
-      pendiente -= cantidad;
-      lotesUsados.push({
-        loteId: lote.id,
-        numeroLote: lote.numeroLote,
-        cantidad,
-      });
-    }
+      const lotesUsados: LoteUsadoDto[] = [];
+      let pendiente = datos.cantidad;
+      for (const lote of lotes) {
+        if (pendiente === 0) {
+          break;
+        }
 
-    const nuevaDispensacion: DispensacionDto = {
-      id: `${new Date().getTime()}`,
-      ...datos,
-      fecha: hoy(),
-      total: medicamento.precio * datos.cantidad,
-      lotesUsados,
-    };
-    this.dispensaciones.push(nuevaDispensacion);
+        const cantidad = Math.min(lote.cantidad, pendiente);
+        lote.cantidad -= cantidad;
+        pendiente -= cantidad;
+        lotesUsados.push({
+          loteId: lote.id,
+          numeroLote: lote.numeroLote,
+          cantidad,
+        });
+      }
 
-    return {
-      message: 'Dispensacion registrada correctamente',
-      data: nuevaDispensacion,
-    };
+      await manager.save(lotes);
+
+      const nuevaDispensacion = await manager.save(
+        manager.create(Dispensacion, {
+          medicamentoId: medicamento.id,
+          cantidad: datos.cantidad,
+          mascota: datos.mascota,
+          veterinario: datos.veterinario,
+          formula: datos.formula,
+          fecha: hoy(),
+          total: medicamento.precio * datos.cantidad,
+          lotesUsados,
+        }),
+      );
+
+      return {
+        message: 'Dispensacion registrada correctamente',
+        data: nuevaDispensacion,
+      };
+    });
   }
 
-  listar() {
-    return this.dispensaciones;
+  async listar() {
+    return this.dispensacionRepository.find({ order: { id: 'ASC' } });
   }
 
-  obtener(id: string) {
-    const dispensacion = this.dispensaciones.find(
-      (dispensacion) => dispensacion.id === id,
-    );
-    if (dispensacion === undefined) {
+  async obtener(id: number) {
+    const dispensacion = await this.dispensacionRepository.findOneBy({ id });
+    if (dispensacion === null) {
       throw new NotFoundException(`Dispensacion con ID ${id} no existe`);
     }
 

@@ -13,11 +13,11 @@ export class AlertaService {
     private readonly inventarioService: InventarioService,
   ) {}
 
-  generar(): AlertaDto[] {
+  async generar() {
     const alertas: AlertaDto[] = [];
 
-    for (const medicamento of this.medicamentoService.listar()) {
-      const inventario = this.inventarioService.obtenerInventario(
+    for (const medicamento of await this.medicamentoService.listar()) {
+      const inventario = await this.inventarioService.obtenerInventario(
         medicamento.id,
       );
 

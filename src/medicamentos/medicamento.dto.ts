@@ -66,5 +66,5 @@ export class ActualizarMedicamentoDto {
 }
 
 export class MedicamentoResponseDto extends MedicamentoDto {
-  id: string;
+  id: number;
 }
