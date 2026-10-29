@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { AlertaService } from './alerta.service';
 import { InventarioService } from './inventario.service';
 import { LoteRequestDto } from './lote.dto';
@@ -16,12 +24,17 @@ export class InventarioController {
   }
 
   @Get('lotes')
-  listarLotes(@Query('medicamentoId') medicamentoId?: string) {
+  listarLotes(
+    @Query('medicamentoId', new ParseIntPipe({ optional: true }))
+    medicamentoId?: number,
+  ) {
     return this.inventarioService.listarLotes(medicamentoId);
   }
 
   @Get('inventario/:medicamentoId')
-  obtenerInventario(@Param('medicamentoId') medicamentoId: string) {
+  obtenerInventario(
+    @Param('medicamentoId', ParseIntPipe) medicamentoId: number,
+  ) {
     return this.inventarioService.obtenerInventario(medicamentoId);
   }
 

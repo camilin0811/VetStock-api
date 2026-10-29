@@ -1,20 +1,29 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
+import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { ProveedorService } from './proveedor.service';
 
 describe('ProveedorService', () => {
   let service: ProveedorService;
+  let testingModule: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
+      imports: importacionesBdPrueba(),
       providers: [ProveedorService],
     }).compile();
+    await sembrarBd(testingModule.get(DataSource));
 
-    service = module.get<ProveedorService>(ProveedorService);
+    service = testingModule.get<ProveedorService>(ProveedorService);
   });
 
-  it('registra un proveedor nuevo', () => {
-    const resultado = service.crear({
+  afterEach(async () => {
+    await testingModule.close();
+  });
+
+  it('registra un proveedor nuevo', async () => {
+    const resultado = await service.crear({
       nombre: 'Vet Insumos del Sur',
       nit: '901555444-3',
       telefono: '3205554444',
@@ -24,18 +33,18 @@ describe('ProveedorService', () => {
     expect(resultado.data.id).toBeDefined();
   });
 
-  it('lanza error si el NIT ya esta registrado', () => {
-    expect(() =>
+  it('lanza error si el NIT ya esta registrado', async () => {
+    await expect(
       service.crear({
         nombre: 'Otro nombre',
         nit: '900123456-1',
         telefono: '3000000000',
         ciudad: 'Pasto',
       }),
-    ).toThrow(ConflictException);
+    ).rejects.toThrow(ConflictException);
   });
 
-  it('lanza error si el proveedor no existe', () => {
-    expect(() => service.obtener('999')).toThrow(NotFoundException);
+  it('lanza error si el proveedor no existe', async () => {
+    await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
   });
 });

@@ -1,20 +1,29 @@
 import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
+import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
+  let testingModule: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
+      imports: importacionesBdPrueba(),
       providers: [AuthService],
     }).compile();
+    await sembrarBd(testingModule.get(DataSource));
 
-    service = module.get<AuthService>(AuthService);
+    service = testingModule.get<AuthService>(AuthService);
   });
 
-  it('registra un usuario y devuelve tokens', () => {
-    const resultado = service.registrar({
+  afterEach(async () => {
+    await testingModule.close();
+  });
+
+  it('registra un usuario y devuelve tokens', async () => {
+    const resultado = await service.registrar({
       nombre: 'Laura',
       correo: 'laura@vetstock.com',
       clave: '123456',
@@ -24,19 +33,19 @@ describe('AuthService', () => {
     expect(resultado.data.refreshToken).toBeDefined();
   });
 
-  it('lanza error con credenciales invalidas', () => {
-    expect(() =>
+  it('lanza error con credenciales invalidas', async () => {
+    await expect(
       service.login({ correo: 'nadie@vetstock.com', clave: 'mala' }),
-    ).toThrow(UnauthorizedException);
+    ).rejects.toThrow(UnauthorizedException);
   });
 
-  it('lanza error si el correo ya esta registrado', () => {
-    expect(() =>
+  it('lanza error si el correo ya esta registrado', async () => {
+    await expect(
       service.registrar({
         nombre: 'Andres',
         correo: 'andres@vetstock.com',
         clave: '123456',
       }),
-    ).toThrow(ConflictException);
+    ).rejects.toThrow(ConflictException);
   });
 });

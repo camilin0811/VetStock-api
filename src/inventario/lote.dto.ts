@@ -8,13 +8,13 @@ import {
 import { MedicamentoResponseDto } from '../medicamentos/medicamento.dto';
 
 export class LoteRequestDto {
-  @IsString()
-  @IsNotEmpty()
-  medicamentoId: string;
+  @IsInt()
+  @Min(1)
+  medicamentoId: number;
 
-  @IsString()
-  @IsNotEmpty()
-  proveedorId: string;
+  @IsInt()
+  @Min(1)
+  proveedorId: number;
 
   @IsString()
   @IsNotEmpty()
@@ -29,9 +29,9 @@ export class LoteRequestDto {
 }
 
 export class LoteDto {
-  id: string;
-  medicamentoId: string;
-  proveedorId: string;
+  id: number;
+  medicamentoId: number;
+  proveedorId: number;
   numeroLote: string;
   cantidadInicial: number;
   cantidad: number;
@@ -49,6 +49,6 @@ export class InventarioDto {
 export class AlertaDto {
   tipo: 'STOCK_BAJO' | 'POR_VENCER' | 'VENCIDO';
   medicamento: MedicamentoResponseDto;
-  loteId?: string;
+  loteId?: number;
   mensaje: string;
 }

@@ -19,5 +19,5 @@ export class ProveedorDto {
 }
 
 export class ProveedorResponseDto extends ProveedorDto {
-  id: string;
+  id: number;
 }

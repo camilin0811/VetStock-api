@@ -1,20 +1,29 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { DataSource } from 'typeorm';
+import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { MedicamentoService } from './medicamento.service';
 
 describe('MedicamentoService', () => {
   let service: MedicamentoService;
+  let testingModule: TestingModule;
 
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    testingModule = await Test.createTestingModule({
+      imports: importacionesBdPrueba(),
       providers: [MedicamentoService],
     }).compile();
+    await sembrarBd(testingModule.get(DataSource));
 
-    service = module.get<MedicamentoService>(MedicamentoService);
+    service = testingModule.get<MedicamentoService>(MedicamentoService);
   });
 
-  it('registra un medicamento nuevo', () => {
-    const resultado = service.crear({
+  afterEach(async () => {
+    await testingModule.close();
+  });
+
+  it('registra un medicamento nuevo', async () => {
+    const resultado = await service.crear({
       nombre: 'Ivermectina 1%',
       presentacion: 'Frasco 50 ml',
       especie: 'bovino',
@@ -24,11 +33,11 @@ describe('MedicamentoService', () => {
     });
 
     expect(resultado.data.id).toBeDefined();
-    expect(service.listar()).toContainEqual(resultado.data);
+    expect(await service.listar()).toContainEqual(resultado.data);
   });
 
-  it('lanza error si el medicamento ya existe', () => {
-    expect(() =>
+  it('lanza error si el medicamento ya existe', async () => {
+    await expect(
       service.crear({
         nombre: 'amoxicilina 250 mg',
         presentacion: 'Tabletas x 10',
@@ -37,16 +46,16 @@ describe('MedicamentoService', () => {
         stockMinimo: 20,
         requiereFormula: true,
       }),
-    ).toThrow(ConflictException);
+    ).rejects.toThrow(ConflictException);
   });
 
-  it('actualiza el stock minimo de un medicamento', () => {
-    const resultado = service.actualizar('1', { stockMinimo: 30 });
+  it('actualiza el stock minimo de un medicamento', async () => {
+    const resultado = await service.actualizar(1, { stockMinimo: 30 });
 
     expect(resultado.data.stockMinimo).toBe(30);
   });
 
-  it('lanza error si el medicamento no existe', () => {
-    expect(() => service.obtener('999')).toThrow(NotFoundException);
+  it('lanza error si el medicamento no existe', async () => {
+    await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
   });
 });

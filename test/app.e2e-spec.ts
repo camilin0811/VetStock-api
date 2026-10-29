@@ -2,15 +2,20 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
-import { AppModule } from './../src/app.module';
+import { DataSource } from 'typeorm';
+import { CONTROLADORES, PROVEEDORES } from './../src/app.module';
+import { importacionesBdPrueba, sembrarBd } from './bd-prueba';
 
 describe('VetStock API (e2e)', () => {
   let app: INestApplication<App>;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: importacionesBdPrueba(),
+      controllers: CONTROLADORES,
+      providers: PROVEEDORES,
     }).compile();
+    await sembrarBd(moduleFixture.get(DataSource));
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
@@ -58,8 +63,8 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer())
       .post('/lotes')
       .send({
-        medicamentoId: '4',
-        proveedorId: '1',
+        medicamentoId: 4,
+        proveedorId: 1,
         numeroLote: 'ALB-301',
         cantidad: 10,
         fechaVencimiento: '2099-12-31',
@@ -74,8 +79,8 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer())
       .post('/lotes')
       .send({
-        medicamentoId: '999',
-        proveedorId: '1',
+        medicamentoId: 999,
+        proveedorId: 1,
         numeroLote: 'X-1',
         cantidad: 1,
         fechaVencimiento: '2099-12-31',
@@ -106,7 +111,7 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer())
       .post('/dispensaciones')
       .send({
-        medicamentoId: '2',
+        medicamentoId: 2,
         cantidad: 35,
         mascota: 'Toby',
         veterinario: 'Dra. Paola Rosero',
@@ -121,7 +126,7 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer())
       .post('/dispensaciones')
       .send({
-        medicamentoId: '1',
+        medicamentoId: 1,
         cantidad: 1,
         mascota: 'Max',
         veterinario: 'Dra. Paola Rosero',
