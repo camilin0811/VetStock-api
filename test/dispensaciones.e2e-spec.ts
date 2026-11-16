@@ -107,4 +107,41 @@ describe('Dispensaciones (e2e)', () => {
       expect(una.body.usuario).toBeNull();
     });
   });
+
+  it('POST /dispensaciones deja movimientos SALIDA en el kardex', async () => {
+    await contexto
+      .api('veterinario')
+      .post('/dispensaciones')
+      .send(dispensacion)
+      .expect(201);
+
+    const kardex = await contexto
+      .api()
+      .get('/movimientos?medicamentoId=2&tipo=SALIDA')
+      .expect(200);
+    expect(kardex.body.count).toBe(2);
+    expect(kardex.body.data[0]).toMatchObject({
+      tipo: 'SALIDA',
+      cantidad: 5,
+      numeroLote: 'VAR-102',
+      usuario: { id: 2, nombre: 'Paola' },
+    });
+  });
+
+  it('POST /dispensaciones valida datos, formula y stock', async () => {
+    const api = contexto.api();
+    await api.post('/dispensaciones').send({}).expect(400);
+    await api
+      .post('/dispensaciones')
+      .send({ ...dispensacion, medicamentoId: 1 })
+      .expect(400);
+    await api
+      .post('/dispensaciones')
+      .send({ ...dispensacion, cantidad: 500 })
+      .expect(400);
+    await api
+      .post('/dispensaciones')
+      .send({ ...dispensacion, medicamentoId: 999 })
+      .expect(404);
+  });
 });

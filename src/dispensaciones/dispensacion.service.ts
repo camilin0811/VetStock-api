@@ -6,8 +6,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, MoreThan, Repository } from 'typeorm';
 import type { Usuario } from '../auth/entities/usuario.entity';
+import { bloqueoPesimista } from '../common/bloqueo';
 import { hoy } from '../common/fechas';
 import { Lote } from '../inventario/entities/lote.entity';
+import { Movimiento } from '../inventario/entities/movimiento.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { DispensacionRequestDto, LoteUsadoDto } from './dispensacion.dto';
 import { Dispensacion } from './entities/dispensacion.entity';
@@ -33,14 +35,17 @@ export class DispensacionService {
     }
 
     return this.dataSource.transaction(async (manager) => {
-      // FEFO: se descuenta primero del lote que vence antes
+      // FEFO: se descuenta primero del lote que vence antes. El bloqueo
+      // pesimista serializa dispensaciones concurrentes del mismo medicamento
+      // para que no descuenten dos veces las mismas unidades.
       const lotes = await manager.find(Lote, {
         where: {
           medicamentoId: medicamento.id,
           cantidad: MoreThan(0),
           fechaVencimiento: MoreThan(hoy()),
         },
-        order: { fechaVencimiento: 'ASC' },
+        order: { fechaVencimiento: 'ASC', id: 'ASC' },
+        lock: bloqueoPesimista(manager),
       });
 
       const disponible = lotes.reduce(
@@ -82,6 +87,19 @@ export class DispensacionService {
           total: medicamento.precio * datos.cantidad,
           lotesUsados,
         }),
+      );
+
+      await manager.save(
+        lotesUsados.map((usado) =>
+          manager.create(Movimiento, {
+            tipo: 'SALIDA',
+            cantidad: usado.cantidad,
+            lote: { id: usado.loteId },
+            medicamento: { id: medicamento.id },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle: `Dispensacion ${nuevaDispensacion.id} - ${datos.mascota}`,
+          }),
+        ),
       );
 
       return {

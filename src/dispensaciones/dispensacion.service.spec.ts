@@ -1,7 +1,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
+import { jest } from '@jest/globals';
+import { DataSource, EntityManager } from 'typeorm';
+import { bloqueoPesimista } from '../common/bloqueo';
+import { Lote } from '../inventario/entities/lote.entity';
 import { Usuario } from '../auth/entities/usuario.entity';
+import { Movimiento } from '../inventario/entities/movimiento.entity';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { diasDesdeHoy } from '../common/fechas';
 import { InventarioModule } from '../inventario/inventario.module';
@@ -147,6 +151,85 @@ describe('DispensacionService', () => {
       expect(data.usuario).toBeNull();
       expect((await service.obtener(1)).estado).toBe('ACTIVA');
       expect((await service.obtener(1)).usuario).toBeNull();
+    });
+  });
+
+  describe('kardex', () => {
+    it('crea un movimiento SALIDA por cada lote usado, con el usuario', async () => {
+      const dataSource = testingModule.get(DataSource);
+      const usuario = await dataSource
+        .getRepository(Usuario)
+        .findOneByOrFail({ id: 2 });
+
+      const { data } = await service.dispensar(
+        {
+          medicamentoId: 2,
+          cantidad: 35,
+          mascota: 'Toby',
+          veterinario: 'Dra. Paola Rosero',
+        },
+        usuario,
+      );
+
+      const movimientos = await dataSource.getRepository(Movimiento).find({
+        where: { tipo: 'SALIDA', medicamentoId: 2 },
+        order: { id: 'ASC' },
+      });
+      expect(
+        movimientos.map((m) => [m.loteId, m.cantidad, m.usuarioId, m.detalle]),
+      ).toEqual([
+        [2, 30, 2, `Dispensacion ${data.id} - Toby`],
+        [3, 5, 2, `Dispensacion ${data.id} - Toby`],
+      ]);
+    });
+
+    it('no deja movimientos si la dispensacion falla', async () => {
+      const dataSource = testingModule.get(DataSource);
+      const antes = await dataSource.getRepository(Movimiento).count();
+
+      await expect(
+        service.dispensar({
+          medicamentoId: 4,
+          cantidad: 500,
+          mascota: 'Lola',
+          veterinario: 'Dr. Carlos Erazo',
+        }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect(await dataSource.getRepository(Movimiento).count()).toBe(antes);
+    });
+  });
+
+  describe('bloqueo pesimista', () => {
+    it('en sqlite no pide bloqueo (el driver no lo soporta)', async () => {
+      const dataSource = testingModule.get(DataSource);
+
+      await dataSource.transaction(async (manager) => {
+        expect(bloqueoPesimista(manager)).toBeUndefined();
+      });
+    });
+
+    it('en otros drivers pide pessimistic_write', () => {
+      const manager = {
+        connection: { options: { type: 'postgres' } },
+      } as unknown as EntityManager;
+
+      expect(bloqueoPesimista(manager)).toEqual({ mode: 'pessimistic_write' });
+    });
+
+    it('el FEFO consulta los lotes con la opcion de bloqueo de la transaccion', async () => {
+      const espia = jest.spyOn(EntityManager.prototype, 'find');
+
+      await service.dispensar({
+        medicamentoId: 2,
+        cantidad: 1,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      });
+
+      const llamada = espia.mock.calls.find(([entidad]) => entidad === Lote);
+      expect(llamada?.[1]).toHaveProperty('lock');
+      espia.mockRestore();
     });
   });
 });
