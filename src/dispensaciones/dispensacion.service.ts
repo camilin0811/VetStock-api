@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, MoreThan, Repository } from 'typeorm';
+import type { Usuario } from '../auth/entities/usuario.entity';
 import { hoy } from '../common/fechas';
 import { Lote } from '../inventario/entities/lote.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
@@ -20,7 +21,7 @@ export class DispensacionService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async dispensar(datos: DispensacionRequestDto) {
+  async dispensar(datos: DispensacionRequestDto, usuario?: Usuario) {
     const medicamento = await this.medicamentoService.obtener(
       datos.medicamentoId,
     );
@@ -66,6 +67,7 @@ export class DispensacionService {
           loteId: lote.id,
           numeroLote: lote.numeroLote,
           cantidad,
+          fechaVencimiento: lote.fechaVencimiento,
         });
       }
 
@@ -75,6 +77,7 @@ export class DispensacionService {
         manager.create(Dispensacion, {
           ...datos,
           medicamento,
+          usuario: usuario ? { id: usuario.id } : null,
           fecha: hoy(),
           total: medicamento.precio * datos.cantidad,
           lotesUsados,
@@ -83,33 +86,49 @@ export class DispensacionService {
 
       return {
         message: 'Dispensacion registrada correctamente',
-        data: nuevaDispensacion,
+        data: this.aDto({
+          ...nuevaDispensacion,
+          usuario: usuario ?? null,
+        }),
       };
     });
   }
 
   async listar() {
     const dispensaciones = await this.dispensacionRepository.find({
-      relations: { medicamento: true },
+      relations: { medicamento: true, usuario: true },
       order: { id: 'ASC' },
     });
 
+    const data = dispensaciones.map((d) => this.aDto(d));
+
     return {
       message: 'Dispensaciones obtenidas correctamente',
-      data: dispensaciones,
-      count: dispensaciones.length,
+      data,
+      count: data.length,
     };
   }
 
   async obtener(id: number) {
     const dispensacion = await this.dispensacionRepository.findOne({
       where: { id },
-      relations: { medicamento: true },
+      relations: { medicamento: true, usuario: true },
     });
     if (dispensacion === null) {
       throw new NotFoundException(`Dispensacion con ID ${id} no existe`);
     }
 
-    return dispensacion;
+    return this.aDto(dispensacion);
+  }
+
+  // Expone solo id y nombre del usuario (no su correo ni su rol) y formula null
+  private aDto(dispensacion: Dispensacion) {
+    return {
+      ...dispensacion,
+      formula: dispensacion.formula ?? null,
+      usuario: dispensacion.usuario
+        ? { id: dispensacion.usuario.id, nombre: dispensacion.usuario.nombre }
+        : null,
+    };
   }
 }

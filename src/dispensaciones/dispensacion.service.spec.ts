@@ -1,7 +1,9 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
+import { Usuario } from '../auth/entities/usuario.entity';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { diasDesdeHoy } from '../common/fechas';
 import { InventarioModule } from '../inventario/inventario.module';
 import { InventarioService } from '../inventario/inventario.service';
 import { DispensacionesModule } from './dispensaciones.module';
@@ -39,8 +41,18 @@ describe('DispensacionService', () => {
     });
 
     expect(resultado.data.lotesUsados).toEqual([
-      { loteId: 2, numeroLote: 'VAR-101', cantidad: 30 },
-      { loteId: 3, numeroLote: 'VAR-102', cantidad: 5 },
+      {
+        loteId: 2,
+        numeroLote: 'VAR-101',
+        cantidad: 30,
+        fechaVencimiento: diasDesdeHoy(20),
+      },
+      {
+        loteId: 3,
+        numeroLote: 'VAR-102',
+        cantidad: 5,
+        fechaVencimiento: diasDesdeHoy(300),
+      },
     ]);
     expect((await inventarioService.obtenerInventario(2)).stockDisponible).toBe(
       7,
@@ -97,5 +109,44 @@ describe('DispensacionService', () => {
 
   it('lanza error si la dispensacion no existe', async () => {
     await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
+  });
+
+  describe('usuario y estado', () => {
+    it('registra el usuario que dispensa y expone solo id y nombre', async () => {
+      const usuario = await testingModule
+        .get(DataSource)
+        .getRepository(Usuario)
+        .findOneByOrFail({ id: 2 });
+
+      const { data } = await service.dispensar(
+        {
+          medicamentoId: 2,
+          cantidad: 1,
+          mascota: 'Toby',
+          veterinario: 'Dra. Paola Rosero',
+        },
+        usuario,
+      );
+
+      expect(data.usuario).toEqual({ id: 2, nombre: 'Paola' });
+      expect(data.estado).toBe('ACTIVA');
+      expect(data.formula).toBeNull();
+      const guardada = await service.obtener(data.id);
+      expect(guardada.usuario).toEqual({ id: 2, nombre: 'Paola' });
+      expect(guardada.usuarioId).toBe(2);
+    });
+
+    it('sin usuario queda null y las dispensaciones previas son ACTIVA', async () => {
+      const { data } = await service.dispensar({
+        medicamentoId: 2,
+        cantidad: 1,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      });
+
+      expect(data.usuario).toBeNull();
+      expect((await service.obtener(1)).estado).toBe('ACTIVA');
+      expect((await service.obtener(1)).usuario).toBeNull();
+    });
   });
 });

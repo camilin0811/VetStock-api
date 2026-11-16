@@ -23,10 +23,14 @@ export class DispensacionRequestDto {
   formula?: string;
 }
 
+export type EstadoDispensacion = 'ACTIVA' | 'ANULADA';
+
 export class LoteUsadoDto {
   loteId: number;
   numeroLote: string;
   cantidad: number;
+  // Ausente en dispensaciones registradas antes de guardar este dato
+  fechaVencimiento?: string;
 }
 
 export class DispensacionDto {

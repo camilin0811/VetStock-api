@@ -6,6 +6,8 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
+import type { Usuario } from '../auth/entities/usuario.entity';
+import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import { DispensacionRequestDto } from './dispensacion.dto';
 import { DispensacionService } from './dispensacion.service';
 
@@ -14,8 +16,11 @@ export class DispensacionController {
   constructor(private readonly dispensacionService: DispensacionService) {}
 
   @Post()
-  dispensar(@Body() datos: DispensacionRequestDto) {
-    return this.dispensacionService.dispensar(datos);
+  dispensar(
+    @Body() datos: DispensacionRequestDto,
+    @UsuarioActual() usuario?: Usuario,
+  ) {
+    return this.dispensacionService.dispensar(datos, usuario);
   }
 
   @Get()
