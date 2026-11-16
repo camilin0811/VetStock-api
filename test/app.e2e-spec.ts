@@ -29,7 +29,9 @@ describe('VetStock API (e2e)', () => {
     await sembrarBd(moduleFixture.get(DataSource));
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(
+      new ValidationPipe({ transform: true, whitelist: true }),
+    );
     await app.init();
   });
 
