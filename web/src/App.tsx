@@ -16,6 +16,7 @@ import Alertas from './pages/Alertas'
 import Reportes from './pages/Reportes'
 import Calendario from './pages/Calendario'
 import Proveedores from './pages/Proveedores'
+import Categorias from './pages/Categorias'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ export default function App() {
                   <Route path="reportes" element={<Reportes />} />
                   <Route path="calendario" element={<Calendario />} />
                   <Route path="proveedores" element={<Proveedores />} />
+                  <Route path="categorias" element={<Categorias />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>
