@@ -1,12 +1,16 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   Post,
+  Put,
 } from '@nestjs/common';
-import { ProveedorDto } from './proveedor.dto';
+import { Rol } from '../auth/rol.enum';
+import { Roles } from '../auth/roles.decorator';
+import { ActualizarProveedorDto, ProveedorDto } from './proveedor.dto';
 import { ProveedorService } from './proveedor.service';
 
 @Controller('proveedores')
@@ -23,8 +27,24 @@ export class ProveedorController {
     return this.proveedorService.obtener(id);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post()
   crear(@Body() datos: ProveedorDto) {
     return this.proveedorService.crear(datos);
+  }
+
+  @Roles(Rol.Admin, Rol.Farmaceutico)
+  @Put(':id')
+  actualizar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: ActualizarProveedorDto,
+  ) {
+    return this.proveedorService.actualizar(id, datos);
+  }
+
+  @Roles(Rol.Admin, Rol.Farmaceutico)
+  @Delete(':id')
+  eliminar(@Param('id', ParseIntPipe) id: number) {
+    return this.proveedorService.eliminar(id);
   }
 }

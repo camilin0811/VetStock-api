@@ -108,4 +108,82 @@ describe('Catalogo (e2e)', () => {
       await contexto.api('veterinario').get('/medicamentos/1').expect(200);
     });
   });
+
+  describe('proveedores', () => {
+    const proveedorNuevo = {
+      nombre: 'Vet Insumos del Sur',
+      nit: '901555444-3',
+      telefono: '3205554444',
+      ciudad: 'Ipiales',
+    };
+
+    it('POST /proveedores acepta correo opcional y lo valida', async () => {
+      const api = contexto.api();
+      const sin = await api
+        .post('/proveedores')
+        .send(proveedorNuevo)
+        .expect(201);
+      expect(sin.body.data.correo).toBeNull();
+
+      const con = await api
+        .post('/proveedores')
+        .send({ ...proveedorNuevo, nit: '1-1', correo: 'a@b.com' })
+        .expect(201);
+      expect(con.body.data.correo).toBe('a@b.com');
+
+      await api
+        .post('/proveedores')
+        .send({ ...proveedorNuevo, nit: '2-2', correo: 'no-es-correo' })
+        .expect(400);
+    });
+
+    it('GET /proveedores incluye correo null en los existentes', async () => {
+      const respuesta = await contexto.api().get('/proveedores/1').expect(200);
+      expect(respuesta.body.correo).toBeNull();
+    });
+
+    it('PUT /proveedores/:id actualiza parcialmente', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .put('/proveedores/1')
+        .send({ ciudad: 'Ipiales', correo: 'info@agrovet.com' })
+        .expect(200);
+
+      expect(respuesta.body.data).toMatchObject({
+        id: 1,
+        ciudad: 'Ipiales',
+        correo: 'info@agrovet.com',
+        nombre: 'Distribuidora Agrovet Narino',
+      });
+    });
+
+    it('PUT /proveedores/:id responde 409, 404 y 400', async () => {
+      const api = contexto.api();
+      await api.put('/proveedores/1').send({ nit: '800987654-2' }).expect(409);
+      await api.put('/proveedores/999').send({ ciudad: 'X' }).expect(404);
+      await api.put('/proveedores/1').send({ correo: 'mal' }).expect(400);
+    });
+
+    it('DELETE /proveedores/:id elimina uno sin lotes y responde 409 con lotes', async () => {
+      const api = contexto.api();
+      const creado = await api.post('/proveedores').send(proveedorNuevo);
+
+      await api.delete(`/proveedores/${creado.body.data.id}`).expect(200);
+      await api.get(`/proveedores/${creado.body.data.id}`).expect(404);
+      await api.delete('/proveedores/1').expect(409);
+      await api.delete('/proveedores/999').expect(404);
+    });
+
+    it('responde 401 sin token y 403 a un veterinario al escribir', async () => {
+      const http = () => request(contexto.app.getHttpServer());
+      await http().put('/proveedores/1').send({}).expect(401);
+      await http().delete('/proveedores/1').expect(401);
+
+      const vet = contexto.api('veterinario');
+      await vet.post('/proveedores').send(proveedorNuevo).expect(403);
+      await vet.put('/proveedores/1').send({ ciudad: 'X' }).expect(403);
+      await vet.delete('/proveedores/1').expect(403);
+      await vet.get('/proveedores').expect(200);
+    });
+  });
 });
