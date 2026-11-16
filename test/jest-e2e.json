@@ -6,6 +6,9 @@
   "testRegex": ".e2e-spec.ts$",
   "extensionsToTreatAsEsm": [".ts"],
   "transform": {
-    "^.+\\.(t|j)s$": ["ts-jest", { "useESM": true, "tsconfig": "tsconfig.spec.json" }]
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      { "useESM": true, "tsconfig": "tsconfig.spec.json" }
+    ]
   }
 }

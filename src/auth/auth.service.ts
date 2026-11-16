@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -11,6 +12,7 @@ import { Repository } from 'typeorm';
 import { Env } from '../env.model';
 import { AuthResponseDto, LoginDto, RegistroDto } from './auth.dto';
 import { Usuario } from './entities/usuario.entity';
+import { Rol } from './rol.enum';
 
 const RONDAS_BCRYPT = 10;
 
@@ -27,7 +29,7 @@ export class AuthService {
     private readonly configService: ConfigService<Env>,
   ) {}
 
-  async registrar(datos: RegistroDto) {
+  async registrar(datos: RegistroDto, actual?: Usuario) {
     const existente = await this.usuarioRepository.findOneBy({
       correo: datos.correo,
     });
@@ -37,9 +39,21 @@ export class AuthService {
       );
     }
 
+    // Solo un admin crea admins; el primer usuario del sistema puede ser admin
+    const rol = datos.rol ?? Rol.Farmaceutico;
+    if (
+      rol === Rol.Admin &&
+      actual?.rol !== Rol.Admin &&
+      (await this.usuarioRepository.count()) > 0
+    ) {
+      throw new ForbiddenException(
+        'Solo un administrador puede crear usuarios con rol admin',
+      );
+    }
+
     const clave = await bcrypt.hash(datos.clave, RONDAS_BCRYPT);
     const guardado = await this.usuarioRepository.save(
-      this.usuarioRepository.create({ ...datos, clave }),
+      this.usuarioRepository.create({ ...datos, rol, clave }),
     );
     // Se vuelve a leer para devolver el usuario sin la clave
     const nuevoUsuario = await this.usuarioRepository.findOneByOrFail({

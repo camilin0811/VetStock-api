@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { Rol } from '../src/auth/rol.enum';
 import { Usuario } from '../src/auth/entities/usuario.entity';
 import { Categoria } from '../src/categorias/entities/categoria.entity';
 import { diasDesdeHoy } from '../src/common/fechas';
@@ -10,6 +11,12 @@ import { Medicamento } from '../src/medicamentos/entities/medicamento.entity';
 import { Proveedor } from '../src/proveedores/entities/proveedor.entity';
 
 export const CLAVE_PRUEBA = 'VetStock123*';
+
+export const USUARIOS_PRUEBA = {
+  admin: 'andres@vetstock.com',
+  veterinario: 'vet@vetstock.com',
+  farmaceutico: 'farmacia@vetstock.com',
+};
 
 const ENTIDADES = [
   Usuario,
@@ -36,7 +43,27 @@ export function importacionesBdPrueba() {
 export async function sembrarBd(dataSource: DataSource) {
   const clave = bcrypt.hashSync(CLAVE_PRUEBA, 4);
   await dataSource.getRepository(Usuario).save([
-    { id: 1, nombre: 'Andres', correo: 'andres@vetstock.com', clave },
+    {
+      id: 1,
+      nombre: 'Andres',
+      correo: USUARIOS_PRUEBA.admin,
+      clave,
+      rol: Rol.Admin,
+    },
+    {
+      id: 2,
+      nombre: 'Paola',
+      correo: USUARIOS_PRUEBA.veterinario,
+      clave,
+      rol: Rol.Veterinario,
+    },
+    {
+      id: 3,
+      nombre: 'Camila',
+      correo: USUARIOS_PRUEBA.farmaceutico,
+      clave,
+      rol: Rol.Farmaceutico,
+    },
   ]);
 
   await dataSource.getRepository(Categoria).save([

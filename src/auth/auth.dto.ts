@@ -1,5 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import type { Usuario } from './entities/usuario.entity';
+import { Rol } from './rol.enum';
 
 export class RegistroDto {
   @IsString()
@@ -13,6 +20,10 @@ export class RegistroDto {
   @IsString()
   @IsNotEmpty()
   clave: string;
+
+  @IsOptional()
+  @IsEnum(Rol)
+  rol?: Rol;
 }
 
 export class LoginDto {

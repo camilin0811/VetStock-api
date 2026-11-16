@@ -2,7 +2,11 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
-import { CLAVE_PRUEBA, importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import {
+  CLAVE_PRUEBA,
+  importacionesBdPrueba,
+  sembrarBd,
+} from '../../test/bd-prueba';
 import { AuthModule } from './auth.module';
 import { AuthService } from './auth.service';
 import { Usuario } from './entities/usuario.entity';
