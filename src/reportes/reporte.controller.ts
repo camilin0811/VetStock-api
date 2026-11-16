@@ -31,4 +31,12 @@ export class ReporteController {
       data: await this.reporteService.proveedores(filtro),
     };
   }
+
+  @Get('resumen')
+  async resumen() {
+    return {
+      message: 'Resumen obtenido correctamente',
+      data: await this.reporteService.resumen(),
+    };
+  }
 }

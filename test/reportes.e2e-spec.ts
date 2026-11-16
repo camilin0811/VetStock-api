@@ -18,6 +18,7 @@ describe('Reportes (e2e)', () => {
     await http().get('/reportes/vencimientos').expect(401);
     await http().get('/reportes/stock').expect(401);
     await http().get('/reportes/proveedores').expect(401);
+    await http().get('/reportes/resumen').expect(401);
   });
 
   describe('GET /reportes/consumo', () => {
@@ -139,6 +140,58 @@ describe('Reportes (e2e)', () => {
         .api()
         .get('/reportes/proveedores?desde=2030-01-02&hasta=2030-01-01')
         .expect(400);
+    });
+  });
+
+  describe('GET /reportes/resumen', () => {
+    it('devuelve todos los KPIs con la forma del contrato', async () => {
+      await contexto
+        .api('veterinario')
+        .post('/dispensaciones')
+        .send({
+          medicamentoId: 2,
+          cantidad: 3,
+          mascota: 'Toby',
+          veterinario: 'Dra. Paola Rosero',
+        })
+        .expect(201);
+
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .get('/reportes/resumen')
+        .expect(200);
+
+      expect(typeof respuesta.body.message).toBe('string');
+      const data = respuesta.body.data;
+      expect(data).toMatchObject({
+        totalMedicamentos: 4,
+        unidadesDisponibles: 89,
+        valorInventario: 2765000 - 3 * 25000,
+        stockBajo: 1,
+        porVencer: 1,
+        vencidos: 1,
+        dispensacionesHoy: 1,
+        dispensacionesSemana: 1,
+        porcentajeStockSaludable: 75,
+      });
+      expect(data.consumoUltimos7Dias).toHaveLength(7);
+      expect(data.consumoUltimos7Dias[6]).toMatchObject({ unidades: 3 });
+      expect(data.consumoUltimos7Dias[6].fecha).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(data.proximosVencimientos).toEqual([
+        expect.objectContaining({
+          loteId: 2,
+          numeroLote: 'VAR-101',
+          medicamento: { id: 2, nombre: 'Vacuna antirrabica' },
+          diasRestantes: 20,
+          cantidad: 27,
+        }),
+      ]);
+      expect(data.ultimasDispensaciones[0]).toMatchObject({
+        mascota: 'Toby',
+        estado: 'ACTIVA',
+        usuario: { id: 2, nombre: 'Paola' },
+        lotesUsados: [expect.objectContaining({ loteId: 2, cantidad: 3 })],
+      });
     });
   });
 });

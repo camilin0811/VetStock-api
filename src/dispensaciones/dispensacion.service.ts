@@ -170,6 +170,18 @@ export class DispensacionService {
     };
   }
 
+  // Las mas recientes primero, sin anuladas (para el dashboard)
+  async listarUltimas(limite: number) {
+    const dispensaciones = await this.dispensacionRepository.find({
+      where: { estado: 'ACTIVA' },
+      relations: { medicamento: true, usuario: true },
+      order: { fecha: 'DESC', id: 'DESC' },
+      take: limite,
+    });
+
+    return dispensaciones.map((d) => this.aDto(d));
+  }
+
   async listar(filtro: DispensacionQueryDto = {}) {
     const desde = filtro.desde?.slice(0, 10);
     const hasta = filtro.hasta?.slice(0, 10);

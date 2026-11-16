@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { diasDesdeHoy, hoy } from '../common/fechas';
+import { Between, In, MoreThan, Repository } from 'typeorm';
+import { diasDesdeHoy, diasHasta, hoy } from '../common/fechas';
+import { DispensacionService } from '../dispensaciones/dispensacion.service';
 import { Dispensacion } from '../dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../inventario/entities/lote.entity';
 import { InventarioService } from '../inventario/inventario.service';
@@ -13,11 +14,13 @@ import {
   ProveedoresQueryDto,
   ReporteConsumoDto,
   ReporteStockDto,
+  ResumenDto,
   ReporteVencimientosDto,
 } from './reporte.dto';
 
 // Postgres devuelve SUM() como string y sqlite como number
 const aNumero = (valor: unknown) => Number(valor ?? 0);
+const DIAS_POR_VENCER = 30;
 const redondear = (valor: number) => Math.round(valor * 100) / 100;
 
 @Injectable()
@@ -30,6 +33,7 @@ export class ReporteService {
     @InjectRepository(Medicamento)
     private readonly medicamentoRepository: Repository<Medicamento>,
     private readonly inventarioService: InventarioService,
+    private readonly dispensacionService: DispensacionService,
   ) {}
 
   async consumo(filtro: ConsumoQueryDto): Promise<ReporteConsumoDto> {
@@ -178,6 +182,108 @@ export class ReporteService {
       unidades: aNumero(fila.unidades),
       valor: redondear(aNumero(fila.valor)),
     }));
+  }
+
+  // KPIs del dashboard: unas pocas consultas agregadas en paralelo, sin
+  // consultar medicamento por medicamento
+  async resumen(): Promise<ResumenDto> {
+    const hoyStr = hoy();
+    const desdeSemana = diasDesdeHoy(-6);
+    const limite = diasDesdeHoy(DIAS_POR_VENCER);
+
+    const [inventario, conteoLotes, porDia, proximos, ultimas] =
+      await Promise.all([
+        this.inventarioService.listarInventario(),
+        this.loteRepository
+          .createQueryBuilder('lote')
+          .select(
+            'COUNT(CASE WHEN lote.fechaVencimiento > :hoy AND lote.fechaVencimiento <= :limite THEN 1 END)',
+            'porVencer',
+          )
+          .addSelect(
+            'COUNT(CASE WHEN lote.fechaVencimiento <= :hoy THEN 1 END)',
+            'vencidos',
+          )
+          .where('lote.cantidad > 0')
+          .setParameters({ hoy: hoyStr, limite })
+          .getRawOne<{
+            porVencer: number | string;
+            vencidos: number | string;
+          }>(),
+        this.dispensacionRepository
+          .createQueryBuilder('dispensacion')
+          // CAST a texto: Postgres devolveria un Date de JS en vez de 'YYYY-MM-DD'
+          .select('CAST(dispensacion.fecha AS VARCHAR)', 'fecha')
+          .addSelect('COUNT(dispensacion.id)', 'dispensaciones')
+          .addSelect('SUM(dispensacion.cantidad)', 'unidades')
+          .where("dispensacion.estado = 'ACTIVA'")
+          .andWhere('dispensacion.fecha >= :desdeSemana', { desdeSemana })
+          .andWhere('dispensacion.fecha <= :hoy', { hoy: hoyStr })
+          .groupBy('dispensacion.fecha')
+          .getRawMany<{
+            fecha: string;
+            dispensaciones: number | string;
+            unidades: number | string;
+          }>(),
+        this.loteRepository.find({
+          where: {
+            cantidad: MoreThan(0),
+            fechaVencimiento: Between(diasDesdeHoy(1), limite),
+          },
+          relations: { medicamento: true },
+          order: { fechaVencimiento: 'ASC', id: 'ASC' },
+          take: 5,
+        }),
+        this.dispensacionService.listarUltimas(5),
+      ]);
+
+    const medicamentos = inventario.data;
+    const sanos = medicamentos.filter((item) => item.estado === 'OK').length;
+    const porFecha = new Map(
+      porDia.map((fila) => [String(fila.fecha).slice(0, 10), fila]),
+    );
+
+    return {
+      totalMedicamentos: medicamentos.length,
+      unidadesDisponibles: medicamentos.reduce(
+        (total, item) => total + item.disponible,
+        0,
+      ),
+      valorInventario: redondear(
+        medicamentos.reduce(
+          (total, item) => total + item.disponible * item.medicamento.precio,
+          0,
+        ),
+      ),
+      stockBajo: medicamentos.length - sanos,
+      porVencer: aNumero(conteoLotes?.porVencer),
+      vencidos: aNumero(conteoLotes?.vencidos),
+      dispensacionesHoy: aNumero(porFecha.get(hoyStr)?.dispensaciones),
+      dispensacionesSemana: porDia.reduce(
+        (total, fila) => total + aNumero(fila.dispensaciones),
+        0,
+      ),
+      porcentajeStockSaludable:
+        medicamentos.length === 0
+          ? 0
+          : Math.round((sanos / medicamentos.length) * 100),
+      consumoUltimos7Dias: Array.from({ length: 7 }, (_, i) => {
+        const fecha = diasDesdeHoy(i - 6);
+        return { fecha, unidades: aNumero(porFecha.get(fecha)?.unidades) };
+      }),
+      proximosVencimientos: proximos.map((lote) => ({
+        loteId: lote.id,
+        numeroLote: lote.numeroLote,
+        medicamento: {
+          id: lote.medicamento.id,
+          nombre: lote.medicamento.nombre,
+        },
+        fechaVencimiento: lote.fechaVencimiento,
+        diasRestantes: diasHasta(lote.fechaVencimiento),
+        cantidad: lote.cantidad,
+      })),
+      ultimasDispensaciones: ultimas,
+    };
   }
 
   private rango(

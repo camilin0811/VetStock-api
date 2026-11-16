@@ -2,7 +2,9 @@ import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { diasDesdeHoy } from '../common/fechas';
+import { Lote } from '../inventario/entities/lote.entity';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { Dispensacion } from '../dispensaciones/entities/dispensacion.entity';
 import { DispensacionService } from '../dispensaciones/dispensacion.service';
 import { ReportesModule } from './reportes.module';
 import { ReporteService } from './reporte.service';
@@ -211,6 +213,148 @@ describe('ReporteService', () => {
       await expect(
         service.proveedores({ desde: '2030-01-02', hasta: '2030-01-01' }),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('resumen', () => {
+    it('calcula los KPIs del inventario sembrado', async () => {
+      const resumen = await service.resumen();
+
+      expect(resumen).toMatchObject({
+        totalMedicamentos: 4,
+        unidadesDisponibles: 92,
+        valorInventario: 2765000,
+        stockBajo: 1,
+        porVencer: 1,
+        vencidos: 1,
+        dispensacionesHoy: 0,
+        dispensacionesSemana: 0,
+        porcentajeStockSaludable: 75,
+      });
+    });
+
+    it('consumoUltimos7Dias tiene 7 dias consecutivos terminando hoy, con ceros', async () => {
+      const { consumoUltimos7Dias } = await service.resumen();
+
+      expect(consumoUltimos7Dias.map((d) => d.fecha)).toEqual(
+        [-6, -5, -4, -3, -2, -1, 0].map(diasDesdeHoy),
+      );
+      expect(consumoUltimos7Dias.every((d) => d.unidades === 0)).toBe(true);
+    });
+
+    it('cuenta las dispensaciones de hoy y de la semana y rellena el consumo diario', async () => {
+      const dataSource = testingModule.get(DataSource);
+      await dispensacionService.dispensar({
+        medicamentoId: 2,
+        cantidad: 3,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      });
+      await dispensacionService.dispensar({
+        medicamentoId: 2,
+        cantidad: 2,
+        mascota: 'Luna',
+        veterinario: 'Dra. Paola Rosero',
+      });
+      const base = {
+        medicamentoId: 2,
+        mascota: 'Max',
+        veterinario: 'Dr. Carlos Erazo',
+        total: 25000,
+        lotesUsados: [],
+      };
+      await dataSource.getRepository(Dispensacion).save([
+        { ...base, cantidad: 4, fecha: diasDesdeHoy(-6) },
+        { ...base, cantidad: 9, fecha: diasDesdeHoy(-7) },
+      ]);
+
+      const resumen = await service.resumen();
+
+      expect(resumen.dispensacionesHoy).toBe(2);
+      expect(resumen.dispensacionesSemana).toBe(3);
+      expect(resumen.consumoUltimos7Dias[0]).toEqual({
+        fecha: diasDesdeHoy(-6),
+        unidades: 4,
+      });
+      expect(resumen.consumoUltimos7Dias[6]).toEqual({
+        fecha: diasDesdeHoy(0),
+        unidades: 5,
+      });
+      expect(resumen.consumoUltimos7Dias).toHaveLength(7);
+    });
+
+    it('no cuenta las dispensaciones anuladas', async () => {
+      const { data } = await dispensacionService.dispensar({
+        medicamentoId: 2,
+        cantidad: 3,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      });
+      await dispensacionService.anular(data.id, 'Error');
+
+      const resumen = await service.resumen();
+
+      expect(resumen.dispensacionesHoy).toBe(0);
+      expect(resumen.dispensacionesSemana).toBe(0);
+      expect(resumen.consumoUltimos7Dias[6].unidades).toBe(0);
+      expect(resumen.ultimasDispensaciones).toHaveLength(2);
+    });
+
+    it('proximosVencimientos trae solo lotes por vencer con unidades (max 5)', async () => {
+      const { proximosVencimientos } = await service.resumen();
+
+      expect(proximosVencimientos).toEqual([
+        {
+          loteId: 2,
+          numeroLote: 'VAR-101',
+          medicamento: { id: 2, nombre: 'Vacuna antirrabica' },
+          fechaVencimiento: diasDesdeHoy(20),
+          diasRestantes: 20,
+          cantidad: 30,
+        },
+      ]);
+    });
+
+    it('proximosVencimientos se limita a 5 y ordena por fecha', async () => {
+      const dataSource = testingModule.get(DataSource);
+      await dataSource.getRepository(Lote).save(
+        Array.from({ length: 6 }, (_, i) => ({
+          medicamentoId: 4,
+          proveedorId: 1,
+          numeroLote: `ALB-X${i}`,
+          cantidadInicial: 5,
+          cantidad: 5,
+          fechaIngreso: diasDesdeHoy(-5),
+          fechaVencimiento: diasDesdeHoy(i + 1),
+        })),
+      );
+
+      const { proximosVencimientos, porVencer } = await service.resumen();
+
+      expect(proximosVencimientos).toHaveLength(5);
+      expect(proximosVencimientos.map((p) => p.diasRestantes)).toEqual([
+        1, 2, 3, 4, 5,
+      ]);
+      expect(porVencer).toBe(7);
+    });
+
+    it('ultimasDispensaciones trae las mas recientes primero con usuario y medicamento', async () => {
+      await dispensacionService.dispensar({
+        medicamentoId: 2,
+        cantidad: 1,
+        mascota: 'Toby',
+        veterinario: 'Dra. Paola Rosero',
+      });
+
+      const { ultimasDispensaciones } = await service.resumen();
+
+      expect(ultimasDispensaciones).toHaveLength(3);
+      expect(ultimasDispensaciones[0]).toMatchObject({
+        mascota: 'Toby',
+        estado: 'ACTIVA',
+        usuario: null,
+        medicamento: expect.objectContaining({ id: 2 }),
+      });
     });
   });
 });
