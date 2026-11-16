@@ -36,6 +36,21 @@ describe('MedicamentoService', () => {
     expect((await service.listar()).data).toContainEqual(resultado.data);
   });
 
+  it('guarda el precio con decimales y lo devuelve como numero', async () => {
+    const { data } = await service.crear({
+      nombre: 'Suero oral',
+      presentacion: 'Sobre 20 g',
+      especie: 'general',
+      precio: 1234.5,
+      stockMinimo: 2,
+      requiereFormula: false,
+    });
+
+    const medicamento = await service.obtener(data.id);
+
+    expect(medicamento.precio).toBe(1234.5);
+  });
+
   it('lanza error si el medicamento ya existe', async () => {
     await expect(
       service.crear({

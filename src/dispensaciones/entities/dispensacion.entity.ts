@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { TIPO_FECHA_HORA } from '../../common/columnas';
+import { numeroDecimal } from '../../common/transformadores';
 import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
 import type { LoteUsadoDto } from '../dispensacion.dto';
 
@@ -41,7 +42,12 @@ export class Dispensacion {
   @Column({ type: 'date' })
   fecha: string;
 
-  @Column({ type: 'int' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    transformer: numeroDecimal,
+  })
   total: number;
 
   @Column({ type: 'simple-json', name: 'lotes_usados' })

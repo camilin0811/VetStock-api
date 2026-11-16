@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { TIPO_FECHA_HORA } from '../../common/columnas';
+import { numeroDecimal } from '../../common/transformadores';
 import { Dispensacion } from '../../dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../../inventario/entities/lote.entity';
 
@@ -25,7 +26,12 @@ export class Medicamento {
   @Column({ type: 'varchar', length: 30 })
   especie: string;
 
-  @Column({ type: 'int' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    transformer: numeroDecimal,
+  })
   precio: number;
 
   @Column({ type: 'int', name: 'stock_minimo' })
