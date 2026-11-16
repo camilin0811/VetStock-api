@@ -10,6 +10,7 @@ import { InventarioModule } from '../src/inventario/inventario.module';
 import { MedicamentosModule } from '../src/medicamentos/medicamentos.module';
 import { ProveedoresModule } from '../src/proveedores/proveedores.module';
 import { ReportesModule } from '../src/reportes/reportes.module';
+import { UsuariosModule } from '../src/usuarios/usuarios.module';
 import {
   CLAVE_PRUEBA,
   importacionesBdPrueba,
@@ -33,6 +34,7 @@ export async function crearAppPrueba(): Promise<AppPrueba> {
     imports: [
       ...importacionesBdPrueba(),
       AuthModule,
+      UsuariosModule,
       CategoriasModule,
       MedicamentosModule,
       ProveedoresModule,

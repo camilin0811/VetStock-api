@@ -9,6 +9,7 @@ import { InventarioModule } from './inventario/inventario.module';
 import { MedicamentosModule } from './medicamentos/medicamentos.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ReportesModule } from './reportes/reportes.module';
+import { UsuariosModule } from './usuarios/usuarios.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ReportesModule } from './reportes/reportes.module';
       inject: [ConfigService],
     }),
     AuthModule,
+    UsuariosModule,
     CategoriasModule,
     MedicamentosModule,
     ProveedoresModule,
