@@ -1,4 +1,5 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import type { Usuario } from './entities/usuario.entity';
 
 export class RegistroDto {
   @IsString()
@@ -33,4 +34,5 @@ export class RefreshDto {
 export class AuthResponseDto {
   accessToken: string;
   refreshToken: string;
+  usuario: Usuario;
 }

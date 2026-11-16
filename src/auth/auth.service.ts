@@ -3,19 +3,28 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { Env } from '../env.model';
 import { AuthResponseDto, LoginDto, RegistroDto } from './auth.dto';
 import { Usuario } from './entities/usuario.entity';
 
 const RONDAS_BCRYPT = 10;
+
+export interface PayloadToken {
+  sub: number;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService<Env>,
   ) {}
 
   async registrar(datos: RegistroDto) {
@@ -39,7 +48,7 @@ export class AuthService {
 
     return {
       message: 'Usuario registrado correctamente',
-      data: this.generarTokens(nuevoUsuario),
+      data: await this.generarTokens(nuevoUsuario),
     };
   }
 
@@ -57,33 +66,55 @@ export class AuthService {
       throw new UnauthorizedException('Correo o clave incorrectos');
     }
 
+    // Se vuelve a leer sin la clave para no devolver el hash
+    const sinClave = await this.usuarioRepository.findOneByOrFail({
+      id: usuario.id,
+    });
+
     return {
       message: 'Ingreso exitoso',
-      data: this.generarTokens(usuario),
+      data: await this.generarTokens(sinClave),
     };
   }
 
   async refresh(refreshToken: string) {
-    const id = Number(refreshToken.replace('refresh-', ''));
-    if (!Number.isInteger(id)) {
-      throw new UnauthorizedException('Refresh token invalido');
+    let id: number;
+    try {
+      const payload = await this.jwtService.verifyAsync<PayloadToken>(
+        refreshToken,
+        { secret: this.configService.getOrThrow('JWT_REFRESH_SECRET') },
+      );
+      id = Number(payload.sub);
+    } catch {
+      throw new UnauthorizedException('Refresh token invalido o expirado');
     }
 
     const usuario = await this.usuarioRepository.findOneBy({ id });
     if (usuario === null) {
-      throw new UnauthorizedException('Refresh token invalido');
+      throw new UnauthorizedException('Refresh token invalido o expirado');
     }
 
     return {
       message: 'Token renovado',
-      data: this.generarTokens(usuario),
+      data: await this.generarTokens(usuario),
     };
   }
 
-  private generarTokens(usuario: Usuario): AuthResponseDto {
-    return {
-      accessToken: `token-${usuario.id}`,
-      refreshToken: `refresh-${usuario.id}`,
-    };
+  private async generarTokens(usuario: Usuario): Promise<AuthResponseDto> {
+    const payload: PayloadToken = { sub: usuario.id };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow('JWT_SECRET'),
+        expiresIn: (this.configService.get('JWT_EXPIRES_IN') ??
+          '15m') as JwtSignOptions['expiresIn'],
+      }),
+      this.jwtService.signAsync(payload, {
+        secret: this.configService.getOrThrow('JWT_REFRESH_SECRET'),
+        expiresIn: (this.configService.get('JWT_REFRESH_EXPIRES_IN') ??
+          '7d') as JwtSignOptions['expiresIn'],
+      }),
+    ]);
+
+    return { accessToken, refreshToken, usuario };
   }
 }

@@ -67,6 +67,45 @@ describe('AuthService', () => {
     ).rejects.toThrow(UnauthorizedException);
   });
 
+  it('login devuelve tokens jwt y el usuario sin clave', async () => {
+    const { data } = await service.login({
+      correo: 'andres@vetstock.com',
+      clave: CLAVE_PRUEBA,
+    });
+
+    expect(data.accessToken.split('.')).toHaveLength(3);
+    expect(data.refreshToken.split('.')).toHaveLength(3);
+    expect(data.accessToken).not.toBe(data.refreshToken);
+    expect(data.usuario.correo).toBe('andres@vetstock.com');
+    expect(data.usuario.clave).toBeUndefined();
+  });
+
+  it('refresh renueva los tokens con un refresh token valido', async () => {
+    const { data } = await service.login({
+      correo: 'andres@vetstock.com',
+      clave: CLAVE_PRUEBA,
+    });
+
+    const renovado = await service.refresh(data.refreshToken);
+
+    expect(renovado.data.accessToken).toBeDefined();
+    expect(renovado.data.usuario.id).toBe(1);
+  });
+
+  it('refresh rechaza tokens invalidos y el access token', async () => {
+    const { data } = await service.login({
+      correo: 'andres@vetstock.com',
+      clave: CLAVE_PRUEBA,
+    });
+
+    await expect(service.refresh('token-1')).rejects.toThrow(
+      UnauthorizedException,
+    );
+    await expect(service.refresh(data.accessToken)).rejects.toThrow(
+      UnauthorizedException,
+    );
+  });
+
   it('lanza error con credenciales invalidas', async () => {
     await expect(
       service.login({ correo: 'nadie@vetstock.com', clave: 'mala' }),
