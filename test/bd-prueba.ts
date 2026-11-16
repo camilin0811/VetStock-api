@@ -1,6 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { ENTIDADES } from '../src/app.module';
 import { Usuario } from '../src/auth/entities/usuario.entity';
 import { diasDesdeHoy } from '../src/common/fechas';
 import { Dispensacion } from '../src/dispensaciones/entities/dispensacion.entity';
@@ -8,6 +7,9 @@ import { Lote } from '../src/inventario/entities/lote.entity';
 import { Medicamento } from '../src/medicamentos/entities/medicamento.entity';
 import { Proveedor } from '../src/proveedores/entities/proveedor.entity';
 
+const ENTIDADES = [Usuario, Medicamento, Proveedor, Lote, Dispensacion];
+
+// BD sqlite en memoria; cada prueba importa ademas los modulos que necesita
 export function importacionesBdPrueba() {
   return [
     TypeOrmModule.forRoot({
@@ -17,7 +19,6 @@ export function importacionesBdPrueba() {
       synchronize: true,
       dropSchema: true,
     }),
-    TypeOrmModule.forFeature(ENTIDADES),
   ];
 }
 

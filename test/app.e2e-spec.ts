@@ -3,7 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
-import { CONTROLADORES, PROVEEDORES } from './../src/app.module';
+import { AuthModule } from './../src/auth/auth.module';
+import { DispensacionesModule } from './../src/dispensaciones/dispensaciones.module';
+import { InventarioModule } from './../src/inventario/inventario.module';
+import { MedicamentosModule } from './../src/medicamentos/medicamentos.module';
+import { ProveedoresModule } from './../src/proveedores/proveedores.module';
+import { ReportesModule } from './../src/reportes/reportes.module';
 import { importacionesBdPrueba, sembrarBd } from './bd-prueba';
 
 describe('VetStock API (e2e)', () => {
@@ -11,9 +16,15 @@ describe('VetStock API (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      controllers: CONTROLADORES,
-      providers: PROVEEDORES,
+      imports: [
+        ...importacionesBdPrueba(),
+        AuthModule,
+        MedicamentosModule,
+        ProveedoresModule,
+        InventarioModule,
+        DispensacionesModule,
+        ReportesModule,
+      ],
     }).compile();
     await sembrarBd(moduleFixture.get(DataSource));
 
