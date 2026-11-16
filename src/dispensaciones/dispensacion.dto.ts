@@ -52,6 +52,12 @@ export class DispensacionQueryDto {
   mascota?: string;
 }
 
+export class AnularDispensacionDto {
+  @IsString()
+  @IsNotEmpty()
+  motivo: string;
+}
+
 export type EstadoDispensacion = 'ACTIVA' | 'ANULADA';
 
 export class LoteUsadoDto {

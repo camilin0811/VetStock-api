@@ -189,4 +189,118 @@ describe('Dispensaciones (e2e)', () => {
         .expect(400);
     });
   });
+
+  describe('POST /dispensaciones/:id/anular', () => {
+    const crear = async () =>
+      (
+        await contexto
+          .api('veterinario')
+          .post('/dispensaciones')
+          .send(dispensacion)
+          .expect(201)
+      ).body.data.id as number;
+
+    it('responde 401 sin token y 403 a un veterinario', async () => {
+      const id = await crear();
+
+      await request(contexto.app.getHttpServer())
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'x' })
+        .expect(401);
+      await contexto
+        .api('veterinario')
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'x' })
+        .expect(403);
+    });
+
+    it.each(['admin', 'farmaceutico'] as const)(
+      'permite anular al rol %s: restaura stock y deja movimientos ANULACION',
+      async (rol) => {
+        const id = await crear();
+
+        const respuesta = await contexto
+          .api(rol)
+          .post(`/dispensaciones/${id}/anular`)
+          .send({ motivo: 'Error de digitacion' })
+          .expect(201);
+
+        expect(respuesta.body.data).toMatchObject({
+          id,
+          estado: 'ANULADA',
+          lotesUsados: [
+            expect.objectContaining({ loteId: 2, cantidad: 30 }),
+            expect.objectContaining({ loteId: 3, cantidad: 5 }),
+          ],
+        });
+        const inventario = await contexto.api().get('/inventario/2');
+        expect(inventario.body.stockDisponible).toBe(42);
+
+        const kardex = await contexto.api().get('/movimientos?tipo=ANULACION');
+        expect(kardex.body.count).toBe(2);
+        expect(kardex.body.data[0]).toMatchObject({
+          tipo: 'ANULACION',
+          cantidad: 5,
+          usuario: { id: rol === 'admin' ? 1 : 3 },
+        });
+      },
+    );
+
+    it('responde 409 si ya estaba anulada', async () => {
+      const id = await crear();
+      await contexto
+        .api()
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'Primera' })
+        .expect(201);
+
+      await contexto
+        .api()
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'Segunda' })
+        .expect(409);
+      const inventario = await contexto.api().get('/inventario/2');
+      expect(inventario.body.stockDisponible).toBe(42);
+    });
+
+    it('responde 400 sin motivo, 404 y 400 con id invalido', async () => {
+      const id = await crear();
+      const api = contexto.api();
+      await api.post(`/dispensaciones/${id}/anular`).send({}).expect(400);
+      await api
+        .post('/dispensaciones/999/anular')
+        .send({ motivo: 'x' })
+        .expect(404);
+      await api
+        .post('/dispensaciones/abc/anular')
+        .send({ motivo: 'x' })
+        .expect(400);
+    });
+
+    it('GET /dispensaciones/:id muestra el estado ANULADA', async () => {
+      const id = await crear();
+      await contexto
+        .api()
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'x' });
+
+      const respuesta = await contexto.api().get(`/dispensaciones/${id}`);
+      expect(respuesta.body.estado).toBe('ANULADA');
+    });
+
+    it('una dispensacion anulada no cuenta en el reporte de consumo', async () => {
+      const id = await crear();
+      const consumo = async () =>
+        (await contexto.api().get('/reportes/consumo?desde=2000-01-01')).body;
+
+      const antes = await consumo();
+      await contexto
+        .api()
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'x' });
+      const despues = await consumo();
+
+      expect(antes.totalUnidades - despues.totalUnidades).toBe(35);
+    });
+  });
 });

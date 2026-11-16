@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { jest } from '@jest/globals';
 import { DataSource, EntityManager } from 'typeorm';
@@ -298,6 +302,87 @@ describe('DispensacionService', () => {
       expect(
         (await service.listar({ medicamentoId: 1, mascota: 'toby' })).count,
       ).toBe(0);
+    });
+  });
+
+  describe('anular', () => {
+    const dispensarVacunas = (usuario?: Usuario) =>
+      service.dispensar(
+        {
+          medicamentoId: 2,
+          cantidad: 35,
+          mascota: 'Toby',
+          veterinario: 'Dra. Paola Rosero',
+        },
+        usuario,
+      );
+
+    it('devuelve el stock a los mismos lotes y marca la dispensacion ANULADA', async () => {
+      const { data } = await dispensarVacunas();
+      expect(
+        (await inventarioService.obtenerInventario(2)).stockDisponible,
+      ).toBe(7);
+
+      const resultado = await service.anular(data.id, 'Error de digitacion');
+
+      expect(resultado.data.estado).toBe('ANULADA');
+      expect(resultado.data.motivoAnulacion).toBe('Error de digitacion');
+      const inventario = await inventarioService.obtenerInventario(2);
+      expect(inventario.stockDisponible).toBe(42);
+      expect(inventario.lotes.map((lote) => [lote.id, lote.cantidad])).toEqual([
+        [2, 30],
+        [3, 12],
+      ]);
+    });
+
+    it('crea un movimiento ANULACION por lote con el usuario que anula', async () => {
+      const dataSource = testingModule.get(DataSource);
+      const anulador = await dataSource
+        .getRepository(Usuario)
+        .findOneByOrFail({ id: 3 });
+      const { data } = await dispensarVacunas();
+
+      await service.anular(data.id, 'Mascota equivocada', anulador);
+
+      const movimientos = await dataSource.getRepository(Movimiento).find({
+        where: { tipo: 'ANULACION' },
+        order: { id: 'ASC' },
+      });
+      expect(
+        movimientos.map((m) => [m.loteId, m.cantidad, m.usuarioId]),
+      ).toEqual([
+        [2, 30, 3],
+        [3, 5, 3],
+      ]);
+      expect(movimientos[0].detalle).toBe(
+        `Anulacion de la dispensacion ${data.id}: Mascota equivocada`,
+      );
+    });
+
+    it('lanza 409 si ya esta anulada y no devuelve el stock dos veces', async () => {
+      const { data } = await dispensarVacunas();
+      await service.anular(data.id, 'Primera vez');
+
+      await expect(service.anular(data.id, 'Segunda vez')).rejects.toThrow(
+        ConflictException,
+      );
+
+      expect(
+        (await inventarioService.obtenerInventario(2)).stockDisponible,
+      ).toBe(42);
+    });
+
+    it('lanza 404 si no existe', async () => {
+      await expect(service.anular(999, 'x')).rejects.toThrow(NotFoundException);
+    });
+
+    it('anula una dispensacion anterior sin fechaVencimiento en sus lotes', async () => {
+      const { data } = await service.anular(1, 'Registro duplicado');
+
+      expect(data.estado).toBe('ANULADA');
+      expect(
+        (await inventarioService.obtenerInventario(1)).stockDisponible,
+      ).toBe(40);
     });
   });
 });

@@ -1,10 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, MoreThan, Repository } from 'typeorm';
+import { DataSource, In, MoreThan, Repository } from 'typeorm';
 import type { Usuario } from '../auth/entities/usuario.entity';
 import { bloqueoPesimista } from '../common/bloqueo';
 import { hoy } from '../common/fechas';
@@ -114,6 +115,59 @@ export class DispensacionService {
         }),
       };
     });
+  }
+
+  // Devuelve el stock a los lotes de donde salio la dispensacion y deja un
+  // movimiento ANULACION por lote. Todo en una transaccion; el bloqueo de la
+  // dispensacion evita anularla dos veces a la vez.
+  async anular(id: number, motivo: string, usuario?: Usuario) {
+    await this.dataSource.transaction(async (manager) => {
+      const dispensacion = await manager.findOne(Dispensacion, {
+        where: { id },
+        lock: bloqueoPesimista(manager),
+      });
+      if (dispensacion === null) {
+        throw new NotFoundException(`Dispensacion con ID ${id} no existe`);
+      }
+      if (dispensacion.estado === 'ANULADA') {
+        throw new ConflictException(`La dispensacion ${id} ya esta anulada`);
+      }
+
+      const lotes = await manager.find(Lote, {
+        where: { id: In(dispensacion.lotesUsados.map((l) => l.loteId)) },
+        order: { id: 'ASC' },
+        lock: bloqueoPesimista(manager),
+      });
+      for (const usado of dispensacion.lotesUsados) {
+        const lote = lotes.find((l) => l.id === usado.loteId);
+        if (lote !== undefined) {
+          lote.cantidad += usado.cantidad;
+        }
+      }
+      await manager.save(lotes);
+
+      dispensacion.estado = 'ANULADA';
+      dispensacion.motivoAnulacion = motivo;
+      await manager.save(dispensacion);
+
+      await manager.save(
+        dispensacion.lotesUsados.map((usado) =>
+          manager.create(Movimiento, {
+            tipo: 'ANULACION',
+            cantidad: usado.cantidad,
+            lote: { id: usado.loteId },
+            medicamento: { id: dispensacion.medicamentoId },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle: `Anulacion de la dispensacion ${id}: ${motivo}`,
+          }),
+        ),
+      );
+    });
+
+    return {
+      message: 'Dispensacion anulada correctamente',
+      data: await this.obtener(id),
+    };
   }
 
   async listar(filtro: DispensacionQueryDto = {}) {
