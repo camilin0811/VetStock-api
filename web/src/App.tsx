@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard'
 import Medicamentos from './pages/Medicamentos'
 import Inventario from './pages/Inventario'
 import Movimientos from './pages/Movimientos'
+import Dispensar from './pages/Dispensar'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ export default function App() {
                   <Route path="medicamentos" element={<Medicamentos />} />
                   <Route path="inventario" element={<Inventario />} />
                   <Route path="movimientos" element={<Movimientos />} />
+                  <Route path="dispensar" element={<Dispensar />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>
