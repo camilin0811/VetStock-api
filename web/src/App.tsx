@@ -10,6 +10,7 @@ import Pendiente from './pages/Pendiente'
 import Dashboard from './pages/Dashboard'
 import Medicamentos from './pages/Medicamentos'
 import Inventario from './pages/Inventario'
+import Movimientos from './pages/Movimientos'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,7 @@ export default function App() {
                   <Route index element={<Dashboard />} />
                   <Route path="medicamentos" element={<Medicamentos />} />
                   <Route path="inventario" element={<Inventario />} />
+                  <Route path="movimientos" element={<Movimientos />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>
