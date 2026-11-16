@@ -5,10 +5,14 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import type { Usuario } from '../auth/entities/usuario.entity';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
-import { DispensacionRequestDto } from './dispensacion.dto';
+import {
+  DispensacionQueryDto,
+  DispensacionRequestDto,
+} from './dispensacion.dto';
 import { DispensacionService } from './dispensacion.service';
 
 @Controller('dispensaciones')
@@ -24,8 +28,8 @@ export class DispensacionController {
   }
 
   @Get()
-  listar() {
-    return this.dispensacionService.listar();
+  listar(@Query() filtro: DispensacionQueryDto) {
+    return this.dispensacionService.listar(filtro);
   }
 
   @Get(':id')

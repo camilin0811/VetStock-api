@@ -232,4 +232,72 @@ describe('DispensacionService', () => {
       espia.mockRestore();
     });
   });
+
+  describe('filtros de listar', () => {
+    const dispensar = (mascota: string, medicamentoId = 2) =>
+      service.dispensar({
+        medicamentoId,
+        cantidad: 1,
+        mascota,
+        veterinario: 'Dra. Paola Rosero',
+      });
+
+    it('sin filtros devuelve todas con count', async () => {
+      const { data, count } = await service.listar();
+
+      expect(count).toBe(2);
+      expect(data.map((d) => d.id)).toEqual([1, 2]);
+    });
+
+    it('filtra por rango de fechas inclusivo', async () => {
+      const ids = async (desde?: string, hasta?: string) =>
+        (await service.listar({ desde, hasta })).data.map((d) => d.id);
+
+      expect(await ids(diasDesdeHoy(-40))).toEqual([1]);
+      expect(await ids(undefined, diasDesdeHoy(-40))).toEqual([2]);
+      expect(await ids(diasDesdeHoy(-30), diasDesdeHoy(-30))).toEqual([1]);
+      expect(await ids(diasDesdeHoy(-200), diasDesdeHoy(-100))).toEqual([2]);
+      expect(await ids(`${diasDesdeHoy(-30)}T00:00:00.000Z`)).toEqual([1]);
+    });
+
+    it('lanza 400 si desde es mayor que hasta', async () => {
+      await expect(
+        service.listar({ desde: diasDesdeHoy(0), hasta: diasDesdeHoy(-5) }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('filtra por medicamento', async () => {
+      await dispensar('Toby');
+
+      const { data } = await service.listar({ medicamentoId: 2 });
+
+      expect(data.map((d) => d.mascota)).toEqual(['Toby']);
+    });
+
+    it('filtra por mascota sin importar mayusculas y por coincidencia parcial', async () => {
+      await dispensar('Toby');
+      await dispensar('Tobias');
+
+      expect((await service.listar({ mascota: 'TOB' })).count).toBe(2);
+      expect((await service.listar({ mascota: 'toby' })).count).toBe(1);
+      expect((await service.listar({ mascota: 'max' })).count).toBe(1);
+      expect((await service.listar({ mascota: '%' })).count).toBe(0);
+    });
+
+    it('combina los filtros', async () => {
+      await dispensar('Toby');
+
+      const { data } = await service.listar({
+        medicamentoId: 2,
+        mascota: 'toby',
+        desde: diasDesdeHoy(-1),
+        hasta: diasDesdeHoy(1),
+      });
+
+      expect(data).toHaveLength(1);
+      expect(
+        (await service.listar({ medicamentoId: 1, mascota: 'toby' })).count,
+      ).toBe(0);
+    });
+  });
 });

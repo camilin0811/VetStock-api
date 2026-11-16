@@ -144,4 +144,49 @@ describe('Dispensaciones (e2e)', () => {
       .send({ ...dispensacion, medicamentoId: 999 })
       .expect(404);
   });
+
+  describe('GET /dispensaciones con filtros', () => {
+    const hace = (dias: number) =>
+      new Date(Date.now() - dias * 86_400_000).toISOString().slice(0, 10);
+
+    it('filtra por desde y hasta', async () => {
+      const api = contexto.api('veterinario');
+
+      const recientes = await api.get(`/dispensaciones?desde=${hace(40)}`);
+      expect(recientes.body.data.map((d: { id: number }) => d.id)).toEqual([1]);
+
+      const antiguas = await api.get(`/dispensaciones?hasta=${hace(40)}`);
+      expect(antiguas.body.data.map((d: { id: number }) => d.id)).toEqual([2]);
+
+      const rango = await api.get(
+        `/dispensaciones?desde=${hace(200)}&hasta=${hace(20)}`,
+      );
+      expect(rango.body.count).toBe(2);
+    });
+
+    it('filtra por medicamentoId y mascota', async () => {
+      const api = contexto.api();
+      const porMedicamento = await api.get('/dispensaciones?medicamentoId=3');
+      expect(porMedicamento.body.data.map((d: { id: number }) => d.id)).toEqual(
+        [2],
+      );
+
+      const porMascota = await api.get('/dispensaciones?mascota=MAX');
+      expect(porMascota.body.data.map((d: { id: number }) => d.id)).toEqual([
+        1,
+      ]);
+
+      const ninguna = await api.get('/dispensaciones?mascota=zzz');
+      expect(ninguna.body).toMatchObject({ data: [], count: 0 });
+    });
+
+    it('valida los filtros', async () => {
+      const api = contexto.api();
+      await api.get('/dispensaciones?desde=ayer').expect(400);
+      await api.get('/dispensaciones?medicamentoId=abc').expect(400);
+      await api
+        .get(`/dispensaciones?desde=${hace(1)}&hasta=${hace(5)}`)
+        .expect(400);
+    });
+  });
 });

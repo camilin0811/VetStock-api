@@ -11,7 +11,11 @@ import { hoy } from '../common/fechas';
 import { Lote } from '../inventario/entities/lote.entity';
 import { Movimiento } from '../inventario/entities/movimiento.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
-import { DispensacionRequestDto, LoteUsadoDto } from './dispensacion.dto';
+import {
+  DispensacionQueryDto,
+  DispensacionRequestDto,
+  LoteUsadoDto,
+} from './dispensacion.dto';
 import { Dispensacion } from './entities/dispensacion.entity';
 
 @Injectable()
@@ -112,12 +116,43 @@ export class DispensacionService {
     });
   }
 
-  async listar() {
-    const dispensaciones = await this.dispensacionRepository.find({
-      relations: { medicamento: true, usuario: true },
-      order: { id: 'ASC' },
-    });
+  async listar(filtro: DispensacionQueryDto = {}) {
+    const desde = filtro.desde?.slice(0, 10);
+    const hasta = filtro.hasta?.slice(0, 10);
+    if (desde !== undefined && hasta !== undefined && desde > hasta) {
+      throw new BadRequestException(
+        'La fecha desde no puede ser mayor que la fecha hasta',
+      );
+    }
 
+    const consulta = this.dispensacionRepository
+      .createQueryBuilder('dispensacion')
+      .leftJoinAndSelect('dispensacion.medicamento', 'medicamento')
+      .leftJoinAndSelect('dispensacion.usuario', 'usuario')
+      .orderBy('dispensacion.id', 'ASC');
+
+    if (desde !== undefined) {
+      consulta.andWhere('dispensacion.fecha >= :desde', { desde });
+    }
+    if (hasta !== undefined) {
+      consulta.andWhere('dispensacion.fecha <= :hasta', { hasta });
+    }
+    if (filtro.medicamentoId !== undefined) {
+      consulta.andWhere('dispensacion.medicamentoId = :medicamentoId', {
+        medicamentoId: filtro.medicamentoId,
+      });
+    }
+    const mascota = filtro.mascota?.trim();
+    if (mascota) {
+      // Se escapan los comodines para buscar el texto tal cual
+      const texto = mascota.replace(/[\\%_]/g, (c) => `\\${c}`);
+      consulta.andWhere(
+        "LOWER(dispensacion.mascota) LIKE LOWER(:mascota) ESCAPE '\\'",
+        { mascota: `%${texto}%` },
+      );
+    }
+
+    const dispensaciones = await consulta.getMany();
     const data = dispensaciones.map((d) => this.aDto(d));
 
     return {
