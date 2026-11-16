@@ -12,7 +12,7 @@ import type { Usuario } from '../auth/entities/usuario.entity';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import { AlertaService } from './alerta.service';
 import { InventarioService } from './inventario.service';
-import { ActualizarLoteDto, LoteRequestDto } from './lote.dto';
+import { ActualizarLoteDto, AjusteDto, LoteRequestDto } from './lote.dto';
 import { MovimientoQueryDto } from './movimiento.dto';
 import { MovimientoService } from './movimiento.service';
 
@@ -38,6 +38,15 @@ export class InventarioController {
     @Body() datos: ActualizarLoteDto,
   ) {
     return this.inventarioService.actualizarLote(id, datos);
+  }
+
+  @Post('lotes/:id/ajustes')
+  ajustarLote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: AjusteDto,
+    @UsuarioActual() usuario?: Usuario,
+  ) {
+    return this.inventarioService.ajustarLote(id, datos, usuario);
   }
 
   @Get('lotes')

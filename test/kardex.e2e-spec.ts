@@ -169,4 +169,62 @@ describe('Inventario y kardex (e2e)', () => {
       await api.put('/lotes/2').send({ numeroLote: 'VAR-102' }).expect(409);
     });
   });
+
+  describe('POST /lotes/:id/ajustes', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 1, motivo: 'DANO' })
+        .expect(401);
+    });
+
+    it('descuenta, crea el movimiento AJUSTE y refleja el stock', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 5, motivo: 'DANO', observacion: 'Frasco roto' })
+        .expect(201);
+
+      expect(respuesta.body.data).toMatchObject({
+        tipo: 'AJUSTE',
+        cantidad: 5,
+        loteId: 1,
+        medicamentoId: 1,
+        numeroLote: 'AMX-001',
+        detalle: 'DANO: Frasco roto',
+        usuario: { id: 3, nombre: 'Camila' },
+        cantidadRestante: 10,
+      });
+
+      const lotes = await contexto.api().get('/lotes?medicamentoId=1');
+      expect(lotes.body.data[0].cantidad).toBe(10);
+      const kardex = await contexto.api().get('/movimientos?tipo=AJUSTE');
+      expect(kardex.body.count).toBe(1);
+    });
+
+    it('valida cantidad, motivo y existencia del lote', async () => {
+      const api = contexto.api();
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 0, motivo: 'DANO' })
+        .expect(400);
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 1, motivo: 'ROBO' })
+        .expect(400);
+      await api.post('/lotes/1/ajustes').send({ cantidad: 1 }).expect(400);
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 16, motivo: 'PERDIDA' })
+        .expect(400);
+      await api
+        .post('/lotes/999/ajustes')
+        .send({ cantidad: 1, motivo: 'OTRO' })
+        .expect(404);
+      await api
+        .post('/lotes/abc/ajustes')
+        .send({ cantidad: 1, motivo: 'OTRO' })
+        .expect(400);
+    });
+  });
 });

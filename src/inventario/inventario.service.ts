@@ -6,16 +6,20 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
+import { bloqueoPesimista } from '../common/bloqueo';
 import { diasHasta, hoy } from '../common/fechas';
 import type { Usuario } from '../auth/entities/usuario.entity';
+import { Medicamento } from '../medicamentos/entities/medicamento.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { ProveedorService } from '../proveedores/proveedor.service';
 import { Lote } from './entities/lote.entity';
 import { Movimiento } from './entities/movimiento.entity';
+import { MovimientoService } from './movimiento.service';
 import {
   EstadoStock,
   InventarioDto,
   ActualizarLoteDto,
+  AjusteDto,
   InventarioItemDto,
   LoteRequestDto,
 } from './lote.dto';
@@ -27,6 +31,7 @@ export class InventarioService {
     private readonly loteRepository: Repository<Lote>,
     private readonly medicamentoService: MedicamentoService,
     private readonly proveedorService: ProveedorService,
+    private readonly movimientoService: MovimientoService,
   ) {}
 
   async registrarLote(datos: LoteRequestDto, usuario?: Usuario) {
@@ -131,6 +136,60 @@ export class InventarioService {
     const actualizado = await this.loteRepository.save(lote);
 
     return { message: 'Lote actualizado correctamente', data: actualizado };
+  }
+
+  // Baja de stock por perdida, dano, vencimiento u otro motivo. Descuenta del
+  // lote y deja un movimiento AJUSTE en el kardex, todo en una transaccion.
+  async ajustarLote(id: number, datos: AjusteDto, usuario?: Usuario) {
+    const movimiento = await this.loteRepository.manager.transaction(
+      async (manager) => {
+        const lote = await manager.findOne(Lote, {
+          where: { id },
+          // Sin relations: Postgres no permite FOR UPDATE sobre un LEFT JOIN
+          lock: bloqueoPesimista(manager),
+        });
+        if (lote === null) {
+          throw new NotFoundException(`Lote con ID ${id} no existe`);
+        }
+        if (datos.cantidad > lote.cantidad) {
+          throw new BadRequestException(
+            `El lote ${lote.numeroLote} solo tiene ${lote.cantidad} unidades`,
+          );
+        }
+
+        const medicamento = await manager.findOneByOrFail(Medicamento, {
+          id: lote.medicamentoId,
+        });
+        lote.cantidad -= datos.cantidad;
+        await manager.save(lote);
+
+        const detalle = datos.observacion
+          ? `${datos.motivo}: ${datos.observacion}`
+          : datos.motivo;
+        const guardado = await manager.save(
+          manager.create(Movimiento, {
+            tipo: 'AJUSTE',
+            cantidad: datos.cantidad,
+            lote: { id: lote.id },
+            medicamento: { id: lote.medicamentoId },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle,
+          }),
+        );
+
+        return {
+          ...this.movimientoService.aDto({
+            ...guardado,
+            lote,
+            medicamento,
+            usuario: usuario ?? null,
+          }),
+          cantidadRestante: lote.cantidad,
+        };
+      },
+    );
+
+    return { message: 'Ajuste registrado correctamente', data: movimiento };
   }
 
   async listarLotes(medicamentoId?: number) {

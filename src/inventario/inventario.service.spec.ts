@@ -276,4 +276,64 @@ describe('InventarioService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('ajustarLote', () => {
+    it('descuenta del lote y registra un movimiento AJUSTE', async () => {
+      const usuario = await testingModule
+        .get(DataSource)
+        .getRepository(Usuario)
+        .findOneByOrFail({ id: 3 });
+
+      const { data } = await service.ajustarLote(
+        1,
+        { cantidad: 5, motivo: 'DANO', observacion: 'Frasco roto' },
+        usuario,
+      );
+
+      expect((await service.obtenerLote(1)).cantidad).toBe(10);
+      expect(data).toMatchObject({
+        tipo: 'AJUSTE',
+        cantidad: 5,
+        loteId: 1,
+        medicamentoId: 1,
+        numeroLote: 'AMX-001',
+        detalle: 'DANO: Frasco roto',
+        usuario: { id: 3, nombre: 'Camila' },
+        cantidadRestante: 10,
+      });
+      const { data: kardex } = await movimientoService.listar({
+        tipo: 'AJUSTE',
+      });
+      expect(kardex).toHaveLength(1);
+      expect(kardex[0].id).toBe(data.id);
+    });
+
+    it('permite dejar el lote en cero y usar solo el motivo', async () => {
+      const { data } = await service.ajustarLote(1, {
+        cantidad: 15,
+        motivo: 'VENCIDO',
+      });
+
+      expect(data.detalle).toBe('VENCIDO');
+      expect(data.usuario).toBeNull();
+      expect((await service.obtenerLote(1)).cantidad).toBe(0);
+    });
+
+    it('lanza 400 si la cantidad supera el stock y no cambia nada', async () => {
+      await expect(
+        service.ajustarLote(1, { cantidad: 16, motivo: 'PERDIDA' }),
+      ).rejects.toThrow(BadRequestException);
+
+      expect((await service.obtenerLote(1)).cantidad).toBe(15);
+      expect((await movimientoService.listar({ tipo: 'AJUSTE' })).count).toBe(
+        0,
+      );
+    });
+
+    it('lanza 404 si el lote no existe', async () => {
+      await expect(
+        service.ajustarLote(999, { cantidad: 1, motivo: 'OTRO' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });
