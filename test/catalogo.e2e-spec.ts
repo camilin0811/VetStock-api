@@ -186,4 +186,32 @@ describe('Catalogo (e2e)', () => {
       await vet.get('/proveedores').expect(200);
     });
   });
+
+  describe('categorias', () => {
+    it('responde 401 sin token y 403 a un veterinario al escribir', async () => {
+      const http = () => request(contexto.app.getHttpServer());
+      await http().post('/categorias').send({ nombre: 'X' }).expect(401);
+      await http().put('/categorias/1').send({}).expect(401);
+      await http().delete('/categorias/1').expect(401);
+
+      const vet = contexto.api('veterinario');
+      await vet.post('/categorias').send({ nombre: 'Suplementos' }).expect(403);
+      await vet.put('/categorias/1').send({ nombre: 'X' }).expect(403);
+      await vet.delete('/categorias/1').expect(403);
+      await vet.get('/categorias').expect(200);
+    });
+
+    it('permite escribir a admin y farmaceutico', async () => {
+      await contexto
+        .api('farmaceutico')
+        .post('/categorias')
+        .send({ nombre: 'Suplementos' })
+        .expect(201);
+      await contexto
+        .api('admin')
+        .post('/categorias')
+        .send({ nombre: 'Insumos' })
+        .expect(201);
+    });
+  });
 });

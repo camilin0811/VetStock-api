@@ -8,6 +8,8 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
+import { Rol } from '../auth/rol.enum';
+import { Roles } from '../auth/roles.decorator';
 import { ActualizarCategoriaDto, CategoriaDto } from './categoria.dto';
 import { CategoriaService } from './categoria.service';
 
@@ -25,11 +27,13 @@ export class CategoriaController {
     return this.categoriaService.obtener(id);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post()
   crear(@Body() datos: CategoriaDto) {
     return this.categoriaService.crear(datos);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put(':id')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
@@ -38,6 +42,7 @@ export class CategoriaController {
     return this.categoriaService.actualizar(id, datos);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Delete(':id')
   eliminar(@Param('id', ParseIntPipe) id: number) {
     return this.categoriaService.eliminar(id);
