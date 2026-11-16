@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
 import { AuthModule } from './../src/auth/auth.module';
+import { CategoriasModule } from './../src/categorias/categorias.module';
 import { DispensacionesModule } from './../src/dispensaciones/dispensaciones.module';
 import { InventarioModule } from './../src/inventario/inventario.module';
 import { MedicamentosModule } from './../src/medicamentos/medicamentos.module';
@@ -19,6 +20,7 @@ describe('VetStock API (e2e)', () => {
       imports: [
         ...importacionesBdPrueba(),
         AuthModule,
+        CategoriasModule,
         MedicamentosModule,
         ProveedoresModule,
         InventarioModule,
@@ -50,6 +52,57 @@ describe('VetStock API (e2e)', () => {
       .post('/auth/login')
       .send({ correo: 'nadie@vetstock.com', clave: 'mala' })
       .expect(401);
+  });
+
+  it('GET /categorias lista con count', () => {
+    return request(app.getHttpServer())
+      .get('/categorias')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.count).toBe(4);
+        expect(respuesta.body.data).toHaveLength(4);
+      });
+  });
+
+  it('POST /categorias registra y GET /categorias/:id la devuelve', async () => {
+    const creada = await request(app.getHttpServer())
+      .post('/categorias')
+      .send({ nombre: 'Suplementos' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .get(`/categorias/${creada.body.data.id}`)
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.nombre).toBe('Suplementos');
+        expect(respuesta.body.descripcion).toBeNull();
+      });
+  });
+
+  it('POST /categorias responde 409 con nombre duplicado y 400 sin nombre', async () => {
+    await request(app.getHttpServer())
+      .post('/categorias')
+      .send({ nombre: 'Vacunas' })
+      .expect(409);
+    await request(app.getHttpServer()).post('/categorias').send({}).expect(400);
+  });
+
+  it('PUT /categorias/:id actualiza y DELETE /categorias/:id elimina', async () => {
+    await request(app.getHttpServer())
+      .put('/categorias/3')
+      .send({ descripcion: 'Control del dolor' })
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.descripcion).toBe('Control del dolor');
+      });
+    await request(app.getHttpServer()).delete('/categorias/3').expect(200);
+    await request(app.getHttpServer()).get('/categorias/3').expect(404);
+  });
+
+  it('GET /categorias/:id valida el id y responde 404', async () => {
+    await request(app.getHttpServer()).get('/categorias/abc').expect(400);
+    await request(app.getHttpServer()).get('/categorias/999').expect(404);
+    await request(app.getHttpServer()).delete('/categorias/999').expect(404);
   });
 
   it('GET /medicamentos lista el catalogo', () => {

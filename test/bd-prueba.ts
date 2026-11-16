@@ -1,13 +1,21 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Usuario } from '../src/auth/entities/usuario.entity';
+import { Categoria } from '../src/categorias/entities/categoria.entity';
 import { diasDesdeHoy } from '../src/common/fechas';
 import { Dispensacion } from '../src/dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../src/inventario/entities/lote.entity';
 import { Medicamento } from '../src/medicamentos/entities/medicamento.entity';
 import { Proveedor } from '../src/proveedores/entities/proveedor.entity';
 
-const ENTIDADES = [Usuario, Medicamento, Proveedor, Lote, Dispensacion];
+const ENTIDADES = [
+  Usuario,
+  Categoria,
+  Medicamento,
+  Proveedor,
+  Lote,
+  Dispensacion,
+];
 
 // BD sqlite en memoria; cada prueba importa ademas los modulos que necesita
 export function importacionesBdPrueba() {
@@ -30,6 +38,17 @@ export async function sembrarBd(dataSource: DataSource) {
       correo: 'andres@vetstock.com',
       clave: '123456',
     },
+  ]);
+
+  await dataSource.getRepository(Categoria).save([
+    {
+      id: 1,
+      nombre: 'Antibioticos',
+      descripcion: 'Tratamiento de infecciones',
+    },
+    { id: 2, nombre: 'Vacunas', descripcion: 'Prevencion y esquemas' },
+    { id: 3, nombre: 'Antiinflamatorios', descripcion: null },
+    { id: 4, nombre: 'Antiparasitarios', descripcion: 'Internos y externos' },
   ]);
 
   await dataSource.getRepository(Medicamento).save([

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { CategoriasModule } from './categorias/categorias.module';
 import { DispensacionesModule } from './dispensaciones/dispensaciones.module';
 import { Env } from './env.model';
 import { InventarioModule } from './inventario/inventario.module';
@@ -29,6 +30,7 @@ import { ReportesModule } from './reportes/reportes.module';
       inject: [ConfigService],
     }),
     AuthModule,
+    CategoriasModule,
     MedicamentosModule,
     ProveedoresModule,
     InventarioModule,
