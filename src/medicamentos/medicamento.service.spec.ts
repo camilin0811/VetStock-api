@@ -128,4 +128,77 @@ describe('MedicamentoService', () => {
   it('lanza error si el medicamento no existe', async () => {
     await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
   });
+
+  describe('filtros de listar', () => {
+    it('filtra por nombre sin importar mayusculas', async () => {
+      const { data, count } = await service.listar({ q: 'VACUNA' });
+
+      expect(count).toBe(1);
+      expect(data[0].nombre).toBe('Vacuna antirrabica');
+    });
+
+    it('trata los comodines como texto literal', async () => {
+      expect((await service.listar({ q: '%' })).count).toBe(0);
+      expect((await service.listar({ q: '_' })).count).toBe(0);
+    });
+
+    it('filtra por especie', async () => {
+      const { data } = await service.listar({ especie: 'canino' });
+
+      expect(data.map((m) => m.id)).toEqual([1]);
+    });
+
+    it('filtra por categoria y conserva todas sus categorias', async () => {
+      await service.actualizar(1, { categoriaIds: [1, 4] });
+
+      const { data } = await service.listar({ categoriaId: 4 });
+
+      expect(data.map((m) => m.id)).toEqual([1, 4]);
+      expect(data[0].categorias.map((c) => c.id)).toEqual([1, 4]);
+    });
+
+    it('combina filtros y devuelve vacio si nada coincide', async () => {
+      expect(
+        (await service.listar({ especie: 'bovino', categoriaId: 4 })).count,
+      ).toBe(1);
+      expect(
+        (await service.listar({ especie: 'felino', categoriaId: 4 })).count,
+      ).toBe(0);
+    });
+  });
+
+  describe('eliminar', () => {
+    it('elimina un medicamento sin lotes ni dispensaciones', async () => {
+      const { data } = await service.crear({
+        nombre: 'Suero oral',
+        presentacion: 'Sobre 20 g',
+        especie: 'general',
+        precio: 1500,
+        stockMinimo: 2,
+        requiereFormula: false,
+        categoriaIds: [1],
+      });
+
+      const resultado = await service.eliminar(data.id);
+
+      expect(resultado.message).toContain('eliminado');
+      await expect(service.obtener(data.id)).rejects.toThrow(NotFoundException);
+    });
+
+    it('lanza 409 si tiene lotes', async () => {
+      await expect(service.eliminar(1)).rejects.toThrow(ConflictException);
+    });
+
+    it('lanza 409 si solo tiene dispensaciones', async () => {
+      await testingModule
+        .get(DataSource)
+        .query('DELETE FROM lote WHERE medicamento_id = 1');
+
+      await expect(service.eliminar(1)).rejects.toThrow(ConflictException);
+    });
+
+    it('lanza 404 si no existe', async () => {
+      await expect(service.eliminar(999)).rejects.toThrow(NotFoundException);
+    });
+  });
 });

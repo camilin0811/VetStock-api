@@ -6,7 +6,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CategoriaService } from '../categorias/categoria.service';
-import { ActualizarMedicamentoDto, MedicamentoDto } from './medicamento.dto';
+import { Dispensacion } from '../dispensaciones/entities/dispensacion.entity';
+import { Lote } from '../inventario/entities/lote.entity';
+import {
+  ActualizarMedicamentoDto,
+  MedicamentoDto,
+  MedicamentoQueryDto,
+} from './medicamento.dto';
 import { Medicamento } from './entities/medicamento.entity';
 
 @Injectable()
@@ -14,14 +20,43 @@ export class MedicamentoService {
   constructor(
     @InjectRepository(Medicamento)
     private readonly medicamentoRepository: Repository<Medicamento>,
+    @InjectRepository(Lote)
+    private readonly loteRepository: Repository<Lote>,
+    @InjectRepository(Dispensacion)
+    private readonly dispensacionRepository: Repository<Dispensacion>,
     private readonly categoriaService: CategoriaService,
   ) {}
 
-  async listar() {
-    const medicamentos = await this.medicamentoRepository.find({
-      relations: { categorias: true },
-      order: { id: 'ASC' },
-    });
+  async listar(filtro: MedicamentoQueryDto = {}) {
+    const consulta = this.medicamentoRepository
+      .createQueryBuilder('medicamento')
+      .leftJoinAndSelect('medicamento.categorias', 'categoria')
+      .orderBy('medicamento.id', 'ASC')
+      .addOrderBy('categoria.id', 'ASC');
+
+    const q = filtro.q?.trim();
+    if (q) {
+      // Se escapan los comodines para buscar el texto tal cual
+      const texto = q.replace(/[\\%_]/g, (c) => `\\${c}`);
+      consulta.andWhere(
+        "LOWER(medicamento.nombre) LIKE LOWER(:q) ESCAPE '\\'",
+        { q: `%${texto}%` },
+      );
+    }
+    if (filtro.especie !== undefined) {
+      consulta.andWhere('medicamento.especie = :especie', {
+        especie: filtro.especie,
+      });
+    }
+    if (filtro.categoriaId !== undefined) {
+      // Subconsulta para filtrar sin perder las demas categorias del medicamento
+      consulta.andWhere(
+        'medicamento.id IN (SELECT mc.medicamento_id FROM medicamento_categorias mc WHERE mc.categoria_id = :categoriaId)',
+        { categoriaId: filtro.categoriaId },
+      );
+    }
+
+    const medicamentos = await consulta.getMany();
 
     return {
       message: 'Medicamentos obtenidos correctamente',
@@ -85,5 +120,26 @@ export class MedicamentoService {
       message: 'Medicamento actualizado correctamente',
       data: actualizado,
     };
+  }
+
+  async eliminar(id: number) {
+    const medicamento = await this.obtener(id);
+
+    if ((await this.loteRepository.countBy({ medicamentoId: id })) > 0) {
+      throw new ConflictException(
+        `No se puede eliminar ${medicamento.nombre}: tiene lotes registrados`,
+      );
+    }
+    if (
+      (await this.dispensacionRepository.countBy({ medicamentoId: id })) > 0
+    ) {
+      throw new ConflictException(
+        `No se puede eliminar ${medicamento.nombre}: tiene dispensaciones registradas`,
+      );
+    }
+
+    await this.medicamentoRepository.remove(medicamento);
+
+    return { message: 'Medicamento eliminado correctamente' };
   }
 }
