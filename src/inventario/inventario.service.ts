@@ -6,9 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { diasHasta, hoy } from '../common/fechas';
+import type { Usuario } from '../auth/entities/usuario.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { ProveedorService } from '../proveedores/proveedor.service';
 import { Lote } from './entities/lote.entity';
+import { Movimiento } from './entities/movimiento.entity';
 import { InventarioDto, LoteRequestDto } from './lote.dto';
 
 @Injectable()
@@ -20,7 +22,7 @@ export class InventarioService {
     private readonly proveedorService: ProveedorService,
   ) {}
 
-  async registrarLote(datos: LoteRequestDto) {
+  async registrarLote(datos: LoteRequestDto, usuario?: Usuario) {
     const medicamento = await this.medicamentoService.obtener(
       datos.medicamentoId,
     );
@@ -42,15 +44,31 @@ export class InventarioService {
       );
     }
 
-    const nuevoLote = await this.loteRepository.save(
-      this.loteRepository.create({
-        ...datos,
-        medicamento,
-        proveedor,
-        cantidadInicial: datos.cantidad,
-        fechaIngreso: hoy(),
-        fechaVencimiento: datos.fechaVencimiento.slice(0, 10),
-      }),
+    // El lote y su movimiento de ENTRADA se guardan juntos o no se guardan
+    const nuevoLote = await this.loteRepository.manager.transaction(
+      async (manager) => {
+        const lote = await manager.save(
+          manager.create(Lote, {
+            ...datos,
+            medicamento,
+            proveedor,
+            cantidadInicial: datos.cantidad,
+            fechaIngreso: hoy(),
+            fechaVencimiento: datos.fechaVencimiento.slice(0, 10),
+          }),
+        );
+        await manager.save(
+          manager.create(Movimiento, {
+            tipo: 'ENTRADA',
+            cantidad: lote.cantidad,
+            lote: { id: lote.id },
+            medicamento: { id: medicamento.id },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle: `Ingreso del lote ${lote.numeroLote} de ${proveedor.nombre}`,
+          }),
+        );
+        return lote;
+      },
     );
 
     return {

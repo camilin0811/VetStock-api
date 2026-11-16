@@ -6,14 +6,17 @@ import {
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { Usuario } from '../auth/entities/usuario.entity';
 import { diasDesdeHoy } from '../common/fechas';
 import { AlertaService } from './alerta.service';
 import { InventarioModule } from './inventario.module';
 import { InventarioService } from './inventario.service';
+import { MovimientoService } from './movimiento.service';
 
 describe('InventarioService', () => {
   let service: InventarioService;
   let alertaService: AlertaService;
+  let movimientoService: MovimientoService;
   let testingModule: TestingModule;
 
   beforeEach(async () => {
@@ -24,6 +27,7 @@ describe('InventarioService', () => {
 
     service = testingModule.get<InventarioService>(InventarioService);
     alertaService = testingModule.get<AlertaService>(AlertaService);
+    movimientoService = testingModule.get(MovimientoService);
   });
 
   afterEach(async () => {
@@ -91,5 +95,67 @@ describe('InventarioService', () => {
     expect(tipos).toContain('STOCK_BAJO');
     expect(tipos).toContain('POR_VENCER');
     expect(tipos).toContain('VENCIDO');
+  });
+
+  describe('kardex', () => {
+    it('registrar un lote crea un movimiento de ENTRADA con el usuario', async () => {
+      const usuario = await testingModule
+        .get(DataSource)
+        .getRepository(Usuario)
+        .findOneByOrFail({ id: 3 });
+
+      const { data: lote } = await service.registrarLote(
+        {
+          medicamentoId: 4,
+          proveedorId: 1,
+          numeroLote: 'ALB-301',
+          cantidad: 10,
+          fechaVencimiento: diasDesdeHoy(365),
+        },
+        usuario,
+      );
+
+      const { data } = await movimientoService.listar({ medicamentoId: 4 });
+      expect(data[0]).toMatchObject({
+        tipo: 'ENTRADA',
+        cantidad: 10,
+        loteId: lote.id,
+        medicamentoId: 4,
+        numeroLote: 'ALB-301',
+        usuario: { id: 3, nombre: 'Camila' },
+      });
+      expect(data[0].medicamento.nombre).toBe('Desparasitante Albendazol');
+      expect(data[0].fecha).toBeInstanceOf(Date);
+    });
+
+    it('un lote rechazado no deja movimientos', async () => {
+      const antes = (await movimientoService.listar()).count;
+
+      await expect(
+        service.registrarLote({
+          medicamentoId: 1,
+          proveedorId: 1,
+          numeroLote: 'AMX-001',
+          cantidad: 5,
+          fechaVencimiento: diasDesdeHoy(100),
+        }),
+      ).rejects.toThrow(ConflictException);
+
+      expect((await movimientoService.listar()).count).toBe(antes);
+    });
+
+    it('lista del mas reciente al mas antiguo y filtra por medicamento y tipo', async () => {
+      const todos = await movimientoService.listar();
+      expect(todos.count).toBe(8);
+      expect(todos.data[0].id).toBeGreaterThan(todos.data[7].id);
+
+      const salidasDeMeloxicam = await movimientoService.listar({
+        medicamentoId: 3,
+        tipo: 'SALIDA',
+      });
+      expect(salidasDeMeloxicam.count).toBe(1);
+      expect(salidasDeMeloxicam.data[0].usuario).toBeNull();
+      expect(salidasDeMeloxicam.data[0].numeroLote).toBe('MLX-050');
+    });
   });
 });
