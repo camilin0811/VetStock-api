@@ -140,6 +140,25 @@ describe('Auth (e2e)', () => {
       .expect(401);
   });
 
+  it('GET /auth/perfil devuelve el usuario autenticado sin clave', async () => {
+    const respuesta = await contexto
+      .api('veterinario')
+      .get('/auth/perfil')
+      .expect(200);
+
+    expect(respuesta.body.data).toMatchObject({
+      id: 2,
+      correo: USUARIOS_PRUEBA.veterinario,
+      rol: 'veterinario',
+    });
+    expect(respuesta.body.data.createdAt).toBeDefined();
+    expect(respuesta.body.data).not.toHaveProperty('clave');
+  });
+
+  it('GET /auth/perfil responde 401 sin token', () => {
+    return http().get('/auth/perfil').expect(401);
+  });
+
   describe('guard global', () => {
     it('responde 401 sin token en rutas protegidas', async () => {
       for (const ruta of [

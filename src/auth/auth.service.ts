@@ -114,6 +114,10 @@ export class AuthService {
     };
   }
 
+  perfil(usuario: Usuario) {
+    return { message: 'Perfil obtenido correctamente', data: usuario };
+  }
+
   private async generarTokens(usuario: Usuario): Promise<AuthResponseDto> {
     const payload: PayloadToken = { sub: usuario.id };
     const [accessToken, refreshToken] = await Promise.all([

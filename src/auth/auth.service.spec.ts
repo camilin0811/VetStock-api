@@ -125,4 +125,16 @@ describe('AuthService', () => {
       }),
     ).rejects.toThrow(ConflictException);
   });
+
+  it('perfil devuelve el usuario recibido', async () => {
+    const usuario = await testingModule
+      .get(DataSource)
+      .getRepository(Usuario)
+      .findOneByOrFail({ id: 1 });
+
+    const resultado = service.perfil(usuario);
+
+    expect(resultado.data.correo).toBe('andres@vetstock.com');
+    expect(resultado.data.clave).toBeUndefined();
+  });
 });
