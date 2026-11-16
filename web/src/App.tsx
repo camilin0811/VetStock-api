@@ -14,6 +14,7 @@ import Movimientos from './pages/Movimientos'
 import Dispensar from './pages/Dispensar'
 import Alertas from './pages/Alertas'
 import Reportes from './pages/Reportes'
+import Calendario from './pages/Calendario'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,6 +43,7 @@ export default function App() {
                   <Route path="dispensar" element={<Dispensar />} />
                   <Route path="alertas" element={<Alertas />} />
                   <Route path="reportes" element={<Reportes />} />
+                  <Route path="calendario" element={<Calendario />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>

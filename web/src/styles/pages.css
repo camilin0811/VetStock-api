@@ -107,3 +107,17 @@
 .rep-foot { margin-top: 14px; font-size: 13.5px; }
 .reportes-grid { align-items: start; }
 @media (max-width: 520px) { .hbars li { grid-template-columns: 1fr auto; } .hb-bar { grid-column: 1 / -1; grid-row: 2; } }
+
+/* ---------- Calendario ---------- */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-dow { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 6px 0; text-transform: uppercase; }
+.cal-day { position: relative; aspect-ratio: 1; min-height: 44px; border: 0; border-radius: 16px; background: var(--violet-50); font-weight: 700; font-variant-numeric: tabular-nums; transition: background 0.2s, transform 0.2s var(--ease-out); }
+.cal-day:hover { background: var(--violet-100); transform: translateY(-1px); }
+.cal-day.today { box-shadow: inset 0 0 0 2px var(--violet-300); }
+.cal-day.sel { background: var(--violet-600); color: #fff; box-shadow: var(--shadow-md); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--violet-600); }
+.cal-day .dot { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 0 2px var(--violet-50); }
+.cal-day.sel .dot { box-shadow: 0 0 0 2px var(--violet-600); }
+.dot.bad { background: var(--bad-dot); } .dot.warn { background: var(--warn-dot); } .dot.info { background: var(--info-dot); }
+.cal-legend { margin-top: 14px; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+@media (max-width: 520px) { .cal { gap: 4px; } .cal-day { border-radius: 12px; } }
