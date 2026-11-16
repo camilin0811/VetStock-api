@@ -170,4 +170,47 @@ describe('ReporteService', () => {
       expect(valorTotal).toBe(1050000 + 320000 + 270000);
     });
   });
+
+  describe('proveedores', () => {
+    it('suma lotes, unidades recibidas y valor por proveedor', async () => {
+      const data = await service.proveedores({});
+
+      // Agrovet: lotes 1 (40 amox), 4 (10 melox), 5 (10 melox), 6 (25 albendazol)
+      // Pet Salud: lotes 2 (30 vacuna) y 3 (12 vacuna)
+      expect(data).toEqual([
+        {
+          proveedor: { id: 1, nombre: 'Distribuidora Agrovet Narino' },
+          lotes: 4,
+          unidades: 85,
+          valor: 40 * 18000 + 20 * 32000 + 25 * 45000,
+        },
+        {
+          proveedor: { id: 2, nombre: 'Laboratorios Pet Salud' },
+          lotes: 2,
+          unidades: 42,
+          valor: 42 * 25000,
+        },
+      ]);
+    });
+
+    it('filtra por fecha de ingreso del lote', async () => {
+      const data = await service.proveedores({
+        desde: diasDesdeHoy(-35),
+        hasta: diasDesdeHoy(-5),
+      });
+
+      // Ingresos: lote 5 (-20, Agrovet) y lote 6 (-30, Agrovet) y lote 3 (-10, Pet Salud)
+      expect(data.map((p) => [p.proveedor.id, p.lotes, p.unidades])).toEqual([
+        [1, 2, 35],
+        [2, 1, 12],
+      ]);
+    });
+
+    it('devuelve vacio sin lotes en el rango y 400 si el rango es invalido', async () => {
+      expect(await service.proveedores({ desde: diasDesdeHoy(1) })).toEqual([]);
+      await expect(
+        service.proveedores({ desde: '2030-01-02', hasta: '2030-01-01' }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
 });

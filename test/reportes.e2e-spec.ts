@@ -17,6 +17,7 @@ describe('Reportes (e2e)', () => {
     await http().get('/reportes/consumo').expect(401);
     await http().get('/reportes/vencimientos').expect(401);
     await http().get('/reportes/stock').expect(401);
+    await http().get('/reportes/proveedores').expect(401);
   });
 
   describe('GET /reportes/consumo', () => {
@@ -93,6 +94,51 @@ describe('Reportes (e2e)', () => {
         unidades: 25,
         valor: 1125000,
       });
+    });
+  });
+
+  describe('GET /reportes/proveedores', () => {
+    it('devuelve la lista por proveedor segun el contrato', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/reportes/proveedores')
+        .expect(200);
+
+      expect(respuesta.body.data).toEqual([
+        {
+          proveedor: { id: 1, nombre: 'Distribuidora Agrovet Narino' },
+          lotes: 4,
+          unidades: 85,
+          valor: 40 * 18000 + 20 * 32000 + 25 * 45000,
+        },
+        {
+          proveedor: { id: 2, nombre: 'Laboratorios Pet Salud' },
+          lotes: 2,
+          unidades: 42,
+          valor: 1050000,
+        },
+      ]);
+    });
+
+    it('acepta desde y hasta y los valida', async () => {
+      const hace = (dias: number) =>
+        new Date(Date.now() - dias * 86_400_000).toISOString().slice(0, 10);
+
+      const respuesta = await contexto
+        .api()
+        .get(`/reportes/proveedores?desde=${hace(15)}`)
+        .expect(200);
+      expect(
+        respuesta.body.data.map(
+          (p: { proveedor: { id: number } }) => p.proveedor.id,
+        ),
+      ).toEqual([2]);
+
+      await contexto.api().get('/reportes/proveedores?desde=ayer').expect(400);
+      await contexto
+        .api()
+        .get('/reportes/proveedores?desde=2030-01-02&hasta=2030-01-01')
+        .expect(400);
     });
   });
 });

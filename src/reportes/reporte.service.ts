@@ -9,6 +9,8 @@ import { Medicamento } from '../medicamentos/entities/medicamento.entity';
 import {
   ConsumoMedicamentoDto,
   ConsumoQueryDto,
+  ProveedorRecibidoDto,
+  ProveedoresQueryDto,
   ReporteConsumoDto,
   ReporteStockDto,
   ReporteVencimientosDto,
@@ -121,6 +123,61 @@ export class ReporteService {
       items,
       valorTotal: redondear(items.reduce((total, i) => total + i.valor, 0)),
     };
+  }
+
+  // Unidades recibidas (cantidad inicial de los lotes) por proveedor segun la
+  // fecha de ingreso; el valor usa el precio actual del medicamento.
+  async proveedores(
+    filtro: ProveedoresQueryDto,
+  ): Promise<ProveedorRecibidoDto[]> {
+    if (
+      filtro.desde !== undefined &&
+      filtro.hasta !== undefined &&
+      filtro.desde.slice(0, 10) > filtro.hasta.slice(0, 10)
+    ) {
+      throw new BadRequestException(
+        'La fecha desde no puede ser mayor que la fecha hasta',
+      );
+    }
+
+    const consulta = this.loteRepository
+      .createQueryBuilder('lote')
+      .innerJoin('lote.proveedor', 'proveedor')
+      .innerJoin('lote.medicamento', 'medicamento')
+      .select('proveedor.id', 'id')
+      .addSelect('proveedor.nombre', 'nombre')
+      .addSelect('COUNT(lote.id)', 'lotes')
+      .addSelect('SUM(lote.cantidadInicial)', 'unidades')
+      .addSelect('SUM(lote.cantidadInicial * medicamento.precio)', 'valor')
+      .groupBy('proveedor.id')
+      .addGroupBy('proveedor.nombre')
+      .orderBy('SUM(lote.cantidadInicial)', 'DESC')
+      .addOrderBy('proveedor.id', 'ASC');
+    if (filtro.desde !== undefined) {
+      consulta.andWhere('lote.fechaIngreso >= :desde', {
+        desde: filtro.desde.slice(0, 10),
+      });
+    }
+    if (filtro.hasta !== undefined) {
+      consulta.andWhere('lote.fechaIngreso <= :hasta', {
+        hasta: filtro.hasta.slice(0, 10),
+      });
+    }
+
+    const filas = await consulta.getRawMany<{
+      id: number | string;
+      nombre: string;
+      lotes: number | string;
+      unidades: number | string;
+      valor: number | string;
+    }>();
+
+    return filas.map((fila) => ({
+      proveedor: { id: Number(fila.id), nombre: fila.nombre },
+      lotes: aNumero(fila.lotes),
+      unidades: aNumero(fila.unidades),
+      valor: redondear(aNumero(fila.valor)),
+    }));
   }
 
   private rango(

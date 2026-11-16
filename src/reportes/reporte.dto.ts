@@ -49,3 +49,10 @@ export class ReporteStockDto {
   items: StockMedicamentoDto[];
   valorTotal: number;
 }
+
+export class ProveedorRecibidoDto {
+  proveedor: { id: number; nombre: string };
+  lotes: number;
+  unidades: number;
+  valor: number;
+}
