@@ -18,7 +18,8 @@ export class Usuario {
   @Column({ type: 'varchar', length: 255, unique: true })
   correo: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  // select: false evita que la clave viaje en consultas y respuestas
+  @Column({ type: 'varchar', length: 255, select: false })
   clave: string;
 
   @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })

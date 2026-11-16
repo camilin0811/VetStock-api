@@ -4,9 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { AuthResponseDto, LoginDto, RegistroDto } from './auth.dto';
 import { Usuario } from './entities/usuario.entity';
+
+const RONDAS_BCRYPT = 10;
 
 @Injectable()
 export class AuthService {
@@ -25,9 +28,14 @@ export class AuthService {
       );
     }
 
-    const nuevoUsuario = await this.usuarioRepository.save(
-      this.usuarioRepository.create(datos),
+    const clave = await bcrypt.hash(datos.clave, RONDAS_BCRYPT);
+    const guardado = await this.usuarioRepository.save(
+      this.usuarioRepository.create({ ...datos, clave }),
     );
+    // Se vuelve a leer para devolver el usuario sin la clave
+    const nuevoUsuario = await this.usuarioRepository.findOneByOrFail({
+      id: guardado.id,
+    });
 
     return {
       message: 'Usuario registrado correctamente',
@@ -36,10 +44,16 @@ export class AuthService {
   }
 
   async login(datos: LoginDto) {
-    const usuario = await this.usuarioRepository.findOneBy({
-      correo: datos.correo,
-    });
-    if (usuario === null || usuario.clave !== datos.clave) {
+    // clave tiene select: false, por eso se pide de forma explicita
+    const usuario = await this.usuarioRepository
+      .createQueryBuilder('usuario')
+      .addSelect('usuario.clave')
+      .where('usuario.correo = :correo', { correo: datos.correo })
+      .getOne();
+    if (
+      usuario === null ||
+      !(await bcrypt.compare(datos.clave, usuario.clave))
+    ) {
       throw new UnauthorizedException('Correo o clave incorrectos');
     }
 

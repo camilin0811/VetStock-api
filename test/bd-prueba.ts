@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Usuario } from '../src/auth/entities/usuario.entity';
@@ -7,6 +8,8 @@ import { Dispensacion } from '../src/dispensaciones/entities/dispensacion.entity
 import { Lote } from '../src/inventario/entities/lote.entity';
 import { Medicamento } from '../src/medicamentos/entities/medicamento.entity';
 import { Proveedor } from '../src/proveedores/entities/proveedor.entity';
+
+export const CLAVE_PRUEBA = 'VetStock123*';
 
 const ENTIDADES = [
   Usuario,
@@ -31,13 +34,9 @@ export function importacionesBdPrueba() {
 }
 
 export async function sembrarBd(dataSource: DataSource) {
+  const clave = bcrypt.hashSync(CLAVE_PRUEBA, 4);
   await dataSource.getRepository(Usuario).save([
-    {
-      id: 1,
-      nombre: 'Andres',
-      correo: 'andres@vetstock.com',
-      clave: '123456',
-    },
+    { id: 1, nombre: 'Andres', correo: 'andres@vetstock.com', clave },
   ]);
 
   await dataSource.getRepository(Categoria).save([
