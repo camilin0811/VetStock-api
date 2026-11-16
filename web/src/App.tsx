@@ -7,6 +7,7 @@ import { AppLayout } from './components/AppLayout'
 import { ApiError } from './api/client'
 import Login from './pages/Login'
 import Pendiente from './pages/Pendiente'
+import Dashboard from './pages/Dashboard'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,7 +29,7 @@ export default function App() {
               <Route path="/login" element={<Login />} />
               <Route element={<RequireAuth />}>
                 <Route element={<AppLayout />}>
-                  <Route index element={<Pendiente />} />
+                  <Route index element={<Dashboard />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>

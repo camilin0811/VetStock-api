@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, MoreHorizontal, Search } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import { useAlertas } from '../api/hooks'
 import { LogoMark } from './Logo'
 import { NAV, navFor } from './nav'
 
@@ -13,6 +14,8 @@ export function AppLayout() {
   const more = moreAt === pathname
   const setMore = (v: boolean | ((x: boolean) => boolean)) => setMoreAt((cur) => ((typeof v === 'function' ? v(cur === pathname) : v) ? pathname : null))
   const [q, setQ] = useState('')
+  const alertas = useAlertas()
+  const nAlertas = alertas.data?.length ?? 0
   const items = navFor(usuario?.rol)
   const current = [...NAV].reverse().find((i) => (i.to === '/' ? pathname === '/' : pathname.startsWith(i.to)))
   const primeros = items.filter((i) => i.mobile)
@@ -75,7 +78,7 @@ export function AppLayout() {
               <Search size={18} aria-hidden="true" />
               <input type="search" aria-label="Buscar medicamentos" placeholder="Buscar medicamentos" value={q} onChange={(e) => setQ(e.target.value)} />
             </form>
-            <Link to="/alertas" className="icon-btn" aria-label="Ver alertas"><Bell size={20} aria-hidden="true" /></Link>
+            <Link to="/alertas" className="icon-btn" aria-label={nAlertas ? `Ver alertas (${nAlertas})` : 'Ver alertas'}><Bell size={20} aria-hidden="true" />{nAlertas > 0 && <span className="badge" aria-hidden="true">{nAlertas > 99 ? '99+' : nAlertas}</span>}</Link>
           </header>
           <main id="contenido" className="content" tabIndex={-1}>
             <Outlet />
