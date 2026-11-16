@@ -8,6 +8,7 @@ import { ApiError } from './api/client'
 import Login from './pages/Login'
 import Pendiente from './pages/Pendiente'
 import Dashboard from './pages/Dashboard'
+import Medicamentos from './pages/Medicamentos'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ export default function App() {
               <Route element={<RequireAuth />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<Dashboard />} />
+                  <Route path="medicamentos" element={<Medicamentos />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>
