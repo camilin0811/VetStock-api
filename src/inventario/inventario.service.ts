@@ -42,11 +42,10 @@ export class InventarioService {
 
     const nuevoLote = await this.loteRepository.save(
       this.loteRepository.create({
-        medicamentoId: datos.medicamentoId,
-        proveedorId: datos.proveedorId,
-        numeroLote: datos.numeroLote,
+        ...datos,
+        medicamento: { id: datos.medicamentoId },
+        proveedor: { id: datos.proveedorId },
         cantidadInicial: datos.cantidad,
-        cantidad: datos.cantidad,
         fechaIngreso: hoy(),
         fechaVencimiento: datos.fechaVencimiento.slice(0, 10),
       }),
@@ -59,7 +58,7 @@ export class InventarioService {
   }
 
   async listarLotes(medicamentoId?: number) {
-    const lotes = await this.buscarLotes(medicamentoId);
+    const lotes = await this.buscarLotes(medicamentoId, true);
 
     return {
       message: 'Lotes obtenidos correctamente',
@@ -68,9 +67,10 @@ export class InventarioService {
     };
   }
 
-  async buscarLotes(medicamentoId?: number) {
+  async buscarLotes(medicamentoId?: number, conRelaciones = false) {
     return this.loteRepository.find({
       where: medicamentoId === undefined ? {} : { medicamentoId },
+      relations: conRelaciones ? { medicamento: true, proveedor: true } : {},
       order: { id: 'ASC' },
     });
   }

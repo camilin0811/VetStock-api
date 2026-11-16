@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Lote } from '../../inventario/entities/lote.entity';
 
 @Entity({ name: 'medicamento' })
 export class Medicamento {
@@ -28,6 +31,9 @@ export class Medicamento {
 
   @Column({ type: 'boolean', name: 'requiere_formula' })
   requiereFormula: boolean;
+
+  @OneToMany(() => Lote, (lote) => lote.medicamento)
+  lotes: Relation<Lote[]>;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

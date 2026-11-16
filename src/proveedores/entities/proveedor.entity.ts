@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Lote } from '../../inventario/entities/lote.entity';
 
 @Entity({ name: 'proveedor' })
 export class Proveedor {
@@ -22,6 +25,9 @@ export class Proveedor {
 
   @Column({ type: 'varchar', length: 100 })
   ciudad: string;
+
+  @OneToMany(() => Lote, (lote) => lote.proveedor)
+  lotes: Relation<Lote[]>;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

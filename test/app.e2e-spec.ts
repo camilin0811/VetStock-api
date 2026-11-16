@@ -88,6 +88,21 @@ describe('VetStock API (e2e)', () => {
     return request(app.getHttpServer()).get('/medicamentos/999').expect(404);
   });
 
+  it('GET /lotes incluye medicamentoId, medicamento y proveedor', () => {
+    return request(app.getHttpServer())
+      .get('/lotes?medicamentoId=2')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.count).toBe(2);
+        for (const lote of respuesta.body.data) {
+          expect(lote.medicamentoId).toBe(2);
+          expect(lote.proveedorId).toBe(2);
+          expect(lote.medicamento.nombre).toBe('Vacuna antirrabica');
+          expect(lote.proveedor.nombre).toBe('Laboratorios Pet Salud');
+        }
+      });
+  });
+
   it('POST /lotes registra un lote nuevo', () => {
     return request(app.getHttpServer())
       .post('/lotes')

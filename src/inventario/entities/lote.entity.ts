@@ -3,9 +3,14 @@ import {
   CreateDateColumn,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
+import { Proveedor } from '../../proveedores/entities/proveedor.entity';
 
 @Entity({ name: 'lote' })
 @Index(['medicamentoId', 'numeroLote'], { unique: true })
@@ -13,8 +18,22 @@ export class Lote {
   @PrimaryGeneratedColumn()
   id: number;
 
+  // Relation<> evita el error de referencia circular en modulos ESM
+  @ManyToOne(() => Medicamento, (medicamento) => medicamento.lotes, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'medicamento_id' })
+  medicamento: Relation<Medicamento>;
+
+  // Columna FK expuesta para filtrar y responder medicamentoId sin cargar la relacion
   @Column({ type: 'int', name: 'medicamento_id' })
   medicamentoId: number;
+
+  @ManyToOne(() => Proveedor, (proveedor) => proveedor.lotes, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'proveedor_id' })
+  proveedor: Relation<Proveedor>;
 
   @Column({ type: 'int', name: 'proveedor_id' })
   proveedorId: number;
