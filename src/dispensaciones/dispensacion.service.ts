@@ -92,7 +92,15 @@ export class DispensacionService {
   }
 
   async listar() {
-    return this.dispensacionRepository.find({ order: { id: 'ASC' } });
+    const dispensaciones = await this.dispensacionRepository.find({
+      order: { id: 'ASC' },
+    });
+
+    return {
+      message: 'Dispensaciones obtenidas correctamente',
+      data: dispensaciones,
+      count: dispensaciones.length,
+    };
   }
 
   async obtener(id: number) {

@@ -33,7 +33,7 @@ describe('MedicamentoService', () => {
     });
 
     expect(resultado.data.id).toBeDefined();
-    expect(await service.listar()).toContainEqual(resultado.data);
+    expect((await service.listar()).data).toContainEqual(resultado.data);
   });
 
   it('lanza error si el medicamento ya existe', async () => {

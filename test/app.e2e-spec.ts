@@ -55,7 +55,23 @@ describe('VetStock API (e2e)', () => {
       .get('/medicamentos')
       .expect(200)
       .expect((respuesta) => {
-        expect(respuesta.body.length).toBeGreaterThan(0);
+        expect(respuesta.body.data.length).toBeGreaterThan(0);
+        expect(respuesta.body.count).toBe(respuesta.body.data.length);
+      });
+  });
+
+  it.each([
+    ['/proveedores', 2],
+    ['/lotes', 6],
+    ['/dispensaciones', 2],
+  ])('GET %s devuelve message, data y count', (ruta, total) => {
+    return request(app.getHttpServer())
+      .get(ruta)
+      .expect(200)
+      .expect((respuesta) => {
+        expect(typeof respuesta.body.message).toBe('string');
+        expect(respuesta.body.data).toHaveLength(total);
+        expect(respuesta.body.count).toBe(total);
       });
   });
 
@@ -114,7 +130,8 @@ describe('VetStock API (e2e)', () => {
       .get('/alertas')
       .expect(200)
       .expect((respuesta) => {
-        expect(respuesta.body.length).toBeGreaterThan(0);
+        expect(respuesta.body.data.length).toBeGreaterThan(0);
+        expect(respuesta.body.count).toBe(respuesta.body.data.length);
       });
   });
 

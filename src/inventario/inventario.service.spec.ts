@@ -84,7 +84,9 @@ describe('InventarioService', () => {
   });
 
   it('genera alertas de stock bajo, por vencer y vencido', async () => {
-    const tipos = (await alertaService.generar()).map((alerta) => alerta.tipo);
+    const tipos = (await alertaService.generar()).data.map(
+      (alerta) => alerta.tipo,
+    );
 
     expect(tipos).toContain('STOCK_BAJO');
     expect(tipos).toContain('POR_VENCER');

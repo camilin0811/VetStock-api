@@ -16,7 +16,15 @@ export class ProveedorService {
   ) {}
 
   async listar() {
-    return this.proveedorRepository.find({ order: { id: 'ASC' } });
+    const proveedores = await this.proveedorRepository.find({
+      order: { id: 'ASC' },
+    });
+
+    return {
+      message: 'Proveedores obtenidos correctamente',
+      data: proveedores,
+      count: proveedores.length,
+    };
   }
 
   async obtener(id: number) {

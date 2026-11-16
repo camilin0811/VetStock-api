@@ -16,7 +16,7 @@ export class AlertaService {
   async generar() {
     const alertas: AlertaDto[] = [];
 
-    for (const medicamento of await this.medicamentoService.listar()) {
+    for (const medicamento of (await this.medicamentoService.listar()).data) {
       const inventario = await this.inventarioService.obtenerInventario(
         medicamento.id,
       );
@@ -53,6 +53,10 @@ export class AlertaService {
       }
     }
 
-    return alertas;
+    return {
+      message: 'Alertas obtenidas correctamente',
+      data: alertas,
+      count: alertas.length,
+    };
   }
 }
