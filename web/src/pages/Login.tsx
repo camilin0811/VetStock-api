@@ -41,11 +41,11 @@ export default function Login() {
           </div>
           <div>
             <h1>{modo === 'login' ? 'Hola de nuevo' : 'Crea tu cuenta'}</h1>
-            <p className="muted">{modo === 'login' ? 'Ingresa para ver el inventario de tu clinica.' : 'Unete al equipo de la farmacia veterinaria.'}</p>
+            <p className="muted">{modo === 'login' ? 'Ingresa para ver el inventario de tu clínica.' : 'Únete al equipo de la farmacia veterinaria.'}</p>
           </div>
 
           <div className="chips" role="group" aria-label="Modo de acceso">
-            <button type="button" className="chip" aria-pressed={modo === 'login'} onClick={() => { setModo('login'); setErrores([]) }}>Iniciar sesion</button>
+            <button type="button" className="chip" aria-pressed={modo === 'login'} onClick={() => { setModo('login'); setErrores([]) }}>Iniciar sesión</button>
             <button type="button" className="chip" aria-pressed={modo === 'registro'} onClick={() => { setModo('registro'); setErrores([]) }}>Crear cuenta</button>
           </div>
 
@@ -60,12 +60,12 @@ export default function Login() {
             </label>
             <label className="field">Clave
               <span className="input-icon"><LockKeyhole size={18} aria-hidden="true" /><input className="input" name="clave" type="password" autoComplete={modo === 'login' ? 'current-password' : 'new-password'} required minLength={modo === 'registro' ? 8 : 1} /></span>
-              {modo === 'registro' && <span className="hint">Minimo 8 caracteres.</span>}
+              {modo === 'registro' && <span className="hint">Mínimo 8 caracteres.</span>}
             </label>
             {modo === 'registro' && (
               <label className="field">Rol
                 <select className="select" name="rol" defaultValue="farmaceutico">
-                  <option value="farmaceutico">Farmaceutico</option>
+                  <option value="farmaceutico">Farmacéutico</option>
                   <option value="veterinario">Veterinario</option>
                 </select>
               </label>

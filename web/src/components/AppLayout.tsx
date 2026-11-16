@@ -59,7 +59,7 @@ export function AppLayout() {
                   <div className="user-role">{usuario.rol}</div>
                 </div>
               </div>
-              <button type="button" className="btn sm" onClick={logout}><LogOut size={16} aria-hidden="true" />Cerrar sesion</button>
+              <button type="button" className="btn sm" onClick={logout}><LogOut size={16} aria-hidden="true" />Cerrar sesión</button>
             </div>
           )}
         </aside>
@@ -87,13 +87,13 @@ export function AppLayout() {
       </div>
 
       <nav className="bottom-nav" aria-label="Navegacion movil">
-        {primeros.map(({ to, label, icon: Icon }) => (
+        {primeros.map(({ to, label, short, icon: Icon }) => (
           <NavLink key={to} to={to} end={to === '/'} className="bn-item">
-            <Icon size={21} aria-hidden="true" />{label.length > 10 ? label.slice(0, 5) + '.' : label}
+            <Icon size={21} aria-hidden="true" />{short ?? label}
           </NavLink>
         ))}
         <button type="button" className="bn-item" aria-expanded={more} aria-controls="mas-nav" onClick={() => setMore((v) => !v)}>
-          <MoreHorizontal size={21} aria-hidden="true" />Mas
+          <MoreHorizontal size={21} aria-hidden="true" />Más
         </button>
       </nav>
       <div className="more-sheet" hidden={!more} onClick={() => setMore(false)}>
@@ -101,7 +101,7 @@ export function AppLayout() {
           {resto.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className="nav-link"><Icon size={19} aria-hidden="true" />{label}</NavLink>
           ))}
-          <button type="button" className="btn" onClick={logout}><LogOut size={16} aria-hidden="true" />Cerrar sesion</button>
+          <button type="button" className="btn" onClick={logout}><LogOut size={16} aria-hidden="true" />Cerrar sesión</button>
         </div>
       </div>
     </div>

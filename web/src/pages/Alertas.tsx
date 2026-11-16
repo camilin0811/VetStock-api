@@ -27,7 +27,7 @@ export default function Alertas() {
         <label className="field" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           Vencimientos en
           <select className="select" style={{ width: 'auto' }} value={dias} onChange={(e) => setDias(Number(e.target.value))}>
-            {[15, 30, 60, 90].map((d) => <option key={d} value={d}>{d} dias</option>)}
+            {[15, 30, 60, 90].map((d) => <option key={d} value={d}>{d} días</option>)}
           </select>
         </label>
       </div>

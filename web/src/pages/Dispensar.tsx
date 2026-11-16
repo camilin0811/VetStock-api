@@ -12,7 +12,7 @@ import { fmtFecha, fmtFechaHora, fmtMoney, nombreMed } from '../lib/format'
 
 function Anular({ d, onDone }: { d: Dispensacion; onDone: () => void }) {
   const [errores, setErrores] = useState<string[]>([])
-  const anular = useAccion((motivo: string) => post(`/dispensaciones/${d.id}/anular`, { motivo }), 'Dispensacion anulada, stock devuelto', false)
+  const anular = useAccion((motivo: string) => post(`/dispensaciones/${d.id}/anular`, { motivo }), 'Dispensación anulada, stock devuelto', false)
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setErrores([])
@@ -20,12 +20,12 @@ function Anular({ d, onDone }: { d: Dispensacion; onDone: () => void }) {
   }
   return (
     <form className="stack" style={{ gap: 14 }} onSubmit={enviar}>
-      <p>Se devolvera al inventario el stock de {nombreMed(d.medicamento)} x {d.cantidad} (paciente {d.mascota}) en los lotes que se usaron.</p>
+      <p>Se devolverá al inventario el stock de {nombreMed(d.medicamento)} x {d.cantidad} (paciente {d.mascota}) en los lotes que se usaron.</p>
       <label className="field">Motivo<textarea className="textarea" name="motivo" required minLength={3} /></label>
       <FormError errores={errores} />
       <div className="modal-actions">
         <button type="button" className="btn" onClick={onDone}>Cancelar</button>
-        <button className="btn danger" disabled={anular.isPending}>{anular.isPending ? 'Anulando...' : 'Anular dispensacion'}</button>
+        <button className="btn danger" disabled={anular.isPending}>{anular.isPending ? 'Anulando...' : 'Anular dispensación'}</button>
       </div>
     </form>
   )
@@ -46,7 +46,7 @@ export default function Dispensar() {
   const med = meds.data?.find((m) => String(m.id) === medId)
   const disponible = inv.data?.find((i) => String(i.medicamento.id) === medId)?.disponible
 
-  const dispensar = useAccion((b: Record<string, unknown>) => crear('/dispensaciones')(b) as Promise<Un<Dispensacion>>, 'Dispensacion registrada', false)
+  const dispensar = useAccion((b: Record<string, unknown>) => crear('/dispensaciones')(b) as Promise<Un<Dispensacion>>, 'Dispensación registrada', false)
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -67,7 +67,7 @@ export default function Dispensar() {
     <Page deps={[historial.isLoading]}>
       <div className="cols-2 dispensar-top">
         <section className="card" data-reveal aria-labelledby="h-form">
-          <div className="card-head"><h2 id="h-form">Nueva dispensacion</h2></div>
+          <div className="card-head"><h2 id="h-form">Nueva dispensación</h2></div>
           <form className="stack" style={{ gap: 14 }} onSubmit={enviar} key={formKey}>
             <div className="form-grid">
               <label className="field full">Medicamento
@@ -75,12 +75,12 @@ export default function Dispensar() {
                   <option value="" disabled>Elige un medicamento</option>
                   {meds.data?.map((m) => <option key={m.id} value={m.id}>{m.nombre} ({m.presentacion})</option>)}
                 </select>
-                {medId && <span className="hint">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere formula'}</span>}
+                {medId && <span className="hint">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
               </label>
               <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" max={disponible || undefined} step="1" required /></label>
               <label className="field">Paciente (mascota)<input className="input" name="mascota" required /></label>
               <label className="field full">Veterinario<input className="input" name="veterinario" required defaultValue={usuario?.rol === 'veterinario' ? usuario.nombre : ''} /></label>
-              {med?.requiereFormula && <label className="field full">Formula medica<textarea className="textarea" name="formula" required /></label>}
+              {med?.requiereFormula && <label className="field full">Fórmula médica<textarea className="textarea" name="formula" required /></label>}
             </div>
             <FormError errores={errores} />
             <button className="btn primary" style={{ justifyContent: 'center', height: 50 }} disabled={dispensar.isPending || !medId}><Syringe size={18} aria-hidden="true" />{dispensar.isPending ? 'Dispensando...' : 'Dispensar'}</button>
@@ -90,7 +90,7 @@ export default function Dispensar() {
         <section className="card soft" data-reveal aria-labelledby="h-fefo" aria-live="polite">
           <div className="card-head"><h2 id="h-fefo">Resultado FEFO</h2>{resultado && <span className="pill ok"><CheckCircle2 size={14} aria-hidden="true" />Registrada</span>}</div>
           {!resultado ? (
-            <EmptyState title="El primero en vencer sale primero" text="Al dispensar, VetStock descuenta de los lotes con vencimiento mas cercano y te muestra cuales uso." />
+            <EmptyState title="El primero en vencer sale primero" text="Al dispensar, VetStock descuenta de los lotes con vencimiento más cercano y te muestra cuales uso." />
           ) : (
             <div className="stack" style={{ gap: 14 }}>
               <div><div className="row-title">{nombreMed(resultado.medicamento)} x {resultado.cantidad}</div><div className="row-sub">Paciente {resultado.mascota} · {resultado.veterinario}</div></div>
@@ -140,7 +140,7 @@ export default function Dispensar() {
         )}
       </section>
 
-      <Modal open={!!anulando} onClose={() => setAnulando(null)} title="Anular dispensacion">{anulando && <Anular d={anulando} onDone={() => setAnulando(null)} />}</Modal>
+      <Modal open={!!anulando} onClose={() => setAnulando(null)} title="Anular dispensación">{anulando && <Anular d={anulando} onDone={() => setAnulando(null)} />}</Modal>
     </Page>
   )
 }

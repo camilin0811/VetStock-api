@@ -6,7 +6,7 @@ import { ToastProvider } from './components/Toast'
 import { AppLayout } from './components/AppLayout'
 import { ApiError } from './api/client'
 import Login from './pages/Login'
-import Pendiente from './pages/Pendiente'
+import NoEncontrada from './pages/NoEncontrada'
 import Dashboard from './pages/Dashboard'
 import Medicamentos from './pages/Medicamentos'
 import Inventario from './pages/Inventario'
@@ -50,7 +50,7 @@ export default function App() {
                   <Route path="proveedores" element={<Proveedores />} />
                   <Route path="categorias" element={<Categorias />} />
                   <Route element={<RequireAuth roles={['admin']} />}><Route path="usuarios" element={<Usuarios />} /></Route>
-                  <Route path="*" element={<Pendiente />} />
+                  <Route path="*" element={<NoEncontrada />} />
                 </Route>
               </Route>
             </Routes>

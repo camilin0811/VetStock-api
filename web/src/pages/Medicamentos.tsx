@@ -39,21 +39,21 @@ function MedForm({ med, onDone }: { med?: Medicamento; onDone: () => void }) {
     <form className="stack" style={{ gap: 14 }} onSubmit={enviar}>
       <div className="form-grid">
         <label className="field full">Nombre<input className="input" name="nombre" required defaultValue={med?.nombre} /></label>
-        <label className="field">Presentacion<input className="input" name="presentacion" required defaultValue={med?.presentacion} placeholder="Caja x20" /></label>
+        <label className="field">Presentación<input className="input" name="presentacion" required defaultValue={med?.presentacion} placeholder="Caja x20" /></label>
         <label className="field">Especie
           <select className="select" name="especie" defaultValue={med?.especie ?? 'general'}>{ESPECIES.map((e) => <option key={e} value={e}>{cap(e)}</option>)}</select>
         </label>
         <label className="field">Precio<input className="input" name="precio" type="number" min="0" step="0.01" required defaultValue={med?.precio} /></label>
-        <label className="field">Stock minimo<input className="input" name="stockMinimo" type="number" min="0" step="1" required defaultValue={med?.stockMinimo ?? 0} /></label>
-        <label className="check full"><input type="checkbox" name="requiereFormula" defaultChecked={med?.requiereFormula} />Requiere formula medica</label>
+        <label className="field">Stock mínimo<input className="input" name="stockMinimo" type="number" min="0" step="1" required defaultValue={med?.stockMinimo ?? 0} /></label>
+        <label className="check full"><input type="checkbox" name="requiereFormula" defaultChecked={med?.requiereFormula} />Requiere fórmula médica</label>
         <fieldset className="field full" style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend style={{ padding: 0, marginBottom: 6 }}>Categorias</legend>
+          <legend style={{ padding: 0, marginBottom: 6 }}>Categorías</legend>
           <div className="chips">
             {cats.data?.map((c) => (
               <button type="button" key={c.id} className="chip" aria-pressed={sel.includes(c.id)} onClick={() => setSel((s) => (s.includes(c.id) ? s.filter((x) => x !== c.id) : [...s, c.id]))}>{c.nombre}</button>
             ))}
             {cats.isLoading && <span className="muted">Cargando...</span>}
-            {cats.data?.length === 0 && <span className="muted">Aun no hay categorias.</span>}
+            {cats.data?.length === 0 && <span className="muted">Aún no hay categorías.</span>}
           </div>
         </fieldset>
       </div>
@@ -82,12 +82,12 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
       </div>
       <div className="chips">
         {item && <span className={`pill ${item.estado === 'OK' ? 'ok' : item.estado === 'STOCK_BAJO' ? 'warn' : 'bad'}`}>{item.estado === 'OK' ? 'Stock OK' : item.estado === 'STOCK_BAJO' ? 'Stock bajo' : 'Sin stock'}</span>}
-        {med.requiereFormula && <span className="pill info"><ShieldCheck size={14} aria-hidden="true" />Requiere formula</span>}
+        {med.requiereFormula && <span className="pill info"><ShieldCheck size={14} aria-hidden="true" />Requiere fórmula</span>}
         {med.categorias.map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}
       </div>
       <dl className="facts">
         <div><dt>Precio</dt><dd>{fmtMoney(med.precio)}</dd></div>
-        <div><dt>Stock minimo</dt><dd>{med.stockMinimo}</dd></div>
+        <div><dt>Stock mínimo</dt><dd>{med.stockMinimo}</dd></div>
         <div><dt>Disponible</dt><dd>{item ? item.disponible : '-'}</dd></div>
         <div><dt>Vencido</dt><dd>{item ? item.vencido : '-'}</dd></div>
       </dl>
@@ -160,8 +160,8 @@ export default function Medicamentos() {
           {ESPECIES.map((e) => <button key={e} type="button" className="chip" aria-pressed={especie === e} onClick={() => setFiltro('especie', e)}>{cap(e)}</button>)}
         </div>
         {!!cats.data?.length && (
-          <div className="chips" role="group" aria-label="Filtrar por categoria">
-            <button type="button" className="chip" aria-pressed={!cat} onClick={() => setFiltro('cat', '')}>Todas las categorias</button>
+          <div className="chips" role="group" aria-label="Filtrar por categoría">
+            <button type="button" className="chip" aria-pressed={!cat} onClick={() => setFiltro('cat', '')}>Todas las categorías</button>
             {cats.data.map((c) => <button key={c.id} type="button" className="chip" aria-pressed={cat === c.id} onClick={() => setFiltro('cat', String(c.id))}>{c.nombre}</button>)}
           </div>
         )}
@@ -193,7 +193,7 @@ export default function Medicamentos() {
 
         {wide && (
           <aside className="card detail" data-reveal aria-label="Detalle del medicamento">
-            {sel ? <Detalle med={sel} escribe={escribe} onEdit={() => setForm('editar')} onDelete={() => setBorrando(true)} /> : <EmptyState title="Elige un medicamento" text="Veras su stock, lotes y categorias aqui." />}
+            {sel ? <Detalle med={sel} escribe={escribe} onEdit={() => setForm('editar')} onDelete={() => setBorrando(true)} /> : <EmptyState title="Elige un medicamento" text="Verás su stock, lotes y categorías aquí." />}
           </aside>
         )}
       </div>
@@ -206,7 +206,7 @@ export default function Medicamentos() {
       <Modal open={form !== null} onClose={() => setForm(null)} title={form === 'editar' ? 'Editar medicamento' : 'Nuevo medicamento'}>
         <MedForm med={form === 'editar' ? sel : undefined} onDone={() => setForm(null)} />
       </Modal>
-      <ConfirmModal open={borrando} title="Eliminar medicamento" text={`Se eliminara ${sel?.nombre ?? ''}. Si tiene lotes no podras hacerlo.`} confirmLabel="Eliminar" busy={eliminar.isPending}
+      <ConfirmModal open={borrando} title="Eliminar medicamento" text={`Se eliminará ${sel?.nombre ?? ''}. Si tiene lotes no podras hacerlo.`} confirmLabel="Eliminar" busy={eliminar.isPending}
         onClose={() => setBorrando(false)} onConfirm={() => sel && eliminar.mutate(sel.id, { onSuccess: () => { setBorrando(false); setSelId(null) }, onError: () => setBorrando(false) })} />
     </Page>
   )

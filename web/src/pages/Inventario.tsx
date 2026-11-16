@@ -48,7 +48,7 @@ function LoteForm({ onDone }: { onDone: () => void }) {
             {provs.data?.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
         </label>
-        <label className="field">Numero de lote<input className="input" name="numeroLote" required /></label>
+        <label className="field">Número de lote<input className="input" name="numeroLote" required /></label>
         <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" step="1" required /></label>
         <label className="field full">Fecha de vencimiento<input className="input" name="fechaVencimiento" type="date" min={isoHoy()} required /></label>
       </div>
@@ -80,10 +80,10 @@ function AjusteForm({ lote, onDone }: { lote: Lote; onDone: () => void }) {
         <label className="field">Unidades a descontar<input className="input" name="cantidad" type="number" min="1" max={lote.cantidad} step="1" required /></label>
         <label className="field">Motivo
           <select className="select" name="motivo" defaultValue="PERDIDA">
-            <option value="PERDIDA">Perdida</option><option value="DANO">Dano</option><option value="VENCIDO">Vencido</option><option value="OTRO">Otro</option>
+            <option value="PERDIDA">Pérdida</option><option value="DANO">Daño</option><option value="VENCIDO">Vencido</option><option value="OTRO">Otro</option>
           </select>
         </label>
-        <label className="field full">Observacion<textarea className="textarea" name="observacion" /></label>
+        <label className="field full">Observación<textarea className="textarea" name="observacion" /></label>
       </div>
       <FormError errores={errores} />
       <div className="modal-actions">
@@ -129,7 +129,7 @@ export default function Inventario() {
           ) : (
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>Medicamento</th><th className="right">Disponible</th><th className="right">Minimo</th><th className="right">Vencido</th><th>Estado</th></tr></thead>
+                <thead><tr><th>Medicamento</th><th className="right">Disponible</th><th className="right">Mínimo</th><th className="right">Vencido</th><th>Estado</th></tr></thead>
                 <tbody>
                   {items.map((i) => (
                     <tr key={i.medicamento.id}>
@@ -148,7 +148,7 @@ export default function Inventario() {
       ) : (
         <section className="card" data-reveal aria-label="Lotes">
           {lotes.isLoading ? <SkeletonRows /> : lotes.error ? <ErrorState error={lotes.error} onRetry={() => lotes.refetch()} /> : !lotes.data?.length ? (
-            <EmptyState title="Aun no hay lotes" text="Registra el primer lote para ver el inventario." />
+            <EmptyState title="Aún no hay lotes" text="Registra el primer lote para ver el inventario." />
           ) : (
             <div className="table-wrap">
               <table className="table">

@@ -69,12 +69,12 @@ export default function Calendario() {
               })}
             </div>
           )}
-          <p className="muted cal-legend"><span className="dot bad" /> hasta 7 dias o vencido <span className="dot warn" /> hasta 30 dias <span className="dot info" /> mas adelante</p>
+          <p className="muted cal-legend"><span className="dot bad" /> hasta 7 días o vencido <span className="dot warn" /> hasta 30 días <span className="dot info" /> más adelante</p>
         </section>
 
-        <aside className="card detail" data-reveal aria-label="Vencimientos del dia seleccionado" aria-live="polite">
+        <aside className="card detail" data-reveal aria-label="Vencimientos del día seleccionado" aria-live="polite">
           <h2 style={{ fontSize: 17, marginBottom: 12 }}>{fmtFecha(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
-          {!delDia.length ? <EmptyState title="Sin vencimientos" text="Ningun lote con existencias vence este dia." /> : (
+          {!delDia.length ? <EmptyState title="Sin vencimientos" text="Ningun lote con existencias vence este día." /> : (
             <ul className="list">
               {delDia.map((l) => (
                 <li key={l.id} className="list-item slim">

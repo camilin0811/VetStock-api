@@ -44,7 +44,7 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
       {canWrite && <div className="page-head" data-reveal><span className="grow" /><button type="button" className="btn primary" onClick={() => abrir()}><Plus size={18} aria-hidden="true" />Nuevo {singular.toLowerCase()}</button></div>}
       <section className="card" data-reveal>
         {query.isLoading ? <SkeletonRows /> : query.error ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : !query.data?.length ? (
-          <EmptyState title={`Aun no hay ${singular.toLowerCase()}s`} text={emptyText} action={canWrite ? <button type="button" className="btn primary" onClick={() => abrir()}>Crear {singular.toLowerCase()}</button> : undefined} />
+          <EmptyState title={`Aún no hay ${singular.toLowerCase()}s`} text={emptyText} action={canWrite ? <button type="button" className="btn primary" onClick={() => abrir()}>Crear {singular.toLowerCase()}</button> : undefined} />
         ) : (
           <div className="table-wrap">
             <table className="table">
@@ -90,7 +90,7 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
           </div>
         </form>
       </Modal>
-      <ConfirmModal open={!!borrando} title={`Eliminar ${singular.toLowerCase()}`} text={borrando ? (deleteText?.(borrando) ?? `Se eliminara ${nameOf(borrando)}.`) : ''} confirmLabel="Eliminar" busy={eliminar.isPending}
+      <ConfirmModal open={!!borrando} title={`Eliminar ${singular.toLowerCase()}`} text={borrando ? (deleteText?.(borrando) ?? `Se eliminará ${nameOf(borrando)}.`) : ''} confirmLabel="Eliminar" busy={eliminar.isPending}
         onClose={() => setBorrando(null)} onConfirm={() => borrando && eliminar.mutate(borrando.id, { onSettled: () => setBorrando(null) })} />
     </Page>
   )

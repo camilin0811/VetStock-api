@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     qc.clear()
   }, [qc])
 
-  // Sesion previa: refresh token en localStorage -> access en memoria + perfil.
+  // Sesión previa: refresh token en localStorage -> access en memoria + perfil.
   useEffect(() => {
     setUnauthorizedHandler(cerrar)
     if (!tokens.refresh) return

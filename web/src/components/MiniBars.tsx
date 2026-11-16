@@ -6,7 +6,7 @@ export function MiniBars({ data }: { data: { fecha: string; unidades: number }[]
   const W = 280, H = 120, gap = 10
   const bw = (W - gap * (data.length - 1)) / data.length
   return (
-    <svg viewBox={`0 0 ${W} ${H + 22}`} className="minibars" role="img" aria-label={`Consumo de los ultimos ${data.length} dias: ${data.map((d) => d.unidades).join(', ')} unidades`}>
+    <svg viewBox={`0 0 ${W} ${H + 22}`} className="minibars" role="img" aria-label={`Consumo de los últimos ${data.length} días: ${data.map((d) => d.unidades).join(', ')} unidades`}>
       {data.map((d, i) => {
         const h = Math.max(4, (d.unidades / max) * (H - 18))
         const x = i * (bw + gap)

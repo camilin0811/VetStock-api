@@ -4,7 +4,7 @@ import { Skeleton } from '../components/States'
 
 export function Splash() {
   return (
-    <div className="app-bg" role="status" aria-label="Cargando sesion">
+    <div className="app-bg" role="status" aria-label="Cargando sesión">
       <div className="app" style={{ display: 'grid', placeItems: 'center' }}><Skeleton h={120} w={240} r={28} /></div>
     </div>
   )

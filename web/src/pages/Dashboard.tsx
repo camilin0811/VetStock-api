@@ -15,7 +15,7 @@ import { tipDelDia } from '../lib/tips'
 
 function saludo() {
   const h = new Date().getHours()
-  return h < 12 ? 'Buenos dias' : h < 19 ? 'Buenas tardes' : 'Buenas noches'
+  return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches'
 }
 
 export default function Dashboard() {
@@ -40,7 +40,7 @@ export default function Dashboard() {
         <section className="hero" aria-label="Bienvenida">
           <div className="hero-greet" data-reveal>
             <h2>{saludo()}, {nombre} <Heart size={26} fill="var(--violet-600)" color="var(--violet-600)" aria-hidden="true" /></h2>
-            <p className="muted">Que tengas un gran dia en la farmacia.</p>
+            <p className="muted">Que tengas un gran día en la farmacia.</p>
           </div>
           <HeroScene />
           <div className="hero-card card" data-reveal>
@@ -75,7 +75,7 @@ export default function Dashboard() {
         ) : (
           <div className="cols-2 dash-cards">
             <section className="card soft" data-reveal aria-labelledby="h-prox">
-              <div className="card-head"><h2 id="h-prox">Proximos vencimientos</h2><Link className="link-more" to="/calendario">Ver todo</Link></div>
+              <div className="card-head"><h2 id="h-prox">Próximos vencimientos</h2><Link className="link-more" to="/calendario">Ver todo</Link></div>
               {isLoading ? <div className="stack" style={{ gap: 10 }}><Skeleton h={62} r={16} /><Skeleton h={62} r={16} /></div> : !r?.proximosVencimientos.length ? (
                 <EmptyState title="Nada por vencer" text="No hay lotes proximos a vencer." />
               ) : (
@@ -100,7 +100,7 @@ export default function Dashboard() {
                 <ul className="list">
                   <li className="list-item slim"><span className="list-ico"><Boxes size={19} aria-hidden="true" /></span><span className="grow">Stock saludable</span><span className="pill ok"><CountUp value={Math.round(r.porcentajeStockSaludable)} format={(n) => `${n}% OK`} /></span></li>
                   <li className="list-item slim"><span className="list-ico"><AlertTriangle size={19} aria-hidden="true" /></span><span className="grow">Stock bajo</span><span className="pill warn"><CountUp value={r.stockBajo} /> {plural(r.stockBajo, 'producto')}</span></li>
-                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 dias)</span><span className="pill info"><CountUp value={r.porVencer} /> {plural(r.porVencer, 'lote')}</span></li>
+                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 días)</span><span className="pill info"><CountUp value={r.porVencer} /> {plural(r.porVencer, 'lote')}</span></li>
                   <li className="list-item slim"><span className="list-ico"><Bell size={19} aria-hidden="true" /></span><span className="grow">Vencidos</span><span className={`pill ${r.vencidos ? 'bad' : 'ok'}`}><CountUp value={r.vencidos} /> {plural(r.vencidos, 'lote')}</span></li>
                 </ul>
               ) : null}
@@ -109,9 +109,9 @@ export default function Dashboard() {
         )}
 
         <section className="card" data-reveal aria-labelledby="h-ult">
-          <div className="card-head"><h2 id="h-ult">Ultimas dispensaciones</h2><Link className="link-more" to="/dispensar">Ver todo</Link></div>
+          <div className="card-head"><h2 id="h-ult">Últimas dispensaciones</h2><Link className="link-more" to="/dispensar">Ver todo</Link></div>
           {isLoading ? <Skeleton h={120} r={16} /> : !r?.ultimasDispensaciones.length ? (
-            <EmptyState title="Aun no hay dispensaciones" text="Cuando entregues un medicamento aparecera aqui." action={<Link to="/dispensar" className="btn primary">Dispensar ahora</Link>} />
+            <EmptyState title="Aún no hay dispensaciones" text="Cuando entregues un medicamento aparecerá aquí." action={<Link to="/dispensar" className="btn primary">Dispensar ahora</Link>} />
           ) : (
             <ul className="list">
               {r.ultimasDispensaciones.map((d) => (
@@ -150,12 +150,12 @@ export default function Dashboard() {
         </section>
 
         <section className="card" data-reveal aria-labelledby="h-cons">
-          <h2 id="h-cons" className="rail-title">Consumo 7 dias</h2>
+          <h2 id="h-cons" className="rail-title">Consumo 7 días</h2>
           {isLoading ? <Skeleton h={140} r={16} /> : r ? <MiniBars data={r.consumoUltimos7Dias} /> : null}
         </section>
 
         <section className="card tip" data-reveal aria-labelledby="h-tip">
-          <h2 id="h-tip" className="rail-title">Tip del dia</h2>
+          <h2 id="h-tip" className="rail-title">Tip del día</h2>
           <p className="tip-text">{tip.texto}<mark>{tip.destacado}</mark>.</p>
           <span className="tip-quote" aria-hidden="true">&rdquo;</span>
         </section>

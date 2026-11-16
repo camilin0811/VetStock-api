@@ -7,7 +7,7 @@ import { fmtFechaHora, nombreMed } from '../lib/format'
 
 const TIPOS: { v: TipoMovimiento; label: string; tono: string }[] = [
   { v: 'ENTRADA', label: 'Entrada', tono: 'ok' }, { v: 'SALIDA', label: 'Salida', tono: 'info' },
-  { v: 'AJUSTE', label: 'Ajuste', tono: 'warn' }, { v: 'ANULACION', label: 'Anulacion', tono: 'bad' },
+  { v: 'AJUSTE', label: 'Ajuste', tono: 'warn' }, { v: 'ANULACION', label: 'Anulación', tono: 'bad' },
 ]
 
 export default function Movimientos() {
@@ -33,7 +33,7 @@ export default function Movimientos() {
       </div>
       <section className="card" data-reveal aria-label="Kardex">
         {movs.isLoading ? <SkeletonRows /> : movs.error ? <ErrorState error={movs.error} onRetry={() => movs.refetch()} /> : !movs.data?.length ? (
-          <EmptyState title="Sin movimientos" text="Las entradas, salidas y ajustes apareceran aqui." />
+          <EmptyState title="Sin movimientos" text="Las entradas, salidas y ajustes aparecerán aquí." />
         ) : (
           <div className="table-wrap">
             <table className="table">

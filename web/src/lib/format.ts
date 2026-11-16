@@ -16,7 +16,7 @@ export const fmtFechaHora = (s: string) =>
 export function diasLabel(d: number) {
   if (d < 0) return `Vencido hace ${-d} d`
   if (d === 0) return 'Vence hoy'
-  return `En ${d} dias`
+  return `En ${d} días`
 }
 export const diasTono = (d: number): 'bad' | 'warn' | 'info' => (d <= 7 ? 'bad' : d <= 30 ? 'warn' : 'info')
 export const isoHoy = () => {

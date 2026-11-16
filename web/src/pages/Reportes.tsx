@@ -26,7 +26,7 @@ export default function Reportes() {
   return (
     <Page deps={[consumo.isLoading, venc.isLoading, stock.isLoading, prov.isLoading]}>
       <div className="card soft page-head" data-reveal>
-        <p className="muted grow">Rango para consumo y proveedores (por defecto, ultimos 30 dias).</p>
+        <p className="muted grow">Rango para consumo y proveedores (por defecto, últimos 30 días).</p>
         <label className="field">Desde<input className="input" type="date" value={desde} max={hasta || undefined} onChange={(e) => setDesde(e.target.value)} /></label>
         <label className="field">Hasta<input className="input" type="date" value={hasta} min={desde || undefined} onChange={(e) => setHasta(e.target.value)} /></label>
       </div>
@@ -36,7 +36,7 @@ export default function Reportes() {
           {!consumo.data?.detalle.length ? <EmptyState title="Sin consumo" text="No hubo dispensaciones en este rango." /> : (
             <>
               <HBars items={consumo.data.detalle.slice(0, 8).map((d) => ({ label: nombreMed(d.medicamento), value: d.unidades, display: `${fmtNum(d.unidades)} u` }))} />
-              <p className="muted rep-foot">Ventas del periodo: <strong>{fmtMoney(consumo.data.totalVentas)}</strong> · {fmtFecha(consumo.data.desde)} a {fmtFecha(consumo.data.hasta)}</p>
+              <p className="muted rep-foot">Ventas del período: <strong>{fmtMoney(consumo.data.totalVentas)}</strong> · {fmtFecha(consumo.data.desde)} a {fmtFecha(consumo.data.hasta)}</p>
             </>
           )}
         </Bloque>
@@ -47,12 +47,12 @@ export default function Reportes() {
           )}
         </Bloque>
 
-        <Bloque titulo="Vencimientos" q={venc} total={venc.data && <span className={`pill ${venc.data.totalPerdida ? 'bad' : 'ok'}`}>Perdida {fmtMoney(venc.data.totalPerdida)}</span>}>
-          {!venc.data?.lotes.length ? <EmptyState title="Sin lotes vencidos" text="No hay perdidas por vencimiento." /> : (
+        <Bloque titulo="Vencimientos" q={venc} total={venc.data && <span className={`pill ${venc.data.totalPerdida ? 'bad' : 'ok'}`}>Pérdida {fmtMoney(venc.data.totalPerdida)}</span>}>
+          {!venc.data?.lotes.length ? <EmptyState title="Sin lotes vencidos" text="No hay pérdidas por vencimiento." /> : (
             <ul className="list">
               {venc.data.lotes.map(({ lote, medicamento, perdida }) => (
                 <li key={lote.id} className="list-item slim">
-                  <div className="grow"><div className="row-title">{medicamento.nombre}</div><div className="row-sub">Lote {lote.numeroLote} · {lote.cantidad} u · vencio {fmtFecha(lote.fechaVencimiento)}</div></div>
+                  <div className="grow"><div className="row-title">{medicamento.nombre}</div><div className="row-sub">Lote {lote.numeroLote} · {lote.cantidad} u · venció {fmtFecha(lote.fechaVencimiento)}</div></div>
                   <span className="pill bad">{fmtMoney(perdida)}</span>
                 </li>
               ))}

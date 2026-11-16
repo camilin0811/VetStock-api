@@ -9,8 +9,8 @@ export default function Categorias() {
   const query = useCategorias()
   return (
     <CrudPage<Categoria>
-      singular="Categoria" base="/categorias" query={query} canWrite={puedeEscribirCatalogo(usuario?.rol)} nameOf={(c) => c.nombre}
-      emptyText="Agrupa medicamentos, vacunas e insumos para filtrarlos mas facil."
+      singular="Categoría" base="/categorias" query={query} canWrite={puedeEscribirCatalogo(usuario?.rol)} nameOf={(c) => c.nombre}
+      emptyText="Agrupa medicamentos, vacunas e insumos para filtrarlos más fácil."
       fields={[{ name: 'nombre', label: 'Nombre', required: true, full: true }, { name: 'descripcion', label: 'Descripcion', type: 'textarea', full: true, hint: 'Opcional' }]}
       columns={[{ header: 'Categoria', cell: (c) => <span className="row-title">{c.nombre}</span> }, { header: 'Descripcion', cell: (c) => c.descripcion ?? '-' }]}
     />

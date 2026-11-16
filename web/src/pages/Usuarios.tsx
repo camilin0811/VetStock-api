@@ -14,11 +14,11 @@ export default function Usuarios() {
     <CrudPage<Usuario>
       singular="Usuario" base="/usuarios" query={query} canWrite nameOf={(u) => u.nombre} canDelete={(u) => u.id !== usuario?.id}
       emptyText="Las cuentas nuevas se crean desde la pantalla de registro."
-      deleteText={(u) => `Se eliminara la cuenta de ${u.nombre}. No se puede deshacer.`}
+      deleteText={(u) => `Se eliminará la cuenta de ${u.nombre}. No se puede deshacer.`}
       fields={[
         { name: 'nombre', label: 'Nombre', required: true, full: true }, { name: 'correo', label: 'Correo', type: 'email', required: true },
         { name: 'rol', label: 'Rol', type: 'select', options: ROLES, required: true },
-        { name: 'clave', label: 'Clave', type: 'password', required: true, requiredOnCreateOnly: true, full: true, hint: 'Minimo 8 caracteres.' },
+        { name: 'clave', label: 'Clave', type: 'password', required: true, requiredOnCreateOnly: true, full: true, hint: 'Mínimo 8 caracteres.' },
       ]}
       columns={[
         { header: 'Nombre', cell: (u) => <span className="row-title">{u.nombre}{u.id === usuario?.id && <span className="muted"> (tu)</span>}</span> }, { header: 'Correo', cell: (u) => u.correo },

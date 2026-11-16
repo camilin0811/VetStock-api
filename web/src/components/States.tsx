@@ -29,7 +29,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   return (
     <div className="state error" role="alert">
       <AlertCircle size={36} aria-hidden="true" />
-      <h3>Algo salio mal</h3>
+      <h3>Algo salió mal</h3>
       <p>{msg}</p>
       {onRetry && <button type="button" className="btn" onClick={onRetry}>Reintentar</button>}
     </div>
