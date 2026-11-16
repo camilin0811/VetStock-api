@@ -13,6 +13,7 @@ import Inventario from './pages/Inventario'
 import Movimientos from './pages/Movimientos'
 import Dispensar from './pages/Dispensar'
 import Alertas from './pages/Alertas'
+import Reportes from './pages/Reportes'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,6 +41,7 @@ export default function App() {
                   <Route path="movimientos" element={<Movimientos />} />
                   <Route path="dispensar" element={<Dispensar />} />
                   <Route path="alertas" element={<Alertas />} />
+                  <Route path="reportes" element={<Reportes />} />
                   <Route path="*" element={<Pendiente />} />
                 </Route>
               </Route>
