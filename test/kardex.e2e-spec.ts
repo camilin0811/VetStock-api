@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { AppPrueba, crearAppPrueba } from './app-prueba';
 
-describe('Kardex (e2e)', () => {
+describe('Inventario y kardex (e2e)', () => {
   let contexto: AppPrueba;
 
   beforeEach(async () => {
@@ -81,6 +81,41 @@ describe('Kardex (e2e)', () => {
         numeroLote: 'ALB-301',
         usuario: { id: 3, nombre: 'Camila' },
       });
+    });
+  });
+
+  describe('GET /inventario', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .get('/inventario')
+        .expect(401);
+    });
+
+    it('lista el stock de todos los medicamentos con su estado', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/inventario')
+        .expect(200);
+
+      expect(respuesta.body.count).toBe(4);
+      const amoxicilina = respuesta.body.data.find(
+        (item: { medicamento: { id: number } }) => item.medicamento.id === 1,
+      );
+      expect(amoxicilina).toMatchObject({
+        disponible: 15,
+        vencido: 0,
+        estado: 'STOCK_BAJO',
+      });
+      expect(amoxicilina.medicamento.categorias).toHaveLength(1);
+    });
+
+    it('GET /inventario/:medicamentoId conserva la forma anterior', async () => {
+      const respuesta = await contexto.api().get('/inventario/3').expect(200);
+      expect(respuesta.body).toMatchObject({
+        stockDisponible: 10,
+        stockVencido: 4,
+      });
+      await contexto.api().get('/inventario/abc').expect(400);
     });
   });
 });

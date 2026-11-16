@@ -46,6 +46,15 @@ export class InventarioDto {
   lotes: LoteDto[];
 }
 
+export type EstadoStock = 'OK' | 'STOCK_BAJO' | 'SIN_STOCK';
+
+export class InventarioItemDto {
+  medicamento: MedicamentoResponseDto;
+  disponible: number;
+  vencido: number;
+  estado: EstadoStock;
+}
+
 export class AlertaDto {
   tipo: 'STOCK_BAJO' | 'POR_VENCER' | 'VENCIDO';
   medicamento: MedicamentoResponseDto;

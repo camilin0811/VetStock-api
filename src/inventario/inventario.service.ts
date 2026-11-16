@@ -11,7 +11,12 @@ import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { ProveedorService } from '../proveedores/proveedor.service';
 import { Lote } from './entities/lote.entity';
 import { Movimiento } from './entities/movimiento.entity';
-import { InventarioDto, LoteRequestDto } from './lote.dto';
+import {
+  EstadoStock,
+  InventarioDto,
+  InventarioItemDto,
+  LoteRequestDto,
+} from './lote.dto';
 
 @Injectable()
 export class InventarioService {
@@ -107,6 +112,65 @@ export class InventarioService {
       stockVencido: this.sumar(lotes.filter((lote) => this.vencido(lote))),
       lotes,
     };
+  }
+
+  // Stock de todos los medicamentos con 2 consultas (medicamentos + suma de lotes),
+  // sin consultar lote por lote
+  async listarInventario() {
+    const [medicamentos, filas] = await Promise.all([
+      this.medicamentoService.listar(),
+      this.loteRepository
+        .createQueryBuilder('lote')
+        .select('lote.medicamentoId', 'medicamentoId')
+        .addSelect(
+          'SUM(CASE WHEN lote.fechaVencimiento > :hoy THEN lote.cantidad ELSE 0 END)',
+          'disponible',
+        )
+        .addSelect(
+          'SUM(CASE WHEN lote.fechaVencimiento <= :hoy THEN lote.cantidad ELSE 0 END)',
+          'vencido',
+        )
+        .setParameter('hoy', hoy())
+        .groupBy('lote.medicamentoId')
+        .getRawMany<{
+          medicamentoId: number | string;
+          disponible: number | string;
+          vencido: number | string;
+        }>(),
+    ]);
+
+    const stock = new Map(
+      filas.map((fila) => [
+        Number(fila.medicamentoId),
+        { disponible: Number(fila.disponible), vencido: Number(fila.vencido) },
+      ]),
+    );
+
+    const data: InventarioItemDto[] = medicamentos.data.map((medicamento) => {
+      const { disponible, vencido } = stock.get(medicamento.id) ?? {
+        disponible: 0,
+        vencido: 0,
+      };
+      return {
+        medicamento,
+        disponible,
+        vencido,
+        estado: this.estadoStock(disponible, medicamento.stockMinimo),
+      };
+    });
+
+    return {
+      message: 'Inventario obtenido correctamente',
+      data,
+      count: data.length,
+    };
+  }
+
+  estadoStock(disponible: number, stockMinimo: number): EstadoStock {
+    if (disponible <= 0) {
+      return 'SIN_STOCK';
+    }
+    return disponible < stockMinimo ? 'STOCK_BAJO' : 'OK';
   }
 
   vencido(lote: Lote) {

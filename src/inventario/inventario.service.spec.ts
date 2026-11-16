@@ -11,6 +11,7 @@ import { diasDesdeHoy } from '../common/fechas';
 import { AlertaService } from './alerta.service';
 import { InventarioModule } from './inventario.module';
 import { InventarioService } from './inventario.service';
+import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { MovimientoService } from './movimiento.service';
 
 describe('InventarioService', () => {
@@ -156,6 +157,71 @@ describe('InventarioService', () => {
       expect(salidasDeMeloxicam.count).toBe(1);
       expect(salidasDeMeloxicam.data[0].usuario).toBeNull();
       expect(salidasDeMeloxicam.data[0].numeroLote).toBe('MLX-050');
+    });
+  });
+
+  describe('listarInventario', () => {
+    it('agrega disponible y vencido de todos los medicamentos', async () => {
+      const { data, count } = await service.listarInventario();
+
+      expect(count).toBe(4);
+      const porId = new Map(data.map((item) => [item.medicamento.id, item]));
+      expect(porId.get(1)).toMatchObject({ disponible: 15, vencido: 0 });
+      expect(porId.get(2)).toMatchObject({ disponible: 42, vencido: 0 });
+      expect(porId.get(3)).toMatchObject({ disponible: 10, vencido: 4 });
+      expect(porId.get(4)).toMatchObject({ disponible: 25, vencido: 0 });
+    });
+
+    it('calcula el estado segun el stock minimo', async () => {
+      const { data } = await service.listarInventario();
+      const estado = (id: number) =>
+        data.find((item) => item.medicamento.id === id)?.estado;
+
+      expect(estado(1)).toBe('STOCK_BAJO'); // 15 < minimo 20
+      expect(estado(2)).toBe('OK');
+      expect(estado(3)).toBe('OK');
+    });
+
+    it('marca SIN_STOCK a un medicamento sin lotes y coincide con obtenerInventario', async () => {
+      const { data: nuevo } = await testingModule
+        .get(MedicamentoService)
+        .crear({
+          nombre: 'Suero oral',
+          presentacion: 'Sobre 20 g',
+          especie: 'general',
+          precio: 1500,
+          stockMinimo: 2,
+          requiereFormula: false,
+        });
+
+      const { data } = await service.listarInventario();
+      expect(data.find((i) => i.medicamento.id === nuevo.id)).toMatchObject({
+        disponible: 0,
+        vencido: 0,
+        estado: 'SIN_STOCK',
+      });
+
+      for (const item of data) {
+        const detalle = await service.obtenerInventario(item.medicamento.id);
+        expect(item.disponible).toBe(detalle.stockDisponible);
+        expect(item.vencido).toBe(detalle.stockVencido);
+      }
+    });
+
+    it('un lote que vence hoy cuenta como vencido', async () => {
+      await testingModule
+        .get(DataSource)
+        .query('UPDATE lote SET fecha_vencimiento = ? WHERE id = 6', [
+          diasDesdeHoy(0),
+        ]);
+
+      const { data } = await service.listarInventario();
+
+      expect(data.find((i) => i.medicamento.id === 4)).toMatchObject({
+        disponible: 0,
+        vencido: 25,
+        estado: 'SIN_STOCK',
+      });
     });
   });
 });

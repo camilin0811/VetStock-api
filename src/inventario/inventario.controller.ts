@@ -39,6 +39,11 @@ export class InventarioController {
     return this.inventarioService.listarLotes(medicamentoId);
   }
 
+  @Get('inventario')
+  listarInventario() {
+    return this.inventarioService.listarInventario();
+  }
+
   @Get('inventario/:medicamentoId')
   obtenerInventario(
     @Param('medicamentoId', ParseIntPipe) medicamentoId: number,
