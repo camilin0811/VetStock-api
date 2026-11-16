@@ -8,6 +8,7 @@ import {
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { TIPO_FECHA_HORA } from '../../common/columnas';
 import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
 import type { LoteUsadoDto } from '../dispensacion.dto';
 
@@ -46,9 +47,9 @@ export class Dispensacion {
   @Column({ type: 'simple-json', name: 'lotes_usados' })
   lotesUsados: LoteUsadoDto[];
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: TIPO_FECHA_HORA, name: 'updated_at' })
   updatedAt: Date;
 }

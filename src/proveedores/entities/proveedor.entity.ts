@@ -7,6 +7,7 @@ import {
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { TIPO_FECHA_HORA } from '../../common/columnas';
 import { Lote } from '../../inventario/entities/lote.entity';
 
 @Entity({ name: 'proveedor' })
@@ -29,9 +30,9 @@ export class Proveedor {
   @OneToMany(() => Lote, (lote) => lote.proveedor)
   lotes: Relation<Lote[]>;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: TIPO_FECHA_HORA, name: 'updated_at' })
   updatedAt: Date;
 }
