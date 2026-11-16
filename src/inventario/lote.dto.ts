@@ -1,4 +1,5 @@
 import { PartialType, PickType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsIn,
@@ -6,6 +7,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   Min,
 } from 'class-validator';
 import { MedicamentoResponseDto } from '../medicamentos/medicamento.dto';
@@ -80,9 +82,28 @@ export class InventarioItemDto {
   estado: EstadoStock;
 }
 
+export const TIPOS_ALERTA = ['STOCK_BAJO', 'POR_VENCER', 'VENCIDO'] as const;
+export type TipoAlerta = (typeof TIPOS_ALERTA)[number];
+
+export class AlertaQueryDto {
+  @IsOptional()
+  @IsIn(TIPOS_ALERTA)
+  tipo?: TipoAlerta;
+
+  // Ventana en dias para POR_VENCER (por defecto 30)
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  dias?: number;
+}
+
 export class AlertaDto {
-  tipo: 'STOCK_BAJO' | 'POR_VENCER' | 'VENCIDO';
+  tipo: TipoAlerta;
   medicamento: MedicamentoResponseDto;
-  loteId?: number;
   mensaje: string;
+  loteId?: number;
+  fechaVencimiento?: string;
+  diasRestantes?: number;
 }

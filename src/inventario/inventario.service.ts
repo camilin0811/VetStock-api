@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Not, Repository } from 'typeorm';
+import { LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
 import { bloqueoPesimista } from '../common/bloqueo';
-import { diasHasta, hoy } from '../common/fechas';
+import { diasDesdeHoy, diasHasta, hoy } from '../common/fechas';
 import type { Usuario } from '../auth/entities/usuario.entity';
 import { Medicamento } from '../medicamentos/entities/medicamento.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
@@ -200,6 +200,17 @@ export class InventarioService {
       data: lotes,
       count: lotes.length,
     };
+  }
+
+  // Lotes con unidades que ya vencieron o vencen en los proximos `dias`
+  buscarLotesPorVencer(dias: number) {
+    return this.loteRepository.find({
+      where: {
+        cantidad: MoreThan(0),
+        fechaVencimiento: LessThanOrEqual(diasDesdeHoy(dias)),
+      },
+      order: { fechaVencimiento: 'ASC', id: 'ASC' },
+    });
   }
 
   async buscarLotes(medicamentoId?: number, conRelaciones = false) {

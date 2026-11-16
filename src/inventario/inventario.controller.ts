@@ -12,7 +12,12 @@ import type { Usuario } from '../auth/entities/usuario.entity';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import { AlertaService } from './alerta.service';
 import { InventarioService } from './inventario.service';
-import { ActualizarLoteDto, AjusteDto, LoteRequestDto } from './lote.dto';
+import {
+  ActualizarLoteDto,
+  AjusteDto,
+  AlertaQueryDto,
+  LoteRequestDto,
+} from './lote.dto';
 import { MovimientoQueryDto } from './movimiento.dto';
 import { MovimientoService } from './movimiento.service';
 
@@ -70,8 +75,8 @@ export class InventarioController {
   }
 
   @Get('alertas')
-  listarAlertas() {
-    return this.alertaService.generar();
+  listarAlertas(@Query() filtro: AlertaQueryDto) {
+    return this.alertaService.generar(filtro);
   }
 
   @Get('movimientos')

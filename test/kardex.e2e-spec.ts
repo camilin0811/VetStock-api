@@ -227,4 +227,48 @@ describe('Inventario y kardex (e2e)', () => {
         .expect(400);
     });
   });
+
+  describe('GET /alertas', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer()).get('/alertas').expect(401);
+    });
+
+    it('devuelve todas las alertas con la forma del contrato', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/alertas')
+        .expect(200);
+
+      expect(respuesta.body.count).toBe(3);
+      const porVencer = respuesta.body.data.find(
+        (a: { tipo: string }) => a.tipo === 'POR_VENCER',
+      );
+      expect(porVencer).toMatchObject({
+        loteId: 2,
+        diasRestantes: 20,
+        medicamento: expect.objectContaining({ nombre: 'Vacuna antirrabica' }),
+      });
+      expect(porVencer.fechaVencimiento).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('filtra por tipo y dias', async () => {
+      const api = contexto.api();
+      const vencidos = await api.get('/alertas?tipo=VENCIDO');
+      expect(
+        vencidos.body.data.map((a: { loteId: number }) => a.loteId),
+      ).toEqual([4]);
+
+      const sinVentana = await api.get('/alertas?tipo=POR_VENCER&dias=10');
+      expect(sinVentana.body).toMatchObject({ data: [], count: 0 });
+
+      const amplia = await api.get('/alertas?tipo=POR_VENCER&dias=250');
+      expect(amplia.body.count).toBe(3);
+    });
+
+    it('valida tipo y dias', async () => {
+      await contexto.api().get('/alertas?tipo=OTRO').expect(400);
+      await contexto.api().get('/alertas?dias=0').expect(400);
+      await contexto.api().get('/alertas?dias=abc').expect(400);
+    });
+  });
 });
