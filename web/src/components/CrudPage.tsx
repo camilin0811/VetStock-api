@@ -15,15 +15,15 @@ export interface Field {
 export interface Column<T> { header: string; cell: (t: T) => ReactNode; right?: boolean }
 interface Props<T extends { id: number }> {
   singular: string; base: string; query: UseQueryResult<T[]>; fields: Field[]; columns: Column<T>[]
-  canWrite: boolean; emptyText: string; canDelete?: (t: T) => boolean; deleteText?: (t: T) => string; nameOf: (t: T) => string
+  canWrite: boolean; create?: (b: Record<string, unknown>) => Promise<unknown>; emptyText: string; canDelete?: (t: T) => boolean; deleteText?: (t: T) => string; nameOf: (t: T) => string
 }
 
-export function CrudPage<T extends { id: number }>({ singular, base, query, fields, columns, canWrite, emptyText, canDelete, deleteText, nameOf }: Props<T>) {
+export function CrudPage<T extends { id: number }>({ singular, base, query, fields, columns, canWrite, create, emptyText, canDelete, deleteText, nameOf }: Props<T>) {
   const [form, setForm] = useState<{ item?: T } | null>(null)
   const [borrando, setBorrando] = useState<T | null>(null)
   const [errores, setErrores] = useState<string[]>([])
   const editing = form?.item
-  const guardar = useAccion((b: Record<string, unknown>) => (editing ? actualizar(base)({ id: editing.id, ...b }) : crear(base)(b)), editing ? `${singular} actualizado` : `${singular} creado`, false)
+  const guardar = useAccion((b: Record<string, unknown>) => (editing ? actualizar(base)({ id: editing.id, ...b }) : (create ?? crear(base))(b)), editing ? `${singular} actualizado` : `${singular} creado`, false)
   const eliminar = useAccion(borrar(base), `${singular} eliminado`)
 
   async function enviar(e: FormEvent<HTMLFormElement>) {

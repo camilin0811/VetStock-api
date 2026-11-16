@@ -25,7 +25,7 @@ export default function Login() {
       if (modo === 'login') await login(String(f.get('correo')), String(f.get('clave')))
       else await registro({ nombre: String(f.get('nombre')), correo: String(f.get('correo')), clave: String(f.get('clave')), rol: String(f.get('rol')) as Rol })
     } catch (err) {
-      setErrores(err instanceof ApiError ? err.messages : ['Ocurrio un error inesperado.'])
+      setErrores(err instanceof ApiError ? err.messages : ['Ocurrió un error inesperado.'])
     } finally {
       setEnviando(false)
     }

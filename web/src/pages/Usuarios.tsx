@@ -1,3 +1,4 @@
+import { post } from '../api/client'
 import { useUsuarios } from '../api/hooks'
 import type { Usuario } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
@@ -12,8 +13,11 @@ export default function Usuarios() {
   const query = useUsuarios(usuario?.rol === 'admin')
   return (
     <CrudPage<Usuario>
-      singular="Usuario" base="/usuarios" query={query} canWrite nameOf={(u) => u.nombre} canDelete={(u) => u.id !== usuario?.id}
-      emptyText="Las cuentas nuevas se crean desde la pantalla de registro."
+      singular="Usuario" base="/usuarios" query={query} canWrite
+      // El contrato crea cuentas con POST /auth/registro (admin autenticado). Los tokens de la respuesta se ignoran: no se cambia de sesion.
+      create={(b) => post('/auth/registro', b)}
+      nameOf={(u) => u.nombre} canDelete={(u) => u.id !== usuario?.id}
+      emptyText="Crea cuentas para tu equipo y asigna su rol."
       deleteText={(u) => `Se eliminará la cuenta de ${u.nombre}. No se puede deshacer.`}
       fields={[
         { name: 'nombre', label: 'Nombre', required: true, full: true }, { name: 'correo', label: 'Correo', type: 'email', required: true },

@@ -90,7 +90,7 @@ export default function Dispensar() {
         <section className="card soft" data-reveal aria-labelledby="h-fefo" aria-live="polite">
           <div className="card-head"><h2 id="h-fefo">Resultado FEFO</h2>{resultado && <span className="pill ok"><CheckCircle2 size={14} aria-hidden="true" />Registrada</span>}</div>
           {!resultado ? (
-            <EmptyState title="El primero en vencer sale primero" text="Al dispensar, VetStock descuenta de los lotes con vencimiento más cercano y te muestra cuales uso." />
+            <EmptyState title="El primero en vencer sale primero" text="Al dispensar, VetStock descuenta de los lotes con vencimiento más cercano y te muestra cuáles usó." />
           ) : (
             <div className="stack" style={{ gap: 14 }}>
               <div><div className="row-title">{nombreMed(resultado.medicamento)} x {resultado.cantidad}</div><div className="row-sub">Paciente {resultado.mascota} · {resultado.veterinario}</div></div>
@@ -117,7 +117,7 @@ export default function Dispensar() {
           </div>
         </div>
         {historial.isLoading ? <SkeletonRows /> : historial.error ? <ErrorState error={historial.error} onRetry={() => historial.refetch()} /> : !historial.data?.length ? (
-          <EmptyState title="Sin dispensaciones" text={mascota ? 'No hay resultados para ese paciente.' : 'Aun no se ha dispensado nada.'} />
+          <EmptyState title="Sin dispensaciones" text={mascota ? 'No hay resultados para ese paciente.' : 'Aún no se ha dispensado nada.'} />
         ) : (
           <div className="table-wrap">
             <table className="table">

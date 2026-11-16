@@ -40,7 +40,7 @@ export const useReporteProveedores = (desde?: string, hasta?: string) =>
   useQuery({ queryKey: ['rep-prov', desde, hasta], queryFn: async () => unwrap(await get<Un<ReporteProveedor[]>>('/reportes/proveedores', { desde, hasta })) })
 
 export function mensajesDe(e: unknown): string[] {
-  return e instanceof ApiError ? e.messages : ['Ocurrio un error inesperado.']
+  return e instanceof ApiError ? e.messages : ['Ocurrió un error inesperado.']
 }
 
 /** Mutacion con toast de exito/error y recarga de datos. El error tambien se relanza al formulario. */

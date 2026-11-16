@@ -55,7 +55,7 @@ async function raw(path: string, o: Opts): Promise<Response> {
   try {
     return await fetch(url(path, o.query), { method: o.method ?? 'GET', headers, body: o.body !== undefined ? JSON.stringify(o.body) : undefined })
   } catch {
-    throw new ApiError(0, ['No se pudo conectar con el servidor. Verifica que la API este en ejecucion.'])
+    throw new ApiError(0, ['No se pudo conectar con el servidor. Verifica que la API esté en ejecución.'])
   }
 }
 
