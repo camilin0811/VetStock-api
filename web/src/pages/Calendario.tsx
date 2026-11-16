@@ -48,17 +48,17 @@ export default function Calendario() {
             </div>
           </div>
           {lotes.isLoading ? <Skeleton h={320} r={20} /> : lotes.error ? <ErrorState error={lotes.error} onRetry={() => lotes.refetch()} /> : (
-            <div className="cal" role="grid" aria-label={titulo}>
-              {SEMANA.map((d) => <div key={d} className="cal-dow" role="columnheader">{d}</div>)}
+            <div className="cal" role="group" aria-label={titulo}>
+              {SEMANA.map((d) => <div key={d} className="cal-dow" aria-hidden="true">{d}</div>)}
               {celdas.map((d, i) => {
-                if (!d) return <div key={`v${i}`} role="gridcell" />
+                if (!d) return <div key={`v${i}`} />
                 const k = key(d)
                 const ls = porDia.get(k) ?? []
                 const dias = Math.round((d.getTime() - hoy) / 864e5)
                 const tono = ls.length ? diasTono(dias) : null
                 return (
                   <button
-                    type="button" role="gridcell" key={k} className={`cal-day${k === sel ? ' sel' : ''}${k === hoyKey ? ' today' : ''}`} aria-pressed={k === sel}
+                    type="button" key={k} className={`cal-day${k === sel ? ' sel' : ''}${k === hoyKey ? ' today' : ''}`} aria-pressed={k === sel}
                     aria-label={`${d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}${ls.length ? `, ${ls.length} ${ls.length === 1 ? 'vencimiento' : 'vencimientos'}` : ''}`}
                     onClick={() => setSel(k)}
                   >
