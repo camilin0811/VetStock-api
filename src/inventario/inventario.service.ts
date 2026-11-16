@@ -21,8 +21,10 @@ export class InventarioService {
   ) {}
 
   async registrarLote(datos: LoteRequestDto) {
-    await this.medicamentoService.obtener(datos.medicamentoId);
-    await this.proveedorService.obtener(datos.proveedorId);
+    const medicamento = await this.medicamentoService.obtener(
+      datos.medicamentoId,
+    );
+    const proveedor = await this.proveedorService.obtener(datos.proveedorId);
 
     if (diasHasta(datos.fechaVencimiento) <= 0) {
       throw new BadRequestException(
@@ -43,8 +45,8 @@ export class InventarioService {
     const nuevoLote = await this.loteRepository.save(
       this.loteRepository.create({
         ...datos,
-        medicamento: { id: datos.medicamentoId },
-        proveedor: { id: datos.proveedorId },
+        medicamento,
+        proveedor,
         cantidadInicial: datos.cantidad,
         fechaIngreso: hoy(),
         fechaVencimiento: datos.fechaVencimiento.slice(0, 10),

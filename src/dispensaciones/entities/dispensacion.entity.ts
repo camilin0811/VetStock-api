@@ -2,15 +2,25 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
 import type { LoteUsadoDto } from '../dispensacion.dto';
 
 @Entity({ name: 'dispensacion' })
 export class Dispensacion {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(() => Medicamento, (medicamento) => medicamento.dispensaciones, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'medicamento_id' })
+  medicamento: Relation<Medicamento>;
 
   @Column({ type: 'int', name: 'medicamento_id' })
   medicamentoId: number;

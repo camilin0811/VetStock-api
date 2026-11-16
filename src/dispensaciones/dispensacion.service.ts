@@ -73,11 +73,8 @@ export class DispensacionService {
 
       const nuevaDispensacion = await manager.save(
         manager.create(Dispensacion, {
-          medicamentoId: medicamento.id,
-          cantidad: datos.cantidad,
-          mascota: datos.mascota,
-          veterinario: datos.veterinario,
-          formula: datos.formula,
+          ...datos,
+          medicamento,
           fecha: hoy(),
           total: medicamento.precio * datos.cantidad,
           lotesUsados,
@@ -93,6 +90,7 @@ export class DispensacionService {
 
   async listar() {
     const dispensaciones = await this.dispensacionRepository.find({
+      relations: { medicamento: true },
       order: { id: 'ASC' },
     });
 
@@ -104,7 +102,10 @@ export class DispensacionService {
   }
 
   async obtener(id: number) {
-    const dispensacion = await this.dispensacionRepository.findOneBy({ id });
+    const dispensacion = await this.dispensacionRepository.findOne({
+      where: { id },
+      relations: { medicamento: true },
+    });
     if (dispensacion === null) {
       throw new NotFoundException(`Dispensacion con ID ${id} no existe`);
     }

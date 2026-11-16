@@ -34,9 +34,7 @@ export class ReporteService {
       }
 
       const consumo = detalle.get(dispensacion.medicamentoId) ?? {
-        medicamento: await this.medicamentoService.obtener(
-          dispensacion.medicamentoId,
-        ),
+        medicamento: dispensacion.medicamento,
         unidades: 0,
         total: 0,
       };

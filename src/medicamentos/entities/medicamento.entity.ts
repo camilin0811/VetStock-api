@@ -7,6 +7,7 @@ import {
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Dispensacion } from '../../dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../../inventario/entities/lote.entity';
 
 @Entity({ name: 'medicamento' })
@@ -34,6 +35,9 @@ export class Medicamento {
 
   @OneToMany(() => Lote, (lote) => lote.medicamento)
   lotes: Relation<Lote[]>;
+
+  @OneToMany(() => Dispensacion, (dispensacion) => dispensacion.medicamento)
+  dispensaciones: Relation<Dispensacion[]>;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
