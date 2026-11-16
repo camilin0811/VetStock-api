@@ -1,10 +1,10 @@
+import { PartialType } from '@nestjs/mapped-types';
 import {
   IsBoolean,
   IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
-  IsOptional,
   IsString,
   Min,
 } from 'class-validator';
@@ -35,35 +35,7 @@ export class MedicamentoDto {
   requiereFormula: boolean;
 }
 
-export class ActualizarMedicamentoDto {
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  nombre?: string;
-
-  @IsOptional()
-  @IsString()
-  @IsNotEmpty()
-  presentacion?: string;
-
-  @IsOptional()
-  @IsIn(ESPECIES)
-  especie?: string;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  precio?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  stockMinimo?: number;
-
-  @IsOptional()
-  @IsBoolean()
-  requiereFormula?: boolean;
-}
+export class ActualizarMedicamentoDto extends PartialType(MedicamentoDto) {}
 
 export class MedicamentoResponseDto extends MedicamentoDto {
   id: number;

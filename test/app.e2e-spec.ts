@@ -84,6 +84,24 @@ describe('VetStock API (e2e)', () => {
       .expect(400);
   });
 
+  it('PUT /medicamentos/:id acepta una actualizacion parcial', () => {
+    return request(app.getHttpServer())
+      .put('/medicamentos/1')
+      .send({ stockMinimo: 30 })
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.stockMinimo).toBe(30);
+        expect(respuesta.body.data.nombre).toBe('Amoxicilina 250 mg');
+      });
+  });
+
+  it('PUT /medicamentos/:id valida los campos enviados', () => {
+    return request(app.getHttpServer())
+      .put('/medicamentos/1')
+      .send({ especie: 'dinosaurio' })
+      .expect(400);
+  });
+
   it('GET /medicamentos/:id responde 404 si no existe', () => {
     return request(app.getHttpServer()).get('/medicamentos/999').expect(404);
   });
