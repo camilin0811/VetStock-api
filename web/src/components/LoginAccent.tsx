@@ -1,4 +1,19 @@
-/** Provisional: capsula estatica; el commit del hero 3D la reemplaza por una escena ligera. */
+import { lazy, Suspense } from 'react'
+import { CanvasBoundary } from './three/CanvasBoundary'
+import { useGate } from './three/useGate'
+
+const LoginCanvas = lazy(() => import('./three/LoginCanvas'))
+const estatica = <div className="capsule-static" />
+
 export function LoginAccent() {
-  return <div className="capsule-static" />
+  const { ref, visible, reduced } = useGate<HTMLDivElement>()
+  return (
+    <div className="login-canvas" ref={ref}>
+      {reduced ? estatica : (
+        <CanvasBoundary fallback={estatica}>
+          <Suspense fallback={estatica}><LoginCanvas active={visible} /></Suspense>
+        </CanvasBoundary>
+      )}
+    </div>
+  )
 }

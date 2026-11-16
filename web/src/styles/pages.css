@@ -75,3 +75,5 @@
   .rail { grid-template-columns: 1fr; }
   .quick { grid-template-columns: repeat(2, 1fr); }
 }
+.hero-visual canvas { display: block; }
+.login-canvas { position: absolute; inset: 0; display: grid; place-items: center; }

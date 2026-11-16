@@ -6,7 +6,7 @@ import { puedeEscribirCatalogo } from '../components/nav'
 import { CountUp } from '../components/CountUp'
 import { ProgressRing } from '../components/ProgressRing'
 import { MiniBars } from '../components/MiniBars'
-import { HeroVisual } from '../components/HeroVisual'
+import { HeroScene } from '../components/HeroScene'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
 import { diasLabel, diasTono, fmtFecha, fmtFechaHora, fmtMoney, nombreMed } from '../lib/format'
 import { tipDelDia } from '../lib/tips'
@@ -38,7 +38,7 @@ export default function Dashboard() {
             <h2>{saludo()}, {nombre} <Heart size={26} fill="var(--violet-600)" color="var(--violet-600)" aria-hidden="true" /></h2>
             <p className="muted">Que tengas un gran dia en la farmacia.</p>
           </div>
-          <HeroVisual />
+          <HeroScene />
           <div className="hero-card card" data-reveal>
             {isLoading ? (
               <><Skeleton h={18} w="70%" /><Skeleton h={14} w="50%" /><Skeleton h={40} r={999} /></>

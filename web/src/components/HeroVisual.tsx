@@ -1,7 +1,7 @@
 /** Ilustracion estatica del hero (frasco + capsulas). Tambien es el fallback de la escena 3D. */
 export function HeroVisual() {
   return (
-    <div className="hero-visual" aria-hidden="true">
+    <>
       <div className="hero-ring" />
       <svg viewBox="0 0 300 320" className="hero-art">
         <defs>
@@ -16,6 +16,6 @@ export function HeroVisual() {
         <rect x="104" y="50" width="92" height="56" rx="18" fill="url(#hv-cap)" />
         <g transform="rotate(-28 236 250)"><rect x="206" y="236" width="60" height="28" rx="14" fill="url(#hv-cap)" /><path d="M236 236h16a14 14 0 0 1 0 28h-16z" fill="#fff" /></g>
       </svg>
-    </div>
+    </>
   )
 }
