@@ -2,10 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
 import { TIPO_FECHA_HORA } from '../../common/columnas';
+import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
 
 @Entity({ name: 'categoria' })
 export class Categoria {
@@ -17,6 +20,9 @@ export class Categoria {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   descripcion: string | null;
+
+  @ManyToMany(() => Medicamento, (medicamento) => medicamento.categorias)
+  medicamentos: Relation<Medicamento[]>;
 
   @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;

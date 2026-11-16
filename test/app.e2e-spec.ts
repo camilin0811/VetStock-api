@@ -130,6 +130,84 @@ describe('VetStock API (e2e)', () => {
       });
   });
 
+  it('GET /medicamentos/:id y la lista incluyen categorias', async () => {
+    await request(app.getHttpServer())
+      .get('/medicamentos/1')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.categorias).toEqual([
+          expect.objectContaining({ id: 1, nombre: 'Antibioticos' }),
+        ]);
+      });
+    await request(app.getHttpServer())
+      .get('/medicamentos')
+      .expect((respuesta) => {
+        expect(respuesta.body.data[0].categorias).toHaveLength(1);
+      });
+  });
+
+  it('POST /medicamentos asigna categorias por id', () => {
+    return request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({
+        nombre: 'Ivermectina 1%',
+        presentacion: 'Frasco 50 ml',
+        especie: 'bovino',
+        precio: 38000,
+        stockMinimo: 6,
+        requiereFormula: false,
+        categoriaIds: [1, 4],
+      })
+      .expect(201)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.categorias).toHaveLength(2);
+      });
+  });
+
+  it('POST /medicamentos responde 404 con una categoria inexistente y 400 con ids invalidos', async () => {
+    const base = {
+      nombre: 'Ivermectina 1%',
+      presentacion: 'Frasco 50 ml',
+      especie: 'bovino',
+      precio: 38000,
+      stockMinimo: 6,
+      requiereFormula: false,
+    };
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: [999] })
+      .expect(404);
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: ['a'] })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: 3 })
+      .expect(400);
+  });
+
+  it('PUT /medicamentos/:id reemplaza las categorias', () => {
+    return request(app.getHttpServer())
+      .put('/medicamentos/1')
+      .send({ categoriaIds: [2, 3] })
+      .expect(200)
+      .expect((respuesta) => {
+        expect(
+          respuesta.body.data.categorias.map((c: { id: number }) => c.id),
+        ).toEqual([2, 3]);
+      });
+  });
+
+  it('DELETE /categorias/:id quita la categoria de los medicamentos', async () => {
+    await request(app.getHttpServer()).delete('/categorias/1').expect(200);
+    await request(app.getHttpServer())
+      .get('/medicamentos/1')
+      .expect((respuesta) => {
+        expect(respuesta.body.categorias).toEqual([]);
+      });
+  });
+
   it('POST /medicamentos rechaza datos invalidos', () => {
     return request(app.getHttpServer())
       .post('/medicamentos')

@@ -60,6 +60,7 @@ export async function sembrarBd(dataSource: DataSource) {
       precio: 18000,
       stockMinimo: 20,
       requiereFormula: true,
+      categorias: [{ id: 1 }],
     },
     {
       id: 2,
@@ -69,6 +70,7 @@ export async function sembrarBd(dataSource: DataSource) {
       precio: 25000,
       stockMinimo: 10,
       requiereFormula: false,
+      categorias: [{ id: 2 }],
     },
     {
       id: 3,
@@ -78,6 +80,7 @@ export async function sembrarBd(dataSource: DataSource) {
       precio: 32000,
       stockMinimo: 5,
       requiereFormula: true,
+      categorias: [{ id: 3 }],
     },
     {
       id: 4,
@@ -87,6 +90,7 @@ export async function sembrarBd(dataSource: DataSource) {
       precio: 45000,
       stockMinimo: 8,
       requiereFormula: false,
+      categorias: [{ id: 4 }],
     },
   ]);
 

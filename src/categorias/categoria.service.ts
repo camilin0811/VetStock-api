@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { ActualizarCategoriaDto, CategoriaDto } from './categoria.dto';
 import { Categoria } from './entities/categoria.entity';
 
@@ -34,6 +34,29 @@ export class CategoriaService {
     }
 
     return categoria;
+  }
+
+  // Devuelve las categorias de los ids o lanza 404 si alguno no existe
+  async obtenerPorIds(ids: number[]) {
+    const unicos = [...new Set(ids)];
+    if (unicos.length === 0) {
+      return [];
+    }
+
+    const categorias = await this.categoriaRepository.find({
+      where: { id: In(unicos) },
+      order: { id: 'ASC' },
+    });
+    const faltantes = unicos.filter(
+      (id) => !categorias.some((categoria) => categoria.id === id),
+    );
+    if (faltantes.length > 0) {
+      throw new NotFoundException(
+        `Categorias con ID ${faltantes.join(', ')} no existen`,
+      );
+    }
+
+    return categorias;
   }
 
   async crear(datos: CategoriaDto) {
