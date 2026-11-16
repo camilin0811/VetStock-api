@@ -71,7 +71,9 @@ export function refreshSession(): Promise<boolean> {
       const json = await res.json()
       tokens.set(json.data.accessToken, json.data.refreshToken)
       return true
-    } catch {
+    } catch (e) {
+      // Sin red no se invalida la sesion: el error sube y se conserva el refresh token.
+      if (e instanceof ApiError && e.status === 0) throw e
       return false
     }
   })().finally(() => { refreshing = null })

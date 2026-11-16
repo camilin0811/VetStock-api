@@ -1,3 +1,4 @@
+import { lazy } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from './auth/AuthContext'
@@ -6,18 +7,19 @@ import { ToastProvider } from './components/Toast'
 import { AppLayout } from './components/AppLayout'
 import { ApiError } from './api/client'
 import Login from './pages/Login'
-import NoEncontrada from './pages/NoEncontrada'
 import Dashboard from './pages/Dashboard'
-import Medicamentos from './pages/Medicamentos'
-import Inventario from './pages/Inventario'
-import Movimientos from './pages/Movimientos'
-import Dispensar from './pages/Dispensar'
-import Alertas from './pages/Alertas'
-import Reportes from './pages/Reportes'
-import Calendario from './pages/Calendario'
-import Proveedores from './pages/Proveedores'
-import Categorias from './pages/Categorias'
-import Usuarios from './pages/Usuarios'
+
+const Medicamentos = lazy(() => import('./pages/Medicamentos'))
+const Inventario = lazy(() => import('./pages/Inventario'))
+const Movimientos = lazy(() => import('./pages/Movimientos'))
+const Dispensar = lazy(() => import('./pages/Dispensar'))
+const Alertas = lazy(() => import('./pages/Alertas'))
+const Reportes = lazy(() => import('./pages/Reportes'))
+const Calendario = lazy(() => import('./pages/Calendario'))
+const Proveedores = lazy(() => import('./pages/Proveedores'))
+const Categorias = lazy(() => import('./pages/Categorias'))
+const Usuarios = lazy(() => import('./pages/Usuarios'))
+const NoEncontrada = lazy(() => import('./pages/NoEncontrada'))
 
 const queryClient = new QueryClient({
   defaultOptions: {

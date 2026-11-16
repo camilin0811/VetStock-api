@@ -9,7 +9,7 @@ function Spin({ active }: { active: boolean }) {
   useFrame((_, dt) => { if (active && g.current) g.current.rotation.y += dt * 0.4 })
   return (
     <Float speed={1.6} floatIntensity={0.6} rotationIntensity={0.3}>
-      <group ref={g} rotation={[0.3, 0, -0.5]} scale={1.6}><Pill length={1} radius={0.32} /></group>
+      <group ref={g} rotation={[0.3, 0, -0.5]} scale={1.15}><Pill length={1} radius={0.32} /></group>
     </Float>
   )
 }

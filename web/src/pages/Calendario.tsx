@@ -33,14 +33,15 @@ export default function Calendario() {
   const hoy = parseFecha(hoyKey).getTime()
   const delDia = porDia.get(sel) ?? []
   const mover = (n: number) => setMes((m) => new Date(m.getFullYear(), m.getMonth() + n, 1))
-  const titulo = mes.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  const tituloRaw = mes.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  const titulo = tituloRaw.charAt(0).toUpperCase() + tituloRaw.slice(1)
 
   return (
     <Page deps={[lotes.isLoading]}>
       <div className="split">
         <section className="card" data-reveal aria-label="Calendario de vencimientos">
           <div className="card-head">
-            <h2 style={{ textTransform: 'capitalize' }} aria-live="polite">{titulo}</h2>
+            <h2 aria-live="polite">{titulo}</h2>
             <div className="chips">
               <button type="button" className="btn sm" onClick={() => { const h = parseFecha(hoyKey); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); setSel(hoyKey) }}>Hoy</button>
               <button type="button" className="btn icon" aria-label="Mes anterior" onClick={() => mover(-1)}><ChevronLeft size={18} /></button>

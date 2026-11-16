@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, MoreHorizontal, Search } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useAlertas } from '../api/hooks'
 import { LogoMark } from './Logo'
 import { NAV, navFor } from './nav'
+import { SkeletonRows } from './States'
 
 export function AppLayout() {
   const { usuario, logout } = useAuth()
@@ -81,7 +82,7 @@ export function AppLayout() {
             <Link to="/alertas" className="icon-btn" aria-label={nAlertas ? `Ver alertas (${nAlertas})` : 'Ver alertas'}><Bell size={20} aria-hidden="true" />{nAlertas > 0 && <span className="badge" aria-hidden="true">{nAlertas > 99 ? '99+' : nAlertas}</span>}</Link>
           </header>
           <main id="contenido" className="content" tabIndex={-1}>
-            <Outlet />
+            <Suspense fallback={<SkeletonRows rows={4} h={72} />}><Outlet /></Suspense>
           </main>
         </div>
       </div>
