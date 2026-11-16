@@ -16,6 +16,7 @@ describe('Reportes (e2e)', () => {
     const http = () => request(contexto.app.getHttpServer());
     await http().get('/reportes/consumo').expect(401);
     await http().get('/reportes/vencimientos').expect(401);
+    await http().get('/reportes/stock').expect(401);
   });
 
   describe('GET /reportes/consumo', () => {
@@ -73,6 +74,24 @@ describe('Reportes (e2e)', () => {
         lote: expect.objectContaining({ id: 4, numeroLote: 'MLX-050' }),
         medicamento: expect.objectContaining({ id: 3 }),
         perdida: 128000,
+      });
+    });
+  });
+
+  describe('GET /reportes/stock', () => {
+    it('devuelve items y valorTotal segun el contrato', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .get('/reportes/stock')
+        .expect(200);
+
+      expect(typeof respuesta.body.message).toBe('string');
+      expect(respuesta.body.data.valorTotal).toBe(2765000);
+      expect(respuesta.body.data.items).toHaveLength(4);
+      expect(respuesta.body.data.items[0]).toEqual({
+        medicamento: { id: 4, nombre: 'Desparasitante Albendazol' },
+        unidades: 25,
+        valor: 1125000,
       });
     });
   });

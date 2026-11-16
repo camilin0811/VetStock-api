@@ -36,3 +36,16 @@ export class ReporteVencimientosDto {
   totalPerdida: number;
   lotes: LoteVencidoDto[];
 }
+
+export class ProveedoresQueryDto extends ConsumoQueryDto {}
+
+export class StockMedicamentoDto {
+  medicamento: { id: number; nombre: string };
+  unidades: number;
+  valor: number;
+}
+
+export class ReporteStockDto {
+  items: StockMedicamentoDto[];
+  valorTotal: number;
+}

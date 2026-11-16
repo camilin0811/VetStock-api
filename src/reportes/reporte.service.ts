@@ -4,11 +4,13 @@ import { In, Repository } from 'typeorm';
 import { diasDesdeHoy, hoy } from '../common/fechas';
 import { Dispensacion } from '../dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../inventario/entities/lote.entity';
+import { InventarioService } from '../inventario/inventario.service';
 import { Medicamento } from '../medicamentos/entities/medicamento.entity';
 import {
   ConsumoMedicamentoDto,
   ConsumoQueryDto,
   ReporteConsumoDto,
+  ReporteStockDto,
   ReporteVencimientosDto,
 } from './reporte.dto';
 
@@ -25,6 +27,7 @@ export class ReporteService {
     private readonly loteRepository: Repository<Lote>,
     @InjectRepository(Medicamento)
     private readonly medicamentoRepository: Repository<Medicamento>,
+    private readonly inventarioService: InventarioService,
   ) {}
 
   async consumo(filtro: ConsumoQueryDto): Promise<ReporteConsumoDto> {
@@ -95,6 +98,28 @@ export class ReporteService {
         vencidos.reduce((total, vencido) => total + vencido.perdida, 0),
       ),
       lotes: vencidos,
+    };
+  }
+
+  // Valorizacion del stock disponible (sin lotes vencidos) al precio actual
+  async stock(): Promise<ReporteStockDto> {
+    const { data } = await this.inventarioService.listarInventario();
+
+    const items = data
+      .filter((item) => item.disponible > 0)
+      .map((item) => ({
+        medicamento: {
+          id: item.medicamento.id,
+          nombre: item.medicamento.nombre,
+        },
+        unidades: item.disponible,
+        valor: redondear(item.disponible * item.medicamento.precio),
+      }))
+      .sort((a, b) => b.valor - a.valor || a.medicamento.id - b.medicamento.id);
+
+    return {
+      items,
+      valorTotal: redondear(items.reduce((total, i) => total + i.valor, 0)),
     };
   }
 

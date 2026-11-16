@@ -126,4 +126,48 @@ describe('ReporteService', () => {
     expect(vencido.medicamento.categorias).toHaveLength(1);
     expect(vencido.perdida).toBe(4 * 32000);
   });
+
+  describe('stock valorizado', () => {
+    it('valora el stock disponible y no cuenta los lotes vencidos', async () => {
+      const { items, valorTotal } = await service.stock();
+
+      expect(items).toEqual([
+        {
+          medicamento: { id: 4, nombre: 'Desparasitante Albendazol' },
+          unidades: 25,
+          valor: 25 * 45000,
+        },
+        {
+          medicamento: { id: 2, nombre: 'Vacuna antirrabica' },
+          unidades: 42,
+          valor: 42 * 25000,
+        },
+        {
+          medicamento: { id: 3, nombre: 'Meloxicam 1.5 mg/ml' },
+          unidades: 10,
+          valor: 10 * 32000,
+        },
+        {
+          medicamento: { id: 1, nombre: 'Amoxicilina 250 mg' },
+          unidades: 15,
+          valor: 15 * 18000,
+        },
+      ]);
+      expect(valorTotal).toBe(1125000 + 1050000 + 320000 + 270000);
+    });
+
+    it('omite los medicamentos sin stock y refleja las dispensaciones', async () => {
+      await dispensacionService.dispensar({
+        medicamentoId: 4,
+        cantidad: 25,
+        mascota: 'Lola',
+        veterinario: 'Dr. Carlos Erazo',
+      });
+
+      const { items, valorTotal } = await service.stock();
+
+      expect(items.map((i) => i.medicamento.id)).toEqual([2, 3, 1]);
+      expect(valorTotal).toBe(1050000 + 320000 + 270000);
+    });
+  });
 });

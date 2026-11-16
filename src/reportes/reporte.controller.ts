@@ -15,4 +15,12 @@ export class ReporteController {
   vencimientos() {
     return this.reporteService.vencimientos();
   }
+
+  @Get('stock')
+  async stock() {
+    return {
+      message: 'Reporte de stock obtenido correctamente',
+      data: await this.reporteService.stock(),
+    };
+  }
 }
