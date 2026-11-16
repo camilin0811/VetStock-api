@@ -118,4 +118,55 @@ describe('Inventario y kardex (e2e)', () => {
       await contexto.api().get('/inventario/abc').expect(400);
     });
   });
+
+  describe('PUT /lotes/:id', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .put('/lotes/1')
+        .send({ numeroLote: 'X' })
+        .expect(401);
+    });
+
+    it('corrige los datos del lote y devuelve la forma del contrato', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .put('/lotes/1')
+        .send({
+          numeroLote: 'AMX-001B',
+          fechaVencimiento: '2099-06-30',
+          proveedorId: 2,
+        })
+        .expect(200);
+
+      expect(respuesta.body.data).toMatchObject({
+        id: 1,
+        medicamentoId: 1,
+        proveedorId: 2,
+        numeroLote: 'AMX-001B',
+        cantidadInicial: 40,
+        cantidad: 15,
+        fechaVencimiento: '2099-06-30',
+      });
+      expect(respuesta.body.data.medicamento.nombre).toBe('Amoxicilina 250 mg');
+      expect(respuesta.body.data.proveedor.id).toBe(2);
+    });
+
+    it('ignora campos de cantidad (whitelist) y valida los demas', async () => {
+      const api = contexto.api();
+      const respuesta = await api.put('/lotes/1').send({ cantidad: 999 });
+      expect(respuesta.status).toBe(200);
+      expect(respuesta.body.data.cantidad).toBe(15);
+
+      await api.put('/lotes/1').send({ fechaVencimiento: 'ayer' }).expect(400);
+      await api.put('/lotes/1').send({ proveedorId: 0 }).expect(400);
+      await api.put('/lotes/abc').send({}).expect(400);
+    });
+
+    it('responde 404 y 409', async () => {
+      const api = contexto.api();
+      await api.put('/lotes/999').send({ numeroLote: 'X' }).expect(404);
+      await api.put('/lotes/1').send({ proveedorId: 999 }).expect(404);
+      await api.put('/lotes/2').send({ numeroLote: 'VAR-102' }).expect(409);
+    });
+  });
 });

@@ -1,7 +1,10 @@
+import { PartialType, PickType } from '@nestjs/mapped-types';
 import {
   IsDateString,
+  IsIn,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Min,
 } from 'class-validator';
@@ -26,6 +29,28 @@ export class LoteRequestDto {
 
   @IsDateString()
   fechaVencimiento: string;
+}
+
+// Correccion de datos: no cambia medicamento ni cantidades (para eso estan los ajustes)
+export class ActualizarLoteDto extends PartialType(
+  PickType(LoteRequestDto, ['proveedorId', 'numeroLote', 'fechaVencimiento']),
+) {}
+
+export const MOTIVOS_AJUSTE = ['PERDIDA', 'DANO', 'VENCIDO', 'OTRO'] as const;
+export type MotivoAjuste = (typeof MOTIVOS_AJUSTE)[number];
+
+export class AjusteDto {
+  @IsInt()
+  @Min(1)
+  cantidad: number;
+
+  @IsIn(MOTIVOS_AJUSTE)
+  motivo: MotivoAjuste;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  observacion?: string;
 }
 
 export class LoteDto {

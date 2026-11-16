@@ -2,9 +2,10 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { diasHasta, hoy } from '../common/fechas';
 import type { Usuario } from '../auth/entities/usuario.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
@@ -14,6 +15,7 @@ import { Movimiento } from './entities/movimiento.entity';
 import {
   EstadoStock,
   InventarioDto,
+  ActualizarLoteDto,
   InventarioItemDto,
   LoteRequestDto,
 } from './lote.dto';
@@ -80,6 +82,55 @@ export class InventarioService {
       message: 'Lote registrado correctamente',
       data: nuevoLote,
     };
+  }
+
+  async obtenerLote(id: number) {
+    const lote = await this.loteRepository.findOne({
+      where: { id },
+      relations: { medicamento: true, proveedor: true },
+    });
+    if (lote === null) {
+      throw new NotFoundException(`Lote con ID ${id} no existe`);
+    }
+
+    return lote;
+  }
+
+  async actualizarLote(id: number, datos: ActualizarLoteDto) {
+    const lote = await this.obtenerLote(id);
+
+    if (
+      datos.proveedorId !== undefined &&
+      datos.proveedorId !== lote.proveedorId
+    ) {
+      lote.proveedor = await this.proveedorService.obtener(datos.proveedorId);
+      lote.proveedorId = datos.proveedorId;
+    }
+
+    if (
+      datos.numeroLote !== undefined &&
+      datos.numeroLote !== lote.numeroLote
+    ) {
+      const existente = await this.loteRepository.findOneBy({
+        medicamentoId: lote.medicamentoId,
+        numeroLote: datos.numeroLote,
+        id: Not(id),
+      });
+      if (existente !== null) {
+        throw new ConflictException(
+          `El lote ${datos.numeroLote} ya esta registrado para este medicamento`,
+        );
+      }
+      lote.numeroLote = datos.numeroLote;
+    }
+
+    if (datos.fechaVencimiento !== undefined) {
+      lote.fechaVencimiento = datos.fechaVencimiento.slice(0, 10);
+    }
+
+    const actualizado = await this.loteRepository.save(lote);
+
+    return { message: 'Lote actualizado correctamente', data: actualizado };
   }
 
   async listarLotes(medicamentoId?: number) {

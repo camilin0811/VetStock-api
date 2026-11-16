@@ -224,4 +224,56 @@ describe('InventarioService', () => {
       });
     });
   });
+
+  describe('actualizarLote', () => {
+    it('corrige numero de lote, vencimiento y proveedor sin tocar cantidades', async () => {
+      const { data } = await service.actualizarLote(1, {
+        numeroLote: 'AMX-001B',
+        fechaVencimiento: '2099-06-30T00:00:00.000Z',
+        proveedorId: 2,
+      });
+
+      expect(data).toMatchObject({
+        id: 1,
+        numeroLote: 'AMX-001B',
+        fechaVencimiento: '2099-06-30',
+        proveedorId: 2,
+        cantidad: 15,
+        cantidadInicial: 40,
+        medicamentoId: 1,
+      });
+      expect(data.proveedor.nombre).toBe('Laboratorios Pet Salud');
+      expect((await service.obtenerLote(1)).proveedorId).toBe(2);
+    });
+
+    it('acepta una actualizacion parcial y conservar su propio numero', async () => {
+      const { data } = await service.actualizarLote(1, {
+        numeroLote: 'AMX-001',
+      });
+
+      expect(data.numeroLote).toBe('AMX-001');
+      expect(data.proveedorId).toBe(1);
+    });
+
+    it('lanza 409 si el numero ya existe en el mismo medicamento', async () => {
+      await expect(
+        service.actualizarLote(2, { numeroLote: 'VAR-102' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('permite el mismo numero en otro medicamento', async () => {
+      await expect(
+        service.actualizarLote(1, { numeroLote: 'VAR-102' }),
+      ).resolves.toBeDefined();
+    });
+
+    it('lanza 404 si el lote o el proveedor no existen', async () => {
+      await expect(
+        service.actualizarLote(999, { numeroLote: 'X' }),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.actualizarLote(1, { proveedorId: 999 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });
