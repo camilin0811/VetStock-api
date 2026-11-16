@@ -48,7 +48,6 @@
 .dash-cards { align-items: stretch; }
 
 .ring { position: relative; }
-.ring-arc { transition: stroke-dashoffset 1.1s var(--ease-out); }
 .ring-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 2px; }
 .ring-num { font-size: 34px; font-weight: 800; line-height: 1; }
 .ring-cap { font-size: 12px; max-width: 90px; }

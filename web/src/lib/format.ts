@@ -25,3 +25,4 @@ export const isoHoy = () => {
 }
 export const nombreMed = (m: unknown) =>
   typeof m === 'string' ? m : m && typeof m === 'object' && 'nombre' in m ? String((m as { nombre: string }).nombre) : '-'
+export const plural = (n: number, uno: string, varios = uno + 's') => (n === 1 ? uno : varios)

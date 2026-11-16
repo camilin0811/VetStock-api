@@ -1,4 +1,6 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { useReveal } from '../lib/useReveal'
 import { AlertTriangle, ArrowRight, Bell, BarChart3, Boxes, CalendarClock, Heart, PackagePlus, Syringe, Truck } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useResumen } from '../api/hooks'
@@ -8,7 +10,7 @@ import { ProgressRing } from '../components/ProgressRing'
 import { MiniBars } from '../components/MiniBars'
 import { HeroScene } from '../components/HeroScene'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, fmtFechaHora, fmtMoney, nombreMed } from '../lib/format'
+import { diasLabel, diasTono, fmtFecha, fmtFechaHora, fmtMoney, nombreMed, plural } from '../lib/format'
 import { tipDelDia } from '../lib/tips'
 
 function saludo() {
@@ -19,6 +21,8 @@ function saludo() {
 export default function Dashboard() {
   const { usuario } = useAuth()
   const { data: r, isLoading, error, refetch } = useResumen()
+  const root = useRef<HTMLDivElement>(null)
+  useReveal(root, [isLoading])
   const tip = tipDelDia()
   const nombre = usuario?.nombre.split(' ')[0] ?? ''
   const escribe = puedeEscribirCatalogo(usuario?.rol)
@@ -31,7 +35,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="dash">
+    <div className="dash" ref={root}>
       <div className="dash-main">
         <section className="hero" aria-label="Bienvenida">
           <div className="hero-greet" data-reveal>
@@ -95,9 +99,9 @@ export default function Dashboard() {
               {isLoading ? <div className="stack" style={{ gap: 10 }}><Skeleton h={48} r={16} /><Skeleton h={48} r={16} /><Skeleton h={48} r={16} /></div> : r ? (
                 <ul className="list">
                   <li className="list-item slim"><span className="list-ico"><Boxes size={19} aria-hidden="true" /></span><span className="grow">Stock saludable</span><span className="pill ok"><CountUp value={Math.round(r.porcentajeStockSaludable)} format={(n) => `${n}% OK`} /></span></li>
-                  <li className="list-item slim"><span className="list-ico"><AlertTriangle size={19} aria-hidden="true" /></span><span className="grow">Stock bajo</span><span className="pill warn"><CountUp value={r.stockBajo} /> productos</span></li>
-                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 dias)</span><span className="pill info"><CountUp value={r.porVencer} /> lotes</span></li>
-                  <li className="list-item slim"><span className="list-ico"><Bell size={19} aria-hidden="true" /></span><span className="grow">Vencidos</span><span className={`pill ${r.vencidos ? 'bad' : 'ok'}`}><CountUp value={r.vencidos} /> lotes</span></li>
+                  <li className="list-item slim"><span className="list-ico"><AlertTriangle size={19} aria-hidden="true" /></span><span className="grow">Stock bajo</span><span className="pill warn"><CountUp value={r.stockBajo} /> {plural(r.stockBajo, 'producto')}</span></li>
+                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 dias)</span><span className="pill info"><CountUp value={r.porVencer} /> {plural(r.porVencer, 'lote')}</span></li>
+                  <li className="list-item slim"><span className="list-ico"><Bell size={19} aria-hidden="true" /></span><span className="grow">Vencidos</span><span className={`pill ${r.vencidos ? 'bad' : 'ok'}`}><CountUp value={r.vencidos} /> {plural(r.vencidos, 'lote')}</span></li>
                 </ul>
               ) : null}
             </section>
