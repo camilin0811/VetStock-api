@@ -2,9 +2,9 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { InventarioModule } from '../inventario/inventario.module';
 import { InventarioService } from '../inventario/inventario.service';
-import { MedicamentoService } from '../medicamentos/medicamento.service';
-import { ProveedorService } from '../proveedores/proveedor.service';
+import { DispensacionesModule } from './dispensaciones.module';
 import { DispensacionService } from './dispensacion.service';
 
 describe('DispensacionService', () => {
@@ -14,12 +14,10 @@ describe('DispensacionService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [
-        DispensacionService,
-        InventarioService,
-        MedicamentoService,
-        ProveedorService,
+      imports: [
+        ...importacionesBdPrueba(),
+        DispensacionesModule,
+        InventarioModule,
       ],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));

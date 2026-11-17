@@ -59,6 +59,16 @@ export class InventarioService {
   }
 
   async listarLotes(medicamentoId?: number) {
+    const lotes = await this.buscarLotes(medicamentoId);
+
+    return {
+      message: 'Lotes obtenidos correctamente',
+      data: lotes,
+      count: lotes.length,
+    };
+  }
+
+  async buscarLotes(medicamentoId?: number) {
     return this.loteRepository.find({
       where: medicamentoId === undefined ? {} : { medicamentoId },
       order: { id: 'ASC' },
@@ -68,7 +78,7 @@ export class InventarioService {
   async obtenerInventario(medicamentoId: number): Promise<InventarioDto> {
     const medicamento = await this.medicamentoService.obtener(medicamentoId);
     const lotes = this.ordenarPorVencimiento(
-      await this.listarLotes(medicamentoId),
+      await this.buscarLotes(medicamentoId),
     );
 
     return {

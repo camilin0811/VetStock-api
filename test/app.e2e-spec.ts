@@ -3,7 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
-import { CONTROLADORES, PROVEEDORES } from './../src/app.module';
+import { AuthModule } from './../src/auth/auth.module';
+import { DispensacionesModule } from './../src/dispensaciones/dispensaciones.module';
+import { InventarioModule } from './../src/inventario/inventario.module';
+import { MedicamentosModule } from './../src/medicamentos/medicamentos.module';
+import { ProveedoresModule } from './../src/proveedores/proveedores.module';
+import { ReportesModule } from './../src/reportes/reportes.module';
 import { importacionesBdPrueba, sembrarBd } from './bd-prueba';
 
 describe('VetStock API (e2e)', () => {
@@ -11,14 +16,22 @@ describe('VetStock API (e2e)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      controllers: CONTROLADORES,
-      providers: PROVEEDORES,
+      imports: [
+        ...importacionesBdPrueba(),
+        AuthModule,
+        MedicamentosModule,
+        ProveedoresModule,
+        InventarioModule,
+        DispensacionesModule,
+        ReportesModule,
+      ],
     }).compile();
     await sembrarBd(moduleFixture.get(DataSource));
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe());
+    app.useGlobalPipes(
+      new ValidationPipe({ transform: true, whitelist: true }),
+    );
     await app.init();
   });
 
@@ -44,7 +57,23 @@ describe('VetStock API (e2e)', () => {
       .get('/medicamentos')
       .expect(200)
       .expect((respuesta) => {
-        expect(respuesta.body.length).toBeGreaterThan(0);
+        expect(respuesta.body.data.length).toBeGreaterThan(0);
+        expect(respuesta.body.count).toBe(respuesta.body.data.length);
+      });
+  });
+
+  it.each([
+    ['/proveedores', 2],
+    ['/lotes', 6],
+    ['/dispensaciones', 2],
+  ])('GET %s devuelve message, data y count', (ruta, total) => {
+    return request(app.getHttpServer())
+      .get(ruta)
+      .expect(200)
+      .expect((respuesta) => {
+        expect(typeof respuesta.body.message).toBe('string');
+        expect(respuesta.body.data).toHaveLength(total);
+        expect(respuesta.body.count).toBe(total);
       });
   });
 
@@ -103,7 +132,8 @@ describe('VetStock API (e2e)', () => {
       .get('/alertas')
       .expect(200)
       .expect((respuesta) => {
-        expect(respuesta.body.length).toBeGreaterThan(0);
+        expect(respuesta.body.data.length).toBeGreaterThan(0);
+        expect(respuesta.body.count).toBe(respuesta.body.data.length);
       });
   });
 

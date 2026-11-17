@@ -28,7 +28,7 @@ export class ReporteService {
     }
 
     const detalle = new Map<number, ConsumoMedicamentoDto>();
-    for (const dispensacion of await this.dispensacionService.listar()) {
+    for (const dispensacion of (await this.dispensacionService.listar()).data) {
       if (dispensacion.fecha < desde || dispensacion.fecha > hasta) {
         continue;
       }
@@ -59,7 +59,7 @@ export class ReporteService {
   }
 
   async vencimientos(): Promise<ReporteVencimientosDto> {
-    const lotes = (await this.inventarioService.listarLotes())
+    const lotes = (await this.inventarioService.buscarLotes())
       .filter(
         (lote) => lote.cantidad > 0 && this.inventarioService.vencido(lote),
       )

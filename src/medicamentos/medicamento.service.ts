@@ -16,7 +16,15 @@ export class MedicamentoService {
   ) {}
 
   async listar() {
-    return this.medicamentoRepository.find({ order: { id: 'ASC' } });
+    const medicamentos = await this.medicamentoRepository.find({
+      order: { id: 'ASC' },
+    });
+
+    return {
+      message: 'Medicamentos obtenidos correctamente',
+      data: medicamentos,
+      count: medicamentos.length,
+    };
   }
 
   async obtener(id: number) {

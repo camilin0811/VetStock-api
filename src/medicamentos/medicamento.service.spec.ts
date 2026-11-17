@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { MedicamentosModule } from './medicamentos.module';
 import { MedicamentoService } from './medicamento.service';
 
 describe('MedicamentoService', () => {
@@ -10,8 +11,7 @@ describe('MedicamentoService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [MedicamentoService],
+      imports: [...importacionesBdPrueba(), MedicamentosModule],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));
 
@@ -33,7 +33,7 @@ describe('MedicamentoService', () => {
     });
 
     expect(resultado.data.id).toBeDefined();
-    expect(await service.listar()).toContainEqual(resultado.data);
+    expect((await service.listar()).data).toContainEqual(resultado.data);
   });
 
   it('lanza error si el medicamento ya existe', async () => {

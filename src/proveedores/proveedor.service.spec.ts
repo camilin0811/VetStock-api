@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { ProveedoresModule } from './proveedores.module';
 import { ProveedorService } from './proveedor.service';
 
 describe('ProveedorService', () => {
@@ -10,8 +11,7 @@ describe('ProveedorService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [ProveedorService],
+      imports: [...importacionesBdPrueba(), ProveedoresModule],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));
 

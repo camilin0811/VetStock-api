@@ -3,9 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { DispensacionService } from '../dispensaciones/dispensacion.service';
-import { InventarioService } from '../inventario/inventario.service';
-import { MedicamentoService } from '../medicamentos/medicamento.service';
-import { ProveedorService } from '../proveedores/proveedor.service';
+import { ReportesModule } from './reportes.module';
 import { ReporteService } from './reporte.service';
 
 describe('ReporteService', () => {
@@ -15,14 +13,7 @@ describe('ReporteService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [
-        ReporteService,
-        DispensacionService,
-        InventarioService,
-        MedicamentoService,
-        ProveedorService,
-      ],
+      imports: [...importacionesBdPrueba(), ReportesModule],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));
 

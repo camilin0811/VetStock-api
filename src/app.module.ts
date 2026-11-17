@@ -1,53 +1,17 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { AuthController } from './auth/auth.controller';
-import { AuthService } from './auth/auth.service';
-import { Usuario } from './auth/entities/usuario.entity';
-import { DispensacionController } from './dispensaciones/dispensacion.controller';
-import { DispensacionService } from './dispensaciones/dispensacion.service';
-import { Dispensacion } from './dispensaciones/entities/dispensacion.entity';
+import { AuthModule } from './auth/auth.module';
+import { DispensacionesModule } from './dispensaciones/dispensaciones.module';
 import { Env } from './env.model';
-import { AlertaService } from './inventario/alerta.service';
-import { Lote } from './inventario/entities/lote.entity';
-import { InventarioController } from './inventario/inventario.controller';
-import { InventarioService } from './inventario/inventario.service';
-import { Medicamento } from './medicamentos/entities/medicamento.entity';
-import { MedicamentoController } from './medicamentos/medicamento.controller';
-import { MedicamentoService } from './medicamentos/medicamento.service';
-import { Proveedor } from './proveedores/entities/proveedor.entity';
-import { ProveedorController } from './proveedores/proveedor.controller';
-import { ProveedorService } from './proveedores/proveedor.service';
-import { ReporteController } from './reportes/reporte.controller';
-import { ReporteService } from './reportes/reporte.service';
-
-export const ENTIDADES = [Usuario, Medicamento, Proveedor, Lote, Dispensacion];
-
-export const CONTROLADORES = [
-  AuthController,
-  MedicamentoController,
-  ProveedorController,
-  InventarioController,
-  DispensacionController,
-  ReporteController,
-];
-
-export const PROVEEDORES = [
-  AuthService,
-  MedicamentoService,
-  ProveedorService,
-  InventarioService,
-  AlertaService,
-  DispensacionService,
-  ReporteService,
-];
+import { InventarioModule } from './inventario/inventario.module';
+import { MedicamentosModule } from './medicamentos/medicamentos.module';
+import { ProveedoresModule } from './proveedores/proveedores.module';
+import { ReportesModule } from './reportes/reportes.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       useFactory: (
         configService: ConfigService<Env>,
@@ -64,9 +28,12 @@ export const PROVEEDORES = [
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature(ENTIDADES),
+    AuthModule,
+    MedicamentosModule,
+    ProveedoresModule,
+    InventarioModule,
+    DispensacionesModule,
+    ReportesModule,
   ],
-  controllers: CONTROLADORES,
-  providers: PROVEEDORES,
 })
 export class AppModule {}

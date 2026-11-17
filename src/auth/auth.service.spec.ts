@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
+import { AuthModule } from './auth.module';
 import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
@@ -10,8 +11,7 @@ describe('AuthService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [AuthService],
+      imports: [...importacionesBdPrueba(), AuthModule],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));
 

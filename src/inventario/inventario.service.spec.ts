@@ -7,9 +7,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { importacionesBdPrueba, sembrarBd } from '../../test/bd-prueba';
 import { diasDesdeHoy } from '../common/fechas';
-import { MedicamentoService } from '../medicamentos/medicamento.service';
-import { ProveedorService } from '../proveedores/proveedor.service';
 import { AlertaService } from './alerta.service';
+import { InventarioModule } from './inventario.module';
 import { InventarioService } from './inventario.service';
 
 describe('InventarioService', () => {
@@ -19,13 +18,7 @@ describe('InventarioService', () => {
 
   beforeEach(async () => {
     testingModule = await Test.createTestingModule({
-      imports: importacionesBdPrueba(),
-      providers: [
-        InventarioService,
-        AlertaService,
-        MedicamentoService,
-        ProveedorService,
-      ],
+      imports: [...importacionesBdPrueba(), InventarioModule],
     }).compile();
     await sembrarBd(testingModule.get(DataSource));
 
@@ -91,7 +84,9 @@ describe('InventarioService', () => {
   });
 
   it('genera alertas de stock bajo, por vencer y vencido', async () => {
-    const tipos = (await alertaService.generar()).map((alerta) => alerta.tipo);
+    const tipos = (await alertaService.generar()).data.map(
+      (alerta) => alerta.tipo,
+    );
 
     expect(tipos).toContain('STOCK_BAJO');
     expect(tipos).toContain('POR_VENCER');
