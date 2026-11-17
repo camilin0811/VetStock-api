@@ -10,7 +10,7 @@ import { EmptyState, ErrorState, SkeletonRows } from './States'
 
 export interface Field {
   name: string; label: string; type?: 'text' | 'email' | 'tel' | 'password' | 'textarea' | 'select'
-  options?: { value: string; label: string }[]; required?: boolean; full?: boolean; hint?: string; requiredOnCreateOnly?: boolean
+  options?: { value: string; label: string }[]; required?: boolean; full?: boolean; hint?: string; requiredOnCreateOnly?: boolean; defaultValue?: string
 }
 export interface Column<T> { header: string; cell: (t: T) => ReactNode; right?: boolean }
 interface Props<T extends { id: number }> {
@@ -76,7 +76,7 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
               return (
                 <label key={fl.name} className={`field${fl.full ? ' full' : ''}`}>{fl.label}
                   {fl.type === 'textarea' ? <textarea className="textarea" name={fl.name} required={req} defaultValue={(val as string) ?? ''} />
-                    : fl.type === 'select' ? <select className="select" name={fl.name} required={req} defaultValue={(val as string) ?? fl.options?.[0]?.value}>{fl.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
+                    : fl.type === 'select' ? <select className="select" name={fl.name} required={req} defaultValue={(val as string) ?? fl.defaultValue ?? fl.options?.[0]?.value}>{fl.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select>
                     : <input className="input" name={fl.name} type={fl.type ?? 'text'} required={req} autoComplete={fl.type === 'password' ? 'new-password' : 'off'} defaultValue={fl.type === 'password' ? '' : ((val as string) ?? '')} />}
                   {fl.hint && <span className="hint">{editing && fl.type === 'password' ? 'Deja vacio para conservar la actual.' : fl.hint}</span>}
                 </label>

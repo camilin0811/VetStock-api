@@ -14,14 +14,13 @@ export default function Usuarios() {
   return (
     <CrudPage<Usuario>
       singular="Usuario" base="/usuarios" query={query} canWrite
-      // El contrato crea cuentas con POST /auth/registro (admin autenticado). Los tokens de la respuesta se ignoran: no se cambia de sesion.
-      create={(b) => post('/auth/registro', b)}
+      create={(b) => post('/usuarios', b)}
       nameOf={(u) => u.nombre} canDelete={(u) => u.id !== usuario?.id}
       emptyText="Crea cuentas para tu equipo y asigna su rol."
       deleteText={(u) => `Se eliminará la cuenta de ${u.nombre}. No se puede deshacer.`}
       fields={[
         { name: 'nombre', label: 'Nombre', required: true, full: true }, { name: 'correo', label: 'Correo', type: 'email', required: true },
-        { name: 'rol', label: 'Rol', type: 'select', options: ROLES, required: true },
+        { name: 'rol', label: 'Rol', type: 'select', options: ROLES, required: true, defaultValue: 'farmaceutico' },
         { name: 'clave', label: 'Clave', type: 'password', required: true, requiredOnCreateOnly: true, full: true, hint: 'Mínimo 8 caracteres.' },
       ]}
       columns={[
