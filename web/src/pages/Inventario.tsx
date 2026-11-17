@@ -129,7 +129,8 @@ export default function Inventario() {
           ) : (
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>Medicamento</th><th className="right">Disponible</th><th className="right">Mínimo</th><th className="right">Vencido</th><th>Estado</th></tr></thead>
+                <caption className="sr-only">Existencias por medicamento</caption>
+                <thead><tr><th scope="col">Medicamento</th><th scope="col" className="right">Disponible</th><th scope="col" className="right">Mínimo</th><th scope="col" className="right">Vencido</th><th scope="col">Estado</th></tr></thead>
                 <tbody>
                   {items.map((i) => (
                     <tr key={i.medicamento.id}>
@@ -152,7 +153,8 @@ export default function Inventario() {
           ) : (
             <div className="table-wrap">
               <table className="table">
-                <thead><tr><th>Lote</th><th>Medicamento</th><th>Proveedor</th><th className="right">Cantidad</th><th>Vence</th>{escribe && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
+                <caption className="sr-only">Lotes registrados</caption>
+                <thead><tr><th scope="col">Lote</th><th scope="col">Medicamento</th><th scope="col">Proveedor</th><th scope="col" className="right">Cantidad</th><th scope="col">Vence</th>{escribe && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
                 <tbody>
                   {lotes.data.map((l) => {
                     const d = Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5)

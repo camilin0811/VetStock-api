@@ -14,7 +14,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback((kind: Kind, m: string | string[]) => {
     const id = ++seq
     setItems((l) => [...l.slice(-3), { id, kind, messages: Array.isArray(m) ? m : [m] }])
-    setTimeout(() => dismiss(id), kind === 'error' ? 7000 : 4500)
+    // Los errores permanecen hasta que se cierran (2.2.1); los avisos informativos se retiran solos
+    if (kind !== 'error') setTimeout(() => dismiss(id), 6000)
   }, [dismiss])
   const api = useMemo<ToastApi>(() => ({
     success: (m) => push('success', m),
@@ -25,9 +26,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      <div className="toasts" role="status" aria-live="polite">
+      <div className="toasts" aria-live="polite" aria-relevant="additions">
         {items.map((t) => (
-          <div key={t.id} className={`toast ${t.kind}`}>
+          <div key={t.id} className={`toast ${t.kind}`} role={t.kind === 'error' ? 'alert' : 'status'}>
             <div>
               {t.messages.length > 1 ? (
                 <><strong>Revisa los datos</strong><ul>{t.messages.map((m) => <li key={m}>{m}</li>)}</ul></>

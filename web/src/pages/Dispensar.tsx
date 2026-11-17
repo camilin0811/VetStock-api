@@ -71,11 +71,11 @@ export default function Dispensar() {
           <form className="stack" style={{ gap: 14 }} onSubmit={enviar} key={formKey}>
             <div className="form-grid">
               <label className="field full">Medicamento
-                <select className="select" required value={medId} onChange={(e) => setMedId(e.target.value)}>
+                <select className="select" required aria-describedby="hint-stock" value={medId} onChange={(e) => setMedId(e.target.value)}>
                   <option value="" disabled>Elige un medicamento</option>
                   {meds.data?.map((m) => <option key={m.id} value={m.id}>{m.nombre} ({m.presentacion})</option>)}
                 </select>
-                {medId && <span className="hint">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
+                {medId && <span className="hint" id="hint-stock" role="status">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
               </label>
               <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" max={disponible || undefined} step="1" required /></label>
               <label className="field">Paciente (mascota)<input className="input" name="mascota" required maxLength={100} /></label>
@@ -121,7 +121,8 @@ export default function Dispensar() {
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Fecha</th><th>Medicamento</th><th>Paciente</th><th>Lotes</th><th className="right">Total</th><th>Estado</th>{puedeAnular && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
+              <caption className="sr-only">Historial de dispensaciones</caption>
+              <thead><tr><th scope="col">Fecha</th><th scope="col">Medicamento</th><th scope="col">Paciente</th><th scope="col">Lotes</th><th scope="col" className="right">Total</th><th scope="col">Estado</th>{puedeAnular && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {historial.data.map((d) => (
                   <tr key={d.id} className={d.estado === 'ANULADA' ? 'anulada' : undefined}>

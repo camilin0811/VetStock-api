@@ -66,7 +66,8 @@ export default function Reportes() {
               <HBars tone="var(--warn-dot)" items={prov.data.map((p) => ({ label: p.proveedor.nombre, value: p.unidades, display: `${fmtNum(p.unidades)} u` }))} />
               <div className="table-wrap" style={{ marginTop: 10 }}>
                 <table className="table">
-                  <thead><tr><th>Proveedor</th><th className="right">Lotes</th><th className="right">Valor</th></tr></thead>
+                  <caption className="sr-only">Lotes y valor recibido por proveedor</caption>
+                  <thead><tr><th scope="col">Proveedor</th><th scope="col" className="right">Lotes</th><th scope="col" className="right">Valor</th></tr></thead>
                   <tbody>{prov.data.map((p) => <tr key={p.proveedor.id}><td>{p.proveedor.nombre}</td><td className="right">{p.lotes}</td><td className="right">{fmtMoney(p.valor)}</td></tr>)}</tbody>
                 </table>
               </div>

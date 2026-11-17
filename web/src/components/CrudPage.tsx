@@ -50,7 +50,8 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr>{columns.map((c) => <th key={c.header} className={c.right ? 'right' : ''}>{c.header}</th>)}{canWrite && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
+              <caption className="sr-only">Listado de {singular.toLowerCase()}s</caption>
+              <thead><tr>{columns.map((c) => <th scope="col" key={c.header} className={c.right ? 'right' : ''}>{c.header}</th>)}{canWrite && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {query.data.map((t) => (
                   <tr key={t.id}>

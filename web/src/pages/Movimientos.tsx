@@ -37,7 +37,8 @@ export default function Movimientos() {
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th>Fecha</th><th>Tipo</th><th>Medicamento</th><th>Lote</th><th className="right">Cantidad</th><th>Detalle</th><th>Usuario</th></tr></thead>
+              <caption className="sr-only">Kardex de movimientos de inventario</caption>
+              <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Medicamento</th><th scope="col">Lote</th><th scope="col" className="right">Cantidad</th><th scope="col">Detalle</th><th scope="col">Usuario</th></tr></thead>
               <tbody>
                 {movs.data.map((m) => {
                   const t = TIPOS.find((x) => x.v === m.tipo)
