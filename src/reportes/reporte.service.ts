@@ -29,7 +29,12 @@ export class ReporteService {
 
     const detalle = new Map<number, ConsumoMedicamentoDto>();
     for (const dispensacion of (await this.dispensacionService.listar()).data) {
-      if (dispensacion.fecha < desde || dispensacion.fecha > hasta) {
+      // Las dispensaciones anuladas no cuentan como consumo
+      if (
+        dispensacion.estado === 'ANULADA' ||
+        dispensacion.fecha < desde ||
+        dispensacion.fecha > hasta
+      ) {
         continue;
       }
 
