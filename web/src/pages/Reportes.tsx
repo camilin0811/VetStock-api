@@ -64,7 +64,7 @@ export default function Reportes() {
           {!prov.data?.length ? <EmptyState title="Sin entregas" text="No hay lotes recibidos en este rango." /> : (
             <>
               <HBars tone="var(--warn-dot)" items={prov.data.map((p) => ({ label: p.proveedor.nombre, value: p.unidades, display: `${fmtNum(p.unidades)} u` }))} />
-              <div className="table-wrap" style={{ marginTop: 10 }}>
+              <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable" style={{ marginTop: 10 }}>
                 <table className="table">
                   <caption className="sr-only">Lotes y valor recibido por proveedor</caption>
                   <thead><tr><th scope="col">Proveedor</th><th scope="col" className="right">Lotes</th><th scope="col" className="right">Valor</th></tr></thead>

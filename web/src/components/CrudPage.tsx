@@ -48,7 +48,7 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
         {query.isLoading ? <SkeletonRows /> : query.error ? <ErrorState error={query.error} onRetry={() => query.refetch()} /> : !query.data?.length ? (
           <EmptyState title={`Aún no hay ${singular.toLowerCase()}s`} text={emptyText} action={canWrite ? <button type="button" className="btn primary" onClick={() => abrir()}>Crear {singular.toLowerCase()}</button> : undefined} />
         ) : (
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
             <table className="table">
               <caption className="sr-only">Listado de {singular.toLowerCase()}s</caption>
               <thead><tr>{columns.map((c) => <th scope="col" key={c.header} className={c.right ? 'right' : ''}>{c.header}</th>)}{canWrite && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>

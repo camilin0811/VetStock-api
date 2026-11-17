@@ -119,7 +119,7 @@ export default function Dispensar() {
         {historial.isLoading ? <SkeletonRows /> : historial.error ? <ErrorState error={historial.error} onRetry={() => historial.refetch()} /> : !historial.data?.length ? (
           <EmptyState title="Sin dispensaciones" text={mascota ? 'No hay resultados para ese paciente.' : 'Aún no se ha dispensado nada.'} />
         ) : (
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
             <table className="table">
               <caption className="sr-only">Historial de dispensaciones</caption>
               <thead><tr><th scope="col">Fecha</th><th scope="col">Medicamento</th><th scope="col">Paciente</th><th scope="col">Lotes</th><th scope="col" className="right">Total</th><th scope="col">Estado</th>{puedeAnular && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
