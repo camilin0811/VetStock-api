@@ -36,3 +36,52 @@ export class ReporteVencimientosDto {
   totalPerdida: number;
   lotes: LoteVencidoDto[];
 }
+
+export class ProveedoresQueryDto extends ConsumoQueryDto {}
+
+export class StockMedicamentoDto {
+  medicamento: { id: number; nombre: string };
+  unidades: number;
+  valor: number;
+}
+
+export class ReporteStockDto {
+  items: StockMedicamentoDto[];
+  valorTotal: number;
+}
+
+export class ProveedorRecibidoDto {
+  proveedor: { id: number; nombre: string };
+  lotes: number;
+  unidades: number;
+  valor: number;
+}
+
+export class ConsumoDiarioDto {
+  fecha: string;
+  unidades: number;
+}
+
+export class ProximoVencimientoDto {
+  loteId: number;
+  numeroLote: string;
+  medicamento: { id: number; nombre: string };
+  fechaVencimiento: string;
+  diasRestantes: number;
+  cantidad: number;
+}
+
+export class ResumenDto {
+  totalMedicamentos: number;
+  unidadesDisponibles: number;
+  valorInventario: number;
+  stockBajo: number;
+  porVencer: number;
+  vencidos: number;
+  dispensacionesHoy: number;
+  dispensacionesSemana: number;
+  porcentajeStockSaludable: number;
+  consumoUltimos7Dias: ConsumoDiarioDto[];
+  proximosVencimientos: ProximoVencimientoDto[];
+  ultimasDispensaciones: unknown[];
+}
