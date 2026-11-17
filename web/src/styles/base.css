@@ -30,7 +30,7 @@ main:focus, main:focus-visible { outline: none; }
 @media (forced-colors: active) {
   :focus-visible { outline: 3px solid Highlight; }
   .pill, .chip, .btn { border: 1px solid ButtonText; }
-  .cal-day.sel, .chip[aria-pressed='true'], .row-btn.on { outline: 2px solid Highlight; }
+  .cal-day.sel, .chip[aria-pressed='true'], .row-btn.on, .med-row.on { outline: 2px solid Highlight; }
 }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-thumb { background: var(--violet-300); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
