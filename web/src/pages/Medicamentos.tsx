@@ -76,7 +76,7 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
   return (
     <div className="stack detalle" style={{ gap: 18 }}>
       <div className="detail-head">
-        <span className="det-foto"><MedImagen base={med.imagen} sizes="(min-width: 1100px) 45vw, 90vw" eager fallback={<PillIcon size={40} aria-hidden="true" />} /></span>
+        <span className="det-foto"><MedImagen base={med.imagen} sizes="(min-width: 521px) 240px, 90vw" eager fallback={<PillIcon size={40} aria-hidden="true" />} /></span>
         <div className="det-titulo">
           <h2>{med.nombre}</h2>
           <p className="det-sub">{med.presentacion} · {cap(med.especie)}</p>
