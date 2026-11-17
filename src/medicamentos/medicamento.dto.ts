@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -22,6 +23,11 @@ export class MedicamentoDto {
   @IsString()
   @IsNotEmpty()
   presentacion: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  imagen?: string | null;
 
   @IsIn(ESPECIES)
   especie: string;

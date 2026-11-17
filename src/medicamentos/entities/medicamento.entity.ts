@@ -26,6 +26,9 @@ export class Medicamento {
   @Column({ type: 'varchar', length: 255 })
   presentacion: string;
 
+  @Column({ type: 'varchar', length: 255, name: 'imagen', nullable: true })
+  imagen: string | null;
+
   @Column({ type: 'varchar', length: 30 })
   especie: string;
 
