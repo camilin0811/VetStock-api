@@ -26,7 +26,7 @@ export default function Reportes() {
   return (
     <Page deps={[consumo.isLoading, venc.isLoading, stock.isLoading, prov.isLoading]}>
       <div className="card soft page-head" data-reveal>
-        <p className="muted grow">Rango para consumo y proveedores (por defecto, últimos 30 días).</p>
+        <p className="muted grow">Consumo y proveedores usan este rango. Sin fechas muestran los últimos 30 días; con solo una, la otra es hoy o hace 30 días.</p>
         <label className="field">Desde<input className="input" type="date" value={desde} max={hasta || undefined} onChange={(e) => setDesde(e.target.value)} /></label>
         <label className="field">Hasta<input className="input" type="date" value={hasta} min={desde || undefined} onChange={(e) => setHasta(e.target.value)} /></label>
       </div>
