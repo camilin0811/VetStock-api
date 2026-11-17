@@ -314,6 +314,10 @@ npm run lint && npm run build
 
 Antes de compartir el entorno, cambia `JWT_SECRET` y `JWT_REFRESH_SECRET` en `.env` (por ejemplo con `openssl rand -hex 32`) y las credenciales de PostgreSQL y pgAdmin. Los valores de `.env.example` son solo para desarrollo local.
 
+## Autor y flujo de trabajo
+
+Proyecto individual de **Andres Camilo Muñoz Bolaños** ([@camilin0811](https://github.com/camilin0811)). Todos los commits y Pull Requests están a su nombre. Cada funcionalidad se desarrolla en una rama `feature/<nombre>` desde `develop` y se integra con un Pull Request; las reglas completas están en [`.agents/workflow.md`](.agents/workflow.md).
+
 ## Documentación adicional
 
 - [docs/arquitectura.md](docs/arquitectura.md): arquitectura, módulos, ciclo de vida de una petición, modelo entidad-relación, FEFO, autenticación, decisiones técnicas y preguntas frecuentes.

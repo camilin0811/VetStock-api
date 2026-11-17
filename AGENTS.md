@@ -6,6 +6,7 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 
 - ANTES de cualquier cambio: `git pull` sobre `develop` para evitar conflictos. Si hay cambios sin commitear, resolver o preguntar antes de continuar.
 - Rama por defecto: `develop`. No trabajar directo sobre ella; crear `feature/<nombre>` desde `develop`.
+- Proyecto individual de Andres Camilo Muñoz Bolaños (`camilin0811`): todos los commits a su nombre (`cammb1004@gmail.com`), push y PR con la cuenta `camilin0811`, sin `Co-Authored-By` ni atribuciones de herramientas en commits o PRs.
 - Reglas de ramas, commits y plantilla de PR: `.agents/workflow.md`. Todo PR lleva el banner de la cooperativa al inicio del cuerpo.
 
 ## Alcance actual (respetar)
