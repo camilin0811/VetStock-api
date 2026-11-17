@@ -25,6 +25,7 @@ const config: Config = {
     'apps/**/*.(t|j)s',
   ],
   coverageDirectory: './coverage',
+  setupFiles: ['<rootDir>/test/entorno.ts'],
   testEnvironment: 'node',
 };
 

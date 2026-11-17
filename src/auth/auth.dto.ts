@@ -1,4 +1,13 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import type { Usuario } from './entities/usuario.entity';
+import { Rol } from './rol.enum';
 
 export class RegistroDto {
   @IsString()
@@ -11,7 +20,12 @@ export class RegistroDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
   clave: string;
+
+  @IsOptional()
+  @IsEnum(Rol)
+  rol?: Rol;
 }
 
 export class LoginDto {
@@ -33,4 +47,5 @@ export class RefreshDto {
 export class AuthResponseDto {
   accessToken: string;
   refreshToken: string;
+  usuario: Usuario;
 }

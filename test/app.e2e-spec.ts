@@ -1,61 +1,15 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
-import { App } from 'supertest/types';
-import { DataSource } from 'typeorm';
-import { AuthModule } from './../src/auth/auth.module';
-import { CategoriasModule } from './../src/categorias/categorias.module';
-import { DispensacionesModule } from './../src/dispensaciones/dispensaciones.module';
-import { InventarioModule } from './../src/inventario/inventario.module';
-import { MedicamentosModule } from './../src/medicamentos/medicamentos.module';
-import { ProveedoresModule } from './../src/proveedores/proveedores.module';
-import { ReportesModule } from './../src/reportes/reportes.module';
-import { importacionesBdPrueba, sembrarBd } from './bd-prueba';
+import { AppPrueba, crearAppPrueba } from './app-prueba';
 
 describe('VetStock API (e2e)', () => {
-  let app: INestApplication<App>;
+  let contexto: AppPrueba;
+  const api = (rol?: Parameters<AppPrueba['api']>[0]) => contexto.api(rol);
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        ...importacionesBdPrueba(),
-        AuthModule,
-        CategoriasModule,
-        MedicamentosModule,
-        ProveedoresModule,
-        InventarioModule,
-        DispensacionesModule,
-        ReportesModule,
-      ],
-    }).compile();
-    await sembrarBd(moduleFixture.get(DataSource));
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ transform: true, whitelist: true }),
-    );
-    await app.init();
-  });
-
-  it('POST /auth/registro registra un usuario', () => {
-    return request(app.getHttpServer())
-      .post('/auth/registro')
-      .send({ nombre: 'Laura', correo: 'laura@vetstock.com', clave: '123456' })
-      .expect(201)
-      .expect((respuesta) => {
-        expect(respuesta.body.data.accessToken).toBeDefined();
-      });
-  });
-
-  it('POST /auth/login rechaza credenciales invalidas', () => {
-    return request(app.getHttpServer())
-      .post('/auth/login')
-      .send({ correo: 'nadie@vetstock.com', clave: 'mala' })
-      .expect(401);
+    contexto = await crearAppPrueba();
   });
 
   it('GET /categorias lista con count', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/categorias')
       .expect(200)
       .expect((respuesta) => {
@@ -65,12 +19,12 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /categorias registra y GET /categorias/:id la devuelve', async () => {
-    const creada = await request(app.getHttpServer())
+    const creada = await api()
       .post('/categorias')
       .send({ nombre: 'Suplementos' })
       .expect(201);
 
-    await request(app.getHttpServer())
+    await api()
       .get(`/categorias/${creada.body.data.id}`)
       .expect(200)
       .expect((respuesta) => {
@@ -80,33 +34,30 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /categorias responde 409 con nombre duplicado y 400 sin nombre', async () => {
-    await request(app.getHttpServer())
-      .post('/categorias')
-      .send({ nombre: 'Vacunas' })
-      .expect(409);
-    await request(app.getHttpServer()).post('/categorias').send({}).expect(400);
+    await api().post('/categorias').send({ nombre: 'Vacunas' }).expect(409);
+    await api().post('/categorias').send({}).expect(400);
   });
 
   it('PUT /categorias/:id actualiza y DELETE /categorias/:id elimina', async () => {
-    await request(app.getHttpServer())
+    await api()
       .put('/categorias/3')
       .send({ descripcion: 'Control del dolor' })
       .expect(200)
       .expect((respuesta) => {
         expect(respuesta.body.data.descripcion).toBe('Control del dolor');
       });
-    await request(app.getHttpServer()).delete('/categorias/3').expect(200);
-    await request(app.getHttpServer()).get('/categorias/3').expect(404);
+    await api().delete('/categorias/3').expect(200);
+    await api().get('/categorias/3').expect(404);
   });
 
   it('GET /categorias/:id valida el id y responde 404', async () => {
-    await request(app.getHttpServer()).get('/categorias/abc').expect(400);
-    await request(app.getHttpServer()).get('/categorias/999').expect(404);
-    await request(app.getHttpServer()).delete('/categorias/999').expect(404);
+    await api().get('/categorias/abc').expect(400);
+    await api().get('/categorias/999').expect(404);
+    await api().delete('/categorias/999').expect(404);
   });
 
   it('GET /medicamentos lista el catalogo', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/medicamentos')
       .expect(200)
       .expect((respuesta) => {
@@ -120,7 +71,7 @@ describe('VetStock API (e2e)', () => {
     ['/lotes', 6],
     ['/dispensaciones', 2],
   ])('GET %s devuelve message, data y count', (ruta, total) => {
-    return request(app.getHttpServer())
+    return api()
       .get(ruta)
       .expect(200)
       .expect((respuesta) => {
@@ -131,7 +82,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('GET /medicamentos/:id y la lista incluyen categorias', async () => {
-    await request(app.getHttpServer())
+    await api()
       .get('/medicamentos/1')
       .expect(200)
       .expect((respuesta) => {
@@ -139,7 +90,7 @@ describe('VetStock API (e2e)', () => {
           expect.objectContaining({ id: 1, nombre: 'Antibioticos' }),
         ]);
       });
-    await request(app.getHttpServer())
+    await api()
       .get('/medicamentos')
       .expect((respuesta) => {
         expect(respuesta.body.data[0].categorias).toHaveLength(1);
@@ -147,7 +98,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /medicamentos asigna categorias por id', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/medicamentos')
       .send({
         nombre: 'Ivermectina 1%',
@@ -173,22 +124,22 @@ describe('VetStock API (e2e)', () => {
       stockMinimo: 6,
       requiereFormula: false,
     };
-    await request(app.getHttpServer())
+    await api()
       .post('/medicamentos')
       .send({ ...base, categoriaIds: [999] })
       .expect(404);
-    await request(app.getHttpServer())
+    await api()
       .post('/medicamentos')
       .send({ ...base, categoriaIds: ['a'] })
       .expect(400);
-    await request(app.getHttpServer())
+    await api()
       .post('/medicamentos')
       .send({ ...base, categoriaIds: 3 })
       .expect(400);
   });
 
   it('PUT /medicamentos/:id reemplaza las categorias', () => {
-    return request(app.getHttpServer())
+    return api()
       .put('/medicamentos/1')
       .send({ categoriaIds: [2, 3] })
       .expect(200)
@@ -200,8 +151,8 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('DELETE /categorias/:id quita la categoria de los medicamentos', async () => {
-    await request(app.getHttpServer()).delete('/categorias/1').expect(200);
-    await request(app.getHttpServer())
+    await api().delete('/categorias/1').expect(200);
+    await api()
       .get('/medicamentos/1')
       .expect((respuesta) => {
         expect(respuesta.body.categorias).toEqual([]);
@@ -209,14 +160,14 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /medicamentos rechaza datos invalidos', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/medicamentos')
       .send({ nombre: 'Sin precio', especie: 'dinosaurio' })
       .expect(400);
   });
 
   it('PUT /medicamentos/:id acepta una actualizacion parcial', () => {
-    return request(app.getHttpServer())
+    return api()
       .put('/medicamentos/1')
       .send({ stockMinimo: 30 })
       .expect(200)
@@ -227,18 +178,18 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('PUT /medicamentos/:id valida los campos enviados', () => {
-    return request(app.getHttpServer())
+    return api()
       .put('/medicamentos/1')
       .send({ especie: 'dinosaurio' })
       .expect(400);
   });
 
   it('GET /medicamentos/:id responde 404 si no existe', () => {
-    return request(app.getHttpServer()).get('/medicamentos/999').expect(404);
+    return api().get('/medicamentos/999').expect(404);
   });
 
   it('GET /lotes incluye medicamentoId, medicamento y proveedor', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/lotes?medicamentoId=2')
       .expect(200)
       .expect((respuesta) => {
@@ -253,7 +204,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /lotes registra un lote nuevo', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/lotes')
       .send({
         medicamentoId: 4,
@@ -269,7 +220,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /lotes rechaza un medicamento que no existe', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/lotes')
       .send({
         medicamentoId: 999,
@@ -282,7 +233,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('GET /inventario/:medicamentoId separa stock disponible y vencido', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/inventario/3')
       .expect(200)
       .expect((respuesta) => {
@@ -292,7 +243,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('GET /alertas devuelve las alertas del inventario', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/alertas')
       .expect(200)
       .expect((respuesta) => {
@@ -302,7 +253,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /dispensaciones descuenta por FEFO y devuelve los lotes usados', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/dispensaciones')
       .send({
         medicamentoId: 2,
@@ -317,7 +268,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('POST /dispensaciones rechaza medicamento con formula sin formula', () => {
-    return request(app.getHttpServer())
+    return api()
       .post('/dispensaciones')
       .send({
         medicamentoId: 1,
@@ -329,7 +280,7 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('GET /reportes/consumo devuelve el consumo por medicamento', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/reportes/consumo')
       .expect(200)
       .expect((respuesta) => {
@@ -338,13 +289,11 @@ describe('VetStock API (e2e)', () => {
   });
 
   it('GET /reportes/consumo rechaza fechas invalidas', () => {
-    return request(app.getHttpServer())
-      .get('/reportes/consumo?desde=ayer')
-      .expect(400);
+    return api().get('/reportes/consumo?desde=ayer').expect(400);
   });
 
   it('GET /reportes/vencimientos calcula la perdida', () => {
-    return request(app.getHttpServer())
+    return api()
       .get('/reportes/vencimientos')
       .expect(200)
       .expect((respuesta) => {
@@ -353,6 +302,6 @@ describe('VetStock API (e2e)', () => {
   });
 
   afterEach(async () => {
-    await app.close();
+    await contexto.cerrar();
   });
 });
