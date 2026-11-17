@@ -33,6 +33,8 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
     for (const fl of fields) {
       const v = String(f.get(fl.name) ?? '').trim()
       if (v !== '' || (fl.required && !fl.requiredOnCreateOnly)) body[fl.name] = v
+      // Al editar, un opcional vacio se envia como null para poder borrarlo (el backend lo acepta y la columna es nullable)
+      else if (editing && !fl.required) body[fl.name] = null
     }
     setErrores([])
     try { await guardar.mutateAsync(body); setForm(null) } catch (err) { setErrores(mensajesDe(err)) }
