@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   Param,
   ParseIntPipe,
   Post,
@@ -41,6 +42,7 @@ export class DispensacionController {
   }
 
   @Roles(Rol.Admin, Rol.Farmaceutico)
+  @HttpCode(200)
   @Post(':id/anular')
   anular(
     @Param('id', ParseIntPipe) id: number,

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { Publico } from './publico.decorator';
 import { UsuarioActual } from './usuario-actual.decorator';
 import type { Usuario } from './entities/usuario.entity';
@@ -16,12 +16,14 @@ export class AuthController {
   }
 
   @Publico()
+  @HttpCode(200)
   @Post('login')
   login(@Body() datos: LoginDto) {
     return this.authService.login(datos);
   }
 
   @Publico()
+  @HttpCode(200)
   @Post('refresh')
   refresh(@Body() datos: RefreshDto) {
     return this.authService.refresh(datos.refreshToken);

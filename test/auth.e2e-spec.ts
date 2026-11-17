@@ -19,7 +19,7 @@ describe('Auth (e2e)', () => {
     const respuesta = await http()
       .post('/auth/login')
       .send({ correo: USUARIOS_PRUEBA.admin, clave: CLAVE_PRUEBA })
-      .expect(201);
+      .expect(200);
 
     expect(respuesta.body.data.accessToken).toBeDefined();
     expect(respuesta.body.data.refreshToken).toBeDefined();
@@ -135,7 +135,7 @@ describe('Auth (e2e)', () => {
     const renovado = await http()
       .post('/auth/refresh')
       .send({ refreshToken: login.body.data.refreshToken })
-      .expect(201);
+      .expect(200);
     expect(renovado.body.data.usuario.correo).toBe(USUARIOS_PRUEBA.veterinario);
 
     await http()
@@ -211,6 +211,42 @@ describe('Auth (e2e)', () => {
       await contexto.app.get(DataSource).getRepository('Usuario').delete(3);
 
       await contexto.api('farmaceutico').get('/medicamentos').expect(401);
+    });
+  });
+});
+
+describe('Formato de errores (e2e)', () => {
+  let contexto: AppPrueba;
+
+  beforeEach(async () => {
+    contexto = await crearAppPrueba();
+  });
+
+  afterEach(async () => {
+    await contexto.cerrar();
+  });
+
+  it('devuelve statusCode, message, error, path y timestamp', async () => {
+    const respuesta = await contexto.api().get('/categorias/999').expect(404);
+    expect(respuesta.body).toMatchObject({
+      statusCode: 404,
+      error: 'Not Found',
+      path: '/categorias/999',
+    });
+    expect(typeof respuesta.body.message).toBe('string');
+    expect(typeof respuesta.body.timestamp).toBe('string');
+  });
+
+  it('responde 400 con el mismo formato ante JSON mal formado', async () => {
+    const respuesta = await contexto
+      .api()
+      .post('/categorias')
+      .set('Content-Type', 'application/json')
+      .send('{"nombre":')
+      .expect(400);
+    expect(respuesta.body).toMatchObject({
+      statusCode: 400,
+      path: '/categorias',
     });
   });
 });

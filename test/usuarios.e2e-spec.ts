@@ -111,7 +111,7 @@ describe('Usuarios (e2e)', () => {
     await http()
       .post('/auth/login')
       .send({ correo: USUARIOS_PRUEBA.farmaceutico, clave: 'NuevaClave456*' })
-      .expect(201);
+      .expect(200);
   });
 
   it('PATCH /usuarios/:id valida datos y correo repetido', async () => {
