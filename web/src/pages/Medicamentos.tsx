@@ -128,6 +128,8 @@ export default function Medicamentos() {
   const filtros = useMemo(() => ({ q: q || undefined, especie: especie || undefined, categoriaId: cat }), [q, especie, cat])
   const meds = useMedicamentos(filtros)
   const cats = useCategorias()
+  const inv = useInventario()
+  const stockPorId = useMemo(() => new Map((inv.data ?? []).map((i) => [i.medicamento.id, i])), [inv.data])
   const wide = useMedia('(min-width: 1100px)')
   const [selId, setSelId] = useState<number | null>(null)
   const [form, setForm] = useState<'nuevo' | 'editar' | null>(null)
@@ -176,18 +178,31 @@ export default function Medicamentos() {
           ) : (
             <>
               <p className="muted" style={{ marginBottom: 10 }}>{meds.data.length} {plural(meds.data.length, 'medicamento')}</p>
-              <ul className="list fluid">
-                {meds.data.map((m) => (
-                  <li key={m.id}>
-                    <button type="button" className={`row-btn${sel?.id === m.id ? ' on' : ''}`} aria-pressed={sel?.id === m.id} onClick={() => { setSelId(m.id); if (!wide) setTimeout(() => detalleRef.current?.focus(), 0) }}>
-                      <span className="list-ico thumb"><MedImagen base={m.imagen} sizes="48px" /></span>
-                      <span className="grow"><span className="row-title">{m.nombre}</span><span className="row-sub" style={{ display: 'block' }}>{m.presentacion} · {cap(m.especie)}</span></span>
-                      <span className="chips" style={{ justifyContent: 'flex-end' }}>{m.categorias.slice(0, 2).map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}</span>
-                      <span className="num row-price">{fmtMoney(m.precio)}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <div className="med-table">
+                <div className="med-head" aria-hidden="true">
+                  <span>Medicamento</span><span className="c-esp">Especie</span><span className="c-num">Stock</span><span className="c-num">Precio</span>
+                </div>
+                <ul className="med-list">
+                  {meds.data.map((m) => {
+                    const it = stockPorId.get(m.id)
+                    const tono = it ? (it.estado === 'OK' ? 'ok' : it.estado === 'STOCK_BAJO' ? 'warn' : 'bad') : ''
+                    return (
+                      <li key={m.id}>
+                        <button type="button" className={`med-row${sel?.id === m.id ? ' on' : ''}`} aria-pressed={sel?.id === m.id} onClick={() => { setSelId(m.id); if (!wide) setTimeout(() => detalleRef.current?.focus(), 0) }}>
+                          <span className="list-ico thumb"><MedImagen base={m.imagen} sizes="48px" /></span>
+                          <span className="c-main"><span className="row-title">{m.nombre}</span><span className="row-sub">{m.presentacion}<span className="sub-esp"> · {cap(m.especie)}</span></span></span>
+                          <span className="c-esp">{cap(m.especie)}</span>
+                          <span className={`c-num c-stock ${tono}`}>
+                            <strong className="num">{it ? it.disponible : '-'}</strong>
+                            {it && it.estado !== 'OK' && <small>{it.estado === 'STOCK_BAJO' ? 'Bajo' : 'Agotado'}</small>}
+                          </span>
+                          <span className="c-num num c-precio">{fmtMoney(m.precio)}</span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
             </>
           )}
         </section>
