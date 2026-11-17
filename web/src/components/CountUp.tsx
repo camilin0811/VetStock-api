@@ -21,6 +21,9 @@ export function CountUp({ value, format = fmtNum }: Props) {
           onComplete: () => { el.textContent = format(value) },
         })
         ScrollTrigger.create({ trigger: el, start: 'top 95%', once: true, onEnter: () => tween.play() })
+        // Si el conteo no arranca, se muestra el valor real igualmente
+        const rescate = gsap.delayedCall(3, () => { if (tween.paused()) tween.progress(1).play() })
+        return () => { rescate.kill() }
       })
       return () => { el.textContent = format(value) }
     },

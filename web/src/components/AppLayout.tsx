@@ -25,7 +25,7 @@ export function AppLayout() {
   const moreBtn = useRef<HTMLButtonElement>(null)
   const morePanel = useRef<HTMLDivElement>(null)
   const mainRef = useRef<HTMLElement>(null)
-  const primera = useRef(true)
+  const ultimaRuta = useRef(pathname)
 
   useEffect(() => {
     if (!more) return
@@ -43,7 +43,8 @@ export function AppLayout() {
   const titulo = current?.label === 'Inicio' ? 'Panel' : current?.label
   useEffect(() => {
     document.title = titulo ? `${titulo} | VetStock` : 'VetStock'
-    if (primera.current) { primera.current = false; return }
+    if (ultimaRuta.current === pathname) return
+    ultimaRuta.current = pathname
     mainRef.current?.focus({ preventScroll: true })
   }, [pathname, titulo])
 

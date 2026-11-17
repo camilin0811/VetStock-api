@@ -16,6 +16,8 @@ export function ProgressRing({ value, size = 168, stroke = 12, label, children }
     gsap.matchMedia().add(NO_MOTION_OK, () => {
       gsap.set(arc, { strokeDashoffset: c })
       ScrollTrigger.create({ trigger: arc, start: 'top 95%', once: true, onEnter: () => gsap.to(arc, { strokeDashoffset: c * (1 - v / 100), duration: 1.4, ease: 'expo.out' }) })
+      const rescate = gsap.delayedCall(3, () => gsap.to(arc, { strokeDashoffset: c * (1 - v / 100), duration: 0.4 }))
+      return () => { rescate.kill() }
     })
   }, { scope: box, dependencies: [v, c], revertOnUpdate: true })
   return (
