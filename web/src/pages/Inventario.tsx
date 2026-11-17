@@ -10,7 +10,7 @@ import { Page } from '../components/Page'
 import { Modal } from '../components/Modal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, isoHoy, nombreMed, parseFecha } from '../lib/format'
+import { diasLabel, diasTono, fmtFecha, isoHoy, isoManana, nombreMed, parseFecha } from '../lib/format'
 
 const ESTADO: Record<EstadoStock, { label: string; tono: string }> = {
   OK: { label: 'OK', tono: 'ok' }, STOCK_BAJO: { label: 'Stock bajo', tono: 'warn' }, SIN_STOCK: { label: 'Sin stock', tono: 'bad' },
@@ -48,9 +48,9 @@ function LoteForm({ onDone }: { onDone: () => void }) {
             {provs.data?.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </select>
         </label>
-        <label className="field">Número de lote<input className="input" name="numeroLote" required /></label>
+        <label className="field">Número de lote<input className="input" name="numeroLote" required maxLength={100} /></label>
         <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" step="1" required /></label>
-        <label className="field full">Fecha de vencimiento<input className="input" name="fechaVencimiento" type="date" min={isoHoy()} required /></label>
+        <label className="field full">Fecha de vencimiento<input className="input" name="fechaVencimiento" type="date" min={isoManana()} required /></label>
       </div>
       <FormError errores={errores} />
       <div className="modal-actions">
@@ -83,7 +83,7 @@ function AjusteForm({ lote, onDone }: { lote: Lote; onDone: () => void }) {
             <option value="PERDIDA">Pérdida</option><option value="DANO">Daño</option><option value="VENCIDO">Vencido</option><option value="OTRO">Otro</option>
           </select>
         </label>
-        <label className="field full">Observación<textarea className="textarea" name="observacion" /></label>
+        <label className="field full">Observación<textarea className="textarea" name="observacion" maxLength={240} /></label>
       </div>
       <FormError errores={errores} />
       <div className="modal-actions">

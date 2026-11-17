@@ -21,7 +21,7 @@ function Anular({ d, onDone }: { d: Dispensacion; onDone: () => void }) {
   return (
     <form className="stack" style={{ gap: 14 }} onSubmit={enviar}>
       <p>Se devolverá al inventario el stock de {nombreMed(d.medicamento)} x {d.cantidad} (paciente {d.mascota}) en los lotes que se usaron.</p>
-      <label className="field">Motivo<textarea className="textarea" name="motivo" required minLength={3} /></label>
+      <label className="field">Motivo<textarea className="textarea" name="motivo" required minLength={3} maxLength={255} /></label>
       <FormError errores={errores} />
       <div className="modal-actions">
         <button type="button" className="btn" onClick={onDone}>Cancelar</button>
@@ -78,9 +78,9 @@ export default function Dispensar() {
                 {medId && <span className="hint">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
               </label>
               <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" max={disponible || undefined} step="1" required /></label>
-              <label className="field">Paciente (mascota)<input className="input" name="mascota" required /></label>
-              <label className="field full">Veterinario<input className="input" name="veterinario" required defaultValue={usuario?.rol === 'veterinario' ? usuario.nombre : ''} /></label>
-              {med?.requiereFormula && <label className="field full">Fórmula médica<textarea className="textarea" name="formula" required /></label>}
+              <label className="field">Paciente (mascota)<input className="input" name="mascota" required maxLength={100} /></label>
+              <label className="field full">Veterinario<input className="input" name="veterinario" required maxLength={255} defaultValue={usuario?.rol === 'veterinario' ? usuario.nombre : ''} /></label>
+              {med?.requiereFormula && <label className="field full">Fórmula médica<textarea className="textarea" name="formula" required maxLength={100} /></label>}
             </div>
             <FormError errores={errores} />
             <button className="btn primary" style={{ justifyContent: 'center', height: 50 }} disabled={dispensar.isPending || !medId}><Syringe size={18} aria-hidden="true" />{dispensar.isPending ? 'Dispensando...' : 'Dispensar'}</button>

@@ -23,6 +23,12 @@ export const isoHoy = () => {
   const n = new Date()
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
 }
+/** Manana en 'YYYY-MM-DD': el backend rechaza lotes que vencen hoy. */
+export const isoManana = () => {
+  const n = new Date()
+  n.setDate(n.getDate() + 1)
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`
+}
 export const nombreMed = (m: unknown) =>
   typeof m === 'string' ? m : m && typeof m === 'object' && 'nombre' in m ? String((m as { nombre: string }).nombre) : '-'
 export const plural = (n: number, uno: string, varios = uno + 's') => (n === 1 ? uno : varios)
