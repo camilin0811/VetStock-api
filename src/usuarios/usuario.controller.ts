@@ -6,13 +6,19 @@ import {
   Param,
   Post,
   ParseIntPipe,
+  Patch,
   Put,
 } from '@nestjs/common';
 import type { Usuario } from '../auth/entities/usuario.entity';
 import { Rol } from '../auth/rol.enum';
 import { Roles } from '../auth/roles.decorator';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
-import { ActualizarUsuarioDto, CrearUsuarioDto } from './usuario.dto';
+import {
+  ActualizarUsuarioDto,
+  CambiarRolDto,
+  CrearUsuarioDto,
+  ReemplazarUsuarioDto,
+} from './usuario.dto';
 import { UsuarioService } from './usuario.service';
 
 @Roles(Rol.Admin)
@@ -36,6 +42,22 @@ export class UsuarioController {
   }
 
   @Put(':id')
+  reemplazar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: ReemplazarUsuarioDto,
+  ) {
+    return this.usuarioService.actualizar(id, datos);
+  }
+
+  @Patch(':id/rol')
+  cambiarRol(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: CambiarRolDto,
+  ) {
+    return this.usuarioService.actualizar(id, datos);
+  }
+
+  @Patch(':id')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
     @Body() datos: ActualizarUsuarioDto,

@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
@@ -35,6 +36,15 @@ export class CategoriaController {
 
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put(':id')
+  reemplazar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: CategoriaDto,
+  ) {
+    return this.categoriaService.reemplazar(id, datos);
+  }
+
+  @Roles(Rol.Admin, Rol.Farmaceutico)
+  @Patch(':id')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
     @Body() datos: ActualizarCategoriaDto,

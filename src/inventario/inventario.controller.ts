@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -19,6 +20,7 @@ import {
   AjusteDto,
   AlertaQueryDto,
   LoteRequestDto,
+  ReemplazarLoteDto,
 } from './lote.dto';
 import { MovimientoQueryDto } from './movimiento.dto';
 import { MovimientoService } from './movimiento.service';
@@ -42,6 +44,15 @@ export class InventarioController {
 
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put('lotes/:id')
+  reemplazarLote(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: ReemplazarLoteDto,
+  ) {
+    return this.inventarioService.actualizarLote(id, datos);
+  }
+
+  @Roles(Rol.Admin, Rol.Farmaceutico)
+  @Patch('lotes/:id')
   actualizarLote(
     @Param('id', ParseIntPipe) id: number,
     @Body() datos: ActualizarLoteDto,

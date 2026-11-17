@@ -38,9 +38,9 @@ describe('VetStock API (e2e)', () => {
     await api().post('/categorias').send({}).expect(400);
   });
 
-  it('PUT /categorias/:id actualiza y DELETE /categorias/:id elimina', async () => {
+  it('PATCH /categorias/:id actualiza y DELETE /categorias/:id elimina', async () => {
     await api()
-      .put('/categorias/3')
+      .patch('/categorias/3')
       .send({ descripcion: 'Control del dolor' })
       .expect(200)
       .expect((respuesta) => {
@@ -138,9 +138,9 @@ describe('VetStock API (e2e)', () => {
       .expect(400);
   });
 
-  it('PUT /medicamentos/:id reemplaza las categorias', () => {
+  it('PATCH /medicamentos/:id reemplaza las categorias', () => {
     return api()
-      .put('/medicamentos/1')
+      .patch('/medicamentos/1')
       .send({ categoriaIds: [2, 3] })
       .expect(200)
       .expect((respuesta) => {
@@ -166,9 +166,9 @@ describe('VetStock API (e2e)', () => {
       .expect(400);
   });
 
-  it('PUT /medicamentos/:id acepta una actualizacion parcial', () => {
+  it('PATCH /medicamentos/:id acepta una actualizacion parcial', () => {
     return api()
-      .put('/medicamentos/1')
+      .patch('/medicamentos/1')
       .send({ stockMinimo: 30 })
       .expect(200)
       .expect((respuesta) => {
@@ -177,9 +177,9 @@ describe('VetStock API (e2e)', () => {
       });
   });
 
-  it('PUT /medicamentos/:id valida los campos enviados', () => {
+  it('PATCH /medicamentos/:id valida los campos enviados', () => {
     return api()
-      .put('/medicamentos/1')
+      .patch('/medicamentos/1')
       .send({ especie: 'dinosaurio' })
       .expect(400);
   });

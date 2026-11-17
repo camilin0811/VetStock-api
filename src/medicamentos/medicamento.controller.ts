@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -40,6 +41,15 @@ export class MedicamentoController {
 
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put(':id')
+  reemplazar(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() datos: MedicamentoDto,
+  ) {
+    return this.medicamentoService.reemplazar(id, datos);
+  }
+
+  @Roles(Rol.Admin, Rol.Farmaceutico)
+  @Patch(':id')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
     @Body() datos: ActualizarMedicamentoDto,
