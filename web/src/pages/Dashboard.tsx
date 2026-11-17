@@ -10,8 +10,9 @@ import { ProgressRing } from '../components/ProgressRing'
 import { MiniBars } from '../components/MiniBars'
 import { HeroScene } from '../components/HeroScene'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, fmtMoney, nombreMed, plural } from '../lib/format'
+import { fmtFecha, fmtMoney, nombreMed, plural } from '../lib/format'
 import { tipDelDia } from '../lib/tips'
+import { Etiqueta, EtiquetaDispensacion, EtiquetaVencimiento } from '../components/Etiqueta'
 
 function saludo() {
   const h = new Date().getHours()
@@ -87,7 +88,7 @@ export default function Dashboard() {
                         <div className="row-title">{v.medicamento.nombre}</div>
                         <div className="row-sub">Lote {v.numeroLote} · {v.cantidad} u · {fmtFecha(v.fechaVencimiento)}</div>
                       </div>
-                      <span className={`pill ${diasTono(v.diasRestantes)}`}>{diasLabel(v.diasRestantes)}</span>
+                      <EtiquetaVencimiento dias={v.diasRestantes} />
                     </li>
                   ))}
                 </ul>
@@ -98,10 +99,10 @@ export default function Dashboard() {
               <div className="card-head"><h2 id="h-estado">Estado de inventario</h2><Link className="link-more" to="/alertas">Ver alertas</Link></div>
               {isLoading ? <div className="stack" style={{ gap: 10 }}><Skeleton h={48} r={16} /><Skeleton h={48} r={16} /><Skeleton h={48} r={16} /></div> : r ? (
                 <ul className="list">
-                  <li className="list-item slim"><span className="list-ico"><Boxes size={19} aria-hidden="true" /></span><span className="grow">Stock saludable</span><span className="pill ok"><CountUp value={Math.round(r.porcentajeStockSaludable)} format={(n) => `${n}% OK`} /></span></li>
-                  <li className="list-item slim"><span className="list-ico"><AlertTriangle size={19} aria-hidden="true" /></span><span className="grow">Stock bajo</span><span className="pill warn"><CountUp value={r.stockBajo} /> {plural(r.stockBajo, 'producto')}</span></li>
-                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 días)</span><span className="pill info"><CountUp value={r.porVencer} /> {plural(r.porVencer, 'lote')}</span></li>
-                  <li className="list-item slim"><span className="list-ico"><Bell size={19} aria-hidden="true" /></span><span className="grow">Vencidos</span><span className={`pill ${r.vencidos ? 'bad' : 'ok'}`}><CountUp value={r.vencidos} /> {plural(r.vencidos, 'lote')}</span></li>
+                  <li className="list-item slim"><span className="list-ico"><Boxes size={19} aria-hidden="true" /></span><span className="grow">Stock saludable</span><Etiqueta tono="ok"><CountUp value={Math.round(r.porcentajeStockSaludable)} format={(n) => `${n}% OK`} /></Etiqueta></li>
+                  <li className="list-item slim"><span className="list-ico"><AlertTriangle size={19} aria-hidden="true" /></span><span className="grow">Stock bajo</span><Etiqueta tono={r.stockBajo ? 'warn' : 'ok'}><CountUp value={r.stockBajo} /> {plural(r.stockBajo, 'producto')}</Etiqueta></li>
+                  <li className="list-item slim"><span className="list-ico"><CalendarClock size={19} aria-hidden="true" /></span><span className="grow">Por vencer (30 días)</span><Etiqueta tono="info" icon={CalendarClock}><CountUp value={r.porVencer} /> {plural(r.porVencer, 'lote')}</Etiqueta></li>
+                  <li className="list-item slim"><span className="list-ico"><Bell size={19} aria-hidden="true" /></span><span className="grow">Vencidos</span><Etiqueta tono={r.vencidos ? 'bad' : 'ok'}><CountUp value={r.vencidos} /> {plural(r.vencidos, 'lote')}</Etiqueta></li>
                 </ul>
               ) : null}
             </section>
@@ -121,7 +122,7 @@ export default function Dashboard() {
                     <div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div>
                     <div className="row-sub">Para {d.mascota} · {d.veterinario} · {fmtFecha(d.fecha)}</div>
                   </div>
-                  <span className={`pill ${d.estado === 'ACTIVA' ? 'ok' : 'bad'}`}>{d.estado === 'ACTIVA' ? 'Activa' : 'Anulada'}</span>
+                  <EtiquetaDispensacion estado={d.estado} />
                 </li>
               ))}
             </ul>

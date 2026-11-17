@@ -4,7 +4,8 @@ import { useLotes } from '../api/hooks'
 import type { Lote } from '../api/types'
 import { Page } from '../components/Page'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, isoHoy, nombreMed, parseFecha } from '../lib/format'
+import { diasTono, fmtFecha, isoHoy, nombreMed, parseFecha } from '../lib/format'
+import { EtiquetaVencimiento } from '../components/Etiqueta'
 
 const SEMANA = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
 const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -58,7 +59,7 @@ export default function Calendario() {
         <section className="card" data-reveal aria-label="Calendario de vencimientos">
           <div className="card-head">
             <h2 aria-live="polite" aria-atomic="true">{titulo}</h2>
-            <div className="chips">
+            <div className="chips cal-nav">
               <button type="button" className="btn sm" onClick={() => { const h = parseFecha(hoyKey); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); setSel(hoyKey) }}>Hoy</button>
               <button type="button" className="btn icon" aria-label="Mes anterior" onClick={() => mover(-1)}><ChevronLeft size={18} aria-hidden="true" /></button>
               <button type="button" className="btn icon" aria-label="Mes siguiente" onClick={() => mover(1)}><ChevronRight size={18} aria-hidden="true" /></button>
@@ -96,7 +97,7 @@ export default function Calendario() {
               {delDia.map((l) => (
                 <li key={l.id} className="list-item slim">
                   <div className="grow"><div className="row-title">{nombreMed(l.medicamento) !== '-' ? nombreMed(l.medicamento) : `Medicamento #${l.medicamentoId}`}</div><div className="row-sub">Lote {l.numeroLote} · {l.cantidad} u</div></div>
-                  <span className={`pill ${diasTono(Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5))}`}>{diasLabel(Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5))}</span>
+                  <EtiquetaVencimiento dias={Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5)} />
                 </li>
               ))}
             </ul>

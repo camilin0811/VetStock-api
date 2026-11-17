@@ -4,8 +4,9 @@ import type { TipoMovimiento } from '../api/types'
 import { Page } from '../components/Page'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
 import { fmtFechaHora, nombreMed } from '../lib/format'
+import { Etiqueta, type Tono } from '../components/Etiqueta'
 
-const TIPOS: { v: TipoMovimiento; label: string; tono: string }[] = [
+const TIPOS: { v: TipoMovimiento; label: string; tono: Tono }[] = [
   { v: 'ENTRADA', label: 'Entrada', tono: 'ok' }, { v: 'SALIDA', label: 'Salida', tono: 'info' },
   { v: 'AJUSTE', label: 'Ajuste', tono: 'warn' }, { v: 'ANULACION', label: 'Anulación', tono: 'bad' },
 ]
@@ -19,7 +20,7 @@ export default function Movimientos() {
   return (
     <Page deps={[movs.isLoading]}>
       <div className="card soft page-head" data-reveal>
-        <div className="chips" role="group" aria-label="Filtrar por tipo">
+        <div className="chips chips-scroll" role="group" aria-label="Filtrar por tipo">
           <button type="button" className="chip" aria-pressed={!tipo} onClick={() => setTipo('')}>Todos</button>
           {TIPOS.map((t) => <button key={t.v} type="button" className="chip" aria-pressed={tipo === t.v} onClick={() => setTipo(t.v)}>{t.label}</button>)}
         </div>
@@ -36,7 +37,7 @@ export default function Movimientos() {
           <EmptyState title="Sin movimientos" text="Las entradas, salidas y ajustes aparecerán aquí." />
         ) : (
           <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
-            <table className="table">
+            <table className="table cards">
               <caption className="sr-only">Kardex de movimientos de inventario</caption>
               <thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th><th scope="col">Medicamento</th><th scope="col">Lote</th><th scope="col" className="right">Cantidad</th><th scope="col">Detalle</th><th scope="col">Usuario</th></tr></thead>
               <tbody>
@@ -44,13 +45,13 @@ export default function Movimientos() {
                   const t = TIPOS.find((x) => x.v === m.tipo)
                   return (
                     <tr key={m.id}>
-                      <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFechaHora(m.fecha)}</td>
-                      <td><span className={`pill ${t?.tono ?? ''}`}>{t?.label ?? m.tipo}</span></td>
-                      <td className="row-title">{nombreMed(m.medicamento)}</td>
-                      <td>{m.numeroLote}</td>
-                      <td className="right"><strong>{m.tipo === 'ENTRADA' || m.tipo === 'ANULACION' ? '+' : '-'}{m.cantidad}</strong></td>
-                      <td className="muted">{m.detalle}</td>
-                      <td>{m.usuario?.nombre ?? '-'}</td>
+                      <td data-label="Fecha" className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFechaHora(m.fecha)}</td>
+                      <td data-label="Tipo"><Etiqueta tono={t?.tono}>{t?.label ?? m.tipo}</Etiqueta></td>
+                      <td className="row-title cell-title">{nombreMed(m.medicamento)}</td>
+                      <td data-label="Lote">{m.numeroLote}</td>
+                      <td data-label="Cantidad" className="right"><strong>{m.tipo === 'ENTRADA' || m.tipo === 'ANULACION' ? '+' : '-'}{m.cantidad}</strong></td>
+                      <td data-label="Detalle" className="muted">{m.detalle}</td>
+                      <td data-label="Usuario">{m.usuario?.nombre ?? '-'}</td>
                     </tr>
                   )
                 })}

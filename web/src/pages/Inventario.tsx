@@ -10,11 +10,8 @@ import { Page } from '../components/Page'
 import { Modal } from '../components/Modal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, isoHoy, isoManana, nombreMed, parseFecha } from '../lib/format'
-
-const ESTADO: Record<EstadoStock, { label: string; tono: string }> = {
-  OK: { label: 'OK', tono: 'ok' }, STOCK_BAJO: { label: 'Stock bajo', tono: 'warn' }, SIN_STOCK: { label: 'Sin stock', tono: 'bad' },
-}
+import { fmtFecha, isoHoy, isoManana, nombreMed, parseFecha } from '../lib/format'
+import { ESTADO_STOCK, EtiquetaStock, EtiquetaVencimiento } from '../components/Etiqueta'
 
 function LoteForm({ onDone }: { onDone: () => void }) {
   const meds = useMedicamentos()
@@ -111,7 +108,7 @@ export default function Inventario() {
   return (
     <Page deps={[inv.isLoading, lotes.isLoading, vista]}>
       <div className="page-head" data-reveal>
-        <div className="chips" role="group" aria-label="Vista">
+        <div className="chips chips-scroll" role="group" aria-label="Vista">
           <button type="button" className="chip" aria-pressed={vista === 'stock'} onClick={() => setVista('stock')}>Existencias</button>
           <button type="button" className="chip" aria-pressed={vista === 'lotes'} onClick={() => setVista('lotes')}>Lotes</button>
         </div>
@@ -120,25 +117,25 @@ export default function Inventario() {
 
       {vista === 'stock' ? (
         <section className="card" data-reveal aria-label="Existencias">
-          <div className="chips" role="group" aria-label="Filtrar por estado" style={{ marginBottom: 14 }}>
+          <div className="chips chips-scroll" role="group" aria-label="Filtrar por estado" style={{ marginBottom: 14 }}>
             <button type="button" className="chip" aria-pressed={!estado} onClick={() => setEstado('')}>Todos</button>
-            {(Object.keys(ESTADO) as EstadoStock[]).map((k) => <button key={k} type="button" className="chip" aria-pressed={estado === k} onClick={() => setEstado(k)}>{ESTADO[k].label}</button>)}
+            {(Object.keys(ESTADO_STOCK) as EstadoStock[]).map((k) => <button key={k} type="button" className="chip" aria-pressed={estado === k} onClick={() => setEstado(k)}>{ESTADO_STOCK[k].label}</button>)}
           </div>
           {inv.isLoading ? <SkeletonRows /> : inv.error ? <ErrorState error={inv.error} onRetry={() => inv.refetch()} /> : !items?.length ? (
             <EmptyState title="Sin resultados" text="No hay productos con ese estado." />
           ) : (
             <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
-              <table className="table">
+              <table className="table cards">
                 <caption className="sr-only">Existencias por medicamento</caption>
                 <thead><tr><th scope="col">Medicamento</th><th scope="col" className="right">Disponible</th><th scope="col" className="right">Mínimo</th><th scope="col" className="right">Vencido</th><th scope="col">Estado</th></tr></thead>
                 <tbody>
                   {items.map((i) => (
                     <tr key={i.medicamento.id}>
-                      <td><div className="row-title">{i.medicamento.nombre}</div><div className="row-sub">{i.medicamento.presentacion}</div></td>
-                      <td className="right"><strong>{i.disponible}</strong></td>
-                      <td className="right">{i.medicamento.stockMinimo}</td>
-                      <td className="right">{i.vencido}</td>
-                      <td><span className={`pill ${ESTADO[i.estado].tono}`}>{ESTADO[i.estado].label}</span></td>
+                      <td className="cell-title"><div className="row-title">{i.medicamento.nombre}</div><div className="row-sub">{i.medicamento.presentacion}</div></td>
+                      <td data-label="Disponible" className="right"><strong>{i.disponible}</strong></td>
+                      <td data-label="Mínimo" className="right">{i.medicamento.stockMinimo}</td>
+                      <td data-label="Vencido" className="right">{i.vencido}</td>
+                      <td data-label="Estado"><EtiquetaStock estado={i.estado} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -152,7 +149,7 @@ export default function Inventario() {
             <EmptyState title="Aún no hay lotes" text="Registra el primer lote para ver el inventario." />
           ) : (
             <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
-              <table className="table">
+              <table className="table cards">
                 <caption className="sr-only">Lotes registrados</caption>
                 <thead><tr><th scope="col">Lote</th><th scope="col">Medicamento</th><th scope="col">Proveedor</th><th scope="col" className="right">Cantidad</th><th scope="col">Vence</th>{escribe && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
                 <tbody>
@@ -160,12 +157,12 @@ export default function Inventario() {
                     const d = Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5)
                     return (
                       <tr key={l.id}>
-                        <td><strong>{l.numeroLote}</strong></td>
-                        <td>{nombreMed(l.medicamento) !== '-' ? nombreMed(l.medicamento) : `#${l.medicamentoId}`}</td>
-                        <td>{l.proveedor?.nombre ?? `#${l.proveedorId}`}</td>
-                        <td className="right">{l.cantidad} <span className="muted">/ {l.cantidadInicial}</span></td>
-                        <td><span className="row-sub" style={{ display: 'block' }}>{fmtFecha(l.fechaVencimiento)}</span><span className={`pill ${diasTono(d)}`}>{diasLabel(d)}</span></td>
-                        {escribe && <td className="right"><button type="button" className="btn sm" disabled={l.cantidad === 0} onClick={() => setAjuste(l)}><MinusCircle size={15} aria-hidden="true" />Ajuste</button></td>}
+                        <td className="cell-title"><strong>{l.numeroLote}</strong></td>
+                        <td data-label="Medicamento">{nombreMed(l.medicamento) !== '-' ? nombreMed(l.medicamento) : `#${l.medicamentoId}`}</td>
+                        <td data-label="Proveedor">{l.proveedor?.nombre ?? `#${l.proveedorId}`}</td>
+                        <td data-label="Cantidad" className="right">{l.cantidad} <span className="muted">/ {l.cantidadInicial}</span></td>
+                        <td data-label="Vence"><span className="row-sub" style={{ display: 'block', marginBottom: 4 }}>{fmtFecha(l.fechaVencimiento)}</span><EtiquetaVencimiento dias={d} /></td>
+                        {escribe && <td className="right cell-actions"><button type="button" className="btn sm" disabled={l.cantidad === 0} onClick={() => setAjuste(l)}><MinusCircle size={15} aria-hidden="true" />Ajuste</button></td>}
                       </tr>
                     )
                   })}

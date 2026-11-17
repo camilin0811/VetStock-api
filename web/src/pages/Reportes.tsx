@@ -5,6 +5,7 @@ import { Page } from '../components/Page'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
 import { CountUp } from '../components/CountUp'
 import { fmtFecha, fmtMoney, fmtNum, nombreMed } from '../lib/format'
+import { Etiqueta } from '../components/Etiqueta'
 
 function Bloque({ titulo, total, children, q }: { titulo: string; total?: React.ReactNode; children: React.ReactNode; q: { isLoading: boolean; error: unknown; refetch: () => unknown } }) {
   return (
@@ -32,7 +33,7 @@ export default function Reportes() {
       </div>
 
       <div className="cols-2 reportes-grid">
-        <Bloque titulo="Consumo por medicamento" q={consumo} total={consumo.data && <span className="pill"><CountUp value={consumo.data.totalUnidades} /> u</span>}>
+        <Bloque titulo="Consumo por medicamento" q={consumo} total={consumo.data && <Etiqueta><CountUp value={consumo.data.totalUnidades} /> u</Etiqueta>}>
           {!consumo.data?.detalle.length ? <EmptyState title="Sin consumo" text="No hubo dispensaciones en este rango." /> : (
             <>
               <HBars items={consumo.data.detalle.slice(0, 8).map((d) => ({ label: nombreMed(d.medicamento), value: d.unidades, display: `${fmtNum(d.unidades)} u` }))} />
@@ -41,19 +42,19 @@ export default function Reportes() {
           )}
         </Bloque>
 
-        <Bloque titulo="Stock valorizado" q={stock} total={stock.data && <span className="pill ok">{fmtMoney(stock.data.valorTotal)}</span>}>
+        <Bloque titulo="Stock valorizado" q={stock} total={stock.data && <Etiqueta tono="neutral">{fmtMoney(stock.data.valorTotal)}</Etiqueta>}>
           {!stock.data?.items.length ? <EmptyState title="Sin existencias" /> : (
             <HBars tone="var(--info-dot)" items={[...stock.data.items].sort((a, b) => b.valor - a.valor).slice(0, 8).map((i) => ({ label: i.medicamento.nombre, value: i.valor, display: fmtMoney(i.valor) }))} />
           )}
         </Bloque>
 
-        <Bloque titulo="Vencimientos" q={venc} total={venc.data && <span className={`pill ${venc.data.totalPerdida ? 'bad' : 'ok'}`}>Pérdida {fmtMoney(venc.data.totalPerdida)}</span>}>
+        <Bloque titulo="Vencimientos" q={venc} total={venc.data && <Etiqueta tono={venc.data.totalPerdida ? 'bad' : 'ok'}>Pérdida {fmtMoney(venc.data.totalPerdida)}</Etiqueta>}>
           {!venc.data?.lotes.length ? <EmptyState title="Sin lotes vencidos" text="No hay pérdidas por vencimiento." /> : (
             <ul className="list">
               {venc.data.lotes.map(({ lote, medicamento, perdida }) => (
                 <li key={lote.id} className="list-item slim">
                   <div className="grow"><div className="row-title">{medicamento.nombre}</div><div className="row-sub">Lote {lote.numeroLote} · {lote.cantidad} u · venció {fmtFecha(lote.fechaVencimiento)}</div></div>
-                  <span className="pill bad">{fmtMoney(perdida)}</span>
+                  <Etiqueta tono="bad">{fmtMoney(perdida)}</Etiqueta>
                 </li>
               ))}
             </ul>
@@ -65,10 +66,10 @@ export default function Reportes() {
             <>
               <HBars tone="var(--warn-dot)" items={prov.data.map((p) => ({ label: p.proveedor.nombre, value: p.unidades, display: `${fmtNum(p.unidades)} u` }))} />
               <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable" style={{ marginTop: 10 }}>
-                <table className="table">
+                <table className="table cards">
                   <caption className="sr-only">Lotes y valor recibido por proveedor</caption>
                   <thead><tr><th scope="col">Proveedor</th><th scope="col" className="right">Lotes</th><th scope="col" className="right">Valor</th></tr></thead>
-                  <tbody>{prov.data.map((p) => <tr key={p.proveedor.id}><td>{p.proveedor.nombre}</td><td className="right">{p.lotes}</td><td className="right">{fmtMoney(p.valor)}</td></tr>)}</tbody>
+                  <tbody>{prov.data.map((p) => <tr key={p.proveedor.id}><td className="cell-title">{p.proveedor.nombre}</td><td data-label="Lotes" className="right">{p.lotes}</td><td data-label="Valor" className="right">{fmtMoney(p.valor)}</td></tr>)}</tbody>
                 </table>
               </div>
             </>

@@ -4,9 +4,10 @@ import { useAlertas } from '../api/hooks'
 import type { TipoAlerta } from '../api/types'
 import { Page } from '../components/Page'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { diasLabel, fmtFecha, nombreMed } from '../lib/format'
+import { fmtFecha, nombreMed } from '../lib/format'
+import { Etiqueta, EtiquetaVencimiento, type Tono } from '../components/Etiqueta'
 
-const TIPOS: { v: TipoAlerta; label: string; tono: string; icon: typeof AlertTriangle }[] = [
+const TIPOS: { v: TipoAlerta; label: string; tono: Tono; icon: typeof AlertTriangle }[] = [
   { v: 'STOCK_BAJO', label: 'Stock bajo', tono: 'warn', icon: AlertTriangle },
   { v: 'POR_VENCER', label: 'Por vencer', tono: 'info', icon: CalendarClock },
   { v: 'VENCIDO', label: 'Vencidos', tono: 'bad', icon: CircleX },
@@ -20,7 +21,7 @@ export default function Alertas() {
   return (
     <Page deps={[alertas.isLoading]}>
       <div className="card soft page-head" data-reveal>
-        <div className="chips" role="group" aria-label="Filtrar por tipo">
+        <div className="chips chips-scroll" role="group" aria-label="Filtrar por tipo">
           <button type="button" className="chip" aria-pressed={!tipo} onClick={() => setTipo('')}>Todas</button>
           {TIPOS.map((t) => <button key={t.v} type="button" className="chip" aria-pressed={tipo === t.v} onClick={() => setTipo(t.v)}>{t.label}</button>)}
         </div>
@@ -46,7 +47,7 @@ export default function Alertas() {
                     <div className="row-title">{nombreMed(a.medicamento)}</div>
                     <div className="row-sub">{a.mensaje}{a.fechaVencimiento && ` · ${fmtFecha(a.fechaVencimiento)}`}</div>
                   </div>
-                  <span className={`pill ${t.tono}`}>{a.diasRestantes !== undefined ? diasLabel(a.diasRestantes) : t.label}</span>
+                  {a.diasRestantes !== undefined ? <EtiquetaVencimiento dias={a.diasRestantes} /> : <Etiqueta tono={t.tono} icon={t.icon}>{t.label}</Etiqueta>}
                 </li>
               )
             })}

@@ -49,15 +49,15 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
           <EmptyState title={`Aún no hay ${singular.toLowerCase()}s`} text={emptyText} action={canWrite ? <button type="button" className="btn primary" onClick={() => abrir()}>Crear {singular.toLowerCase()}</button> : undefined} />
         ) : (
           <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
-            <table className="table">
+            <table className="table cards">
               <caption className="sr-only">Listado de {singular.toLowerCase()}s</caption>
               <thead><tr>{columns.map((c) => <th scope="col" key={c.header} className={c.right ? 'right' : ''}>{c.header}</th>)}{canWrite && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {query.data.map((t) => (
                   <tr key={t.id}>
-                    {columns.map((c) => <td key={c.header} className={c.right ? 'right' : ''}>{c.cell(t)}</td>)}
+                    {columns.map((c, i) => <td key={c.header} data-label={i ? c.header : undefined} className={`${c.right ? 'right' : ''}${i ? '' : ' cell-title'}`}>{c.cell(t)}</td>)}
                     {canWrite && (
-                      <td className="right" style={{ whiteSpace: 'nowrap' }}>
+                      <td className="right cell-actions" style={{ whiteSpace: 'nowrap' }}>
                         <button type="button" className="btn icon" aria-label={`Editar ${nameOf(t)}`} onClick={() => abrir(t)}><Pencil size={16} aria-hidden="true" /></button>{' '}
                         {(!canDelete || canDelete(t)) && <button type="button" className="btn icon danger" aria-label={`Eliminar ${nameOf(t)}`} onClick={() => setBorrando(t)}><Trash2 size={16} aria-hidden="true" /></button>}
                       </td>
