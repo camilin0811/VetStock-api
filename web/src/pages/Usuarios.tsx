@@ -4,9 +4,10 @@ import type { Usuario } from '../api/types'
 import { useAuth } from '../auth/AuthContext'
 import { CrudPage } from '../components/CrudPage'
 import { fmtFecha } from '../lib/format'
+import { Etiqueta } from '../components/Etiqueta'
 
 const ROLES = [{ value: 'admin', label: 'Administrador' }, { value: 'veterinario', label: 'Veterinario' }, { value: 'farmaceutico', label: 'Farmaceutico' }]
-const TONO = { admin: 'bad', veterinario: 'info', farmaceutico: 'ok' } as const
+const TONO = { admin: 'info', veterinario: 'neutral', farmaceutico: 'neutral' } as const
 
 export default function Usuarios() {
   const { usuario } = useAuth()
@@ -25,7 +26,7 @@ export default function Usuarios() {
       ]}
       columns={[
         { header: 'Nombre', cell: (u) => <span className="row-title">{u.nombre}{u.id === usuario?.id && <span className="muted"> (tu)</span>}</span> }, { header: 'Correo', cell: (u) => u.correo },
-        { header: 'Rol', cell: (u) => <span className={`pill ${TONO[u.rol]}`}>{ROLES.find((r) => r.value === u.rol)?.label}</span> }, { header: 'Alta', cell: (u) => fmtFecha(u.createdAt) },
+        { header: 'Rol', cell: (u) => <Etiqueta tono={TONO[u.rol]} icon={false}>{ROLES.find((r) => r.value === u.rol)?.label}</Etiqueta> }, { header: 'Alta', cell: (u) => fmtFecha(u.createdAt) },
       ]}
     />
   )

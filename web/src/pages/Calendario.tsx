@@ -4,7 +4,8 @@ import { useLotes } from '../api/hooks'
 import type { Lote } from '../api/types'
 import { Page } from '../components/Page'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, isoHoy, nombreMed, parseFecha } from '../lib/format'
+import { diasTono, fmtFecha, isoHoy, nombreMed, parseFecha } from '../lib/format'
+import { EtiquetaVencimiento } from '../components/Etiqueta'
 
 const SEMANA = ['lun', 'mar', 'mie', 'jue', 'vie', 'sab', 'dom']
 const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -96,7 +97,7 @@ export default function Calendario() {
               {delDia.map((l) => (
                 <li key={l.id} className="list-item slim">
                   <div className="grow"><div className="row-title">{nombreMed(l.medicamento) !== '-' ? nombreMed(l.medicamento) : `Medicamento #${l.medicamentoId}`}</div><div className="row-sub">Lote {l.numeroLote} · {l.cantidad} u</div></div>
-                  <span className={`pill ${diasTono(Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5))}`}>{diasLabel(Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5))}</span>
+                  <EtiquetaVencimiento dias={Math.round((parseFecha(l.fechaVencimiento).getTime() - hoy) / 864e5)} />
                 </li>
               ))}
             </ul>

@@ -10,11 +10,8 @@ import { Page } from '../components/Page'
 import { Modal } from '../components/Modal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, isoHoy, isoManana, nombreMed, parseFecha } from '../lib/format'
-
-const ESTADO: Record<EstadoStock, { label: string; tono: string }> = {
-  OK: { label: 'OK', tono: 'ok' }, STOCK_BAJO: { label: 'Stock bajo', tono: 'warn' }, SIN_STOCK: { label: 'Sin stock', tono: 'bad' },
-}
+import { fmtFecha, isoHoy, isoManana, nombreMed, parseFecha } from '../lib/format'
+import { ESTADO_STOCK, EtiquetaStock, EtiquetaVencimiento } from '../components/Etiqueta'
 
 function LoteForm({ onDone }: { onDone: () => void }) {
   const meds = useMedicamentos()
@@ -122,7 +119,7 @@ export default function Inventario() {
         <section className="card" data-reveal aria-label="Existencias">
           <div className="chips" role="group" aria-label="Filtrar por estado" style={{ marginBottom: 14 }}>
             <button type="button" className="chip" aria-pressed={!estado} onClick={() => setEstado('')}>Todos</button>
-            {(Object.keys(ESTADO) as EstadoStock[]).map((k) => <button key={k} type="button" className="chip" aria-pressed={estado === k} onClick={() => setEstado(k)}>{ESTADO[k].label}</button>)}
+            {(Object.keys(ESTADO_STOCK) as EstadoStock[]).map((k) => <button key={k} type="button" className="chip" aria-pressed={estado === k} onClick={() => setEstado(k)}>{ESTADO_STOCK[k].label}</button>)}
           </div>
           {inv.isLoading ? <SkeletonRows /> : inv.error ? <ErrorState error={inv.error} onRetry={() => inv.refetch()} /> : !items?.length ? (
             <EmptyState title="Sin resultados" text="No hay productos con ese estado." />
@@ -138,7 +135,7 @@ export default function Inventario() {
                       <td className="right"><strong>{i.disponible}</strong></td>
                       <td className="right">{i.medicamento.stockMinimo}</td>
                       <td className="right">{i.vencido}</td>
-                      <td><span className={`pill ${ESTADO[i.estado].tono}`}>{ESTADO[i.estado].label}</span></td>
+                      <td><EtiquetaStock estado={i.estado} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -164,7 +161,7 @@ export default function Inventario() {
                         <td>{nombreMed(l.medicamento) !== '-' ? nombreMed(l.medicamento) : `#${l.medicamentoId}`}</td>
                         <td>{l.proveedor?.nombre ?? `#${l.proveedorId}`}</td>
                         <td className="right">{l.cantidad} <span className="muted">/ {l.cantidadInicial}</span></td>
-                        <td><span className="row-sub" style={{ display: 'block' }}>{fmtFecha(l.fechaVencimiento)}</span><span className={`pill ${diasTono(d)}`}>{diasLabel(d)}</span></td>
+                        <td><span className="row-sub" style={{ display: 'block', marginBottom: 4 }}>{fmtFecha(l.fechaVencimiento)}</span><EtiquetaVencimiento dias={d} /></td>
                         {escribe && <td className="right"><button type="button" className="btn sm" disabled={l.cantidad === 0} onClick={() => setAjuste(l)}><MinusCircle size={15} aria-hidden="true" />Ajuste</button></td>}
                       </tr>
                     )

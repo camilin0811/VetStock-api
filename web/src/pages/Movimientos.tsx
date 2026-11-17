@@ -4,8 +4,9 @@ import type { TipoMovimiento } from '../api/types'
 import { Page } from '../components/Page'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
 import { fmtFechaHora, nombreMed } from '../lib/format'
+import { Etiqueta, type Tono } from '../components/Etiqueta'
 
-const TIPOS: { v: TipoMovimiento; label: string; tono: string }[] = [
+const TIPOS: { v: TipoMovimiento; label: string; tono: Tono }[] = [
   { v: 'ENTRADA', label: 'Entrada', tono: 'ok' }, { v: 'SALIDA', label: 'Salida', tono: 'info' },
   { v: 'AJUSTE', label: 'Ajuste', tono: 'warn' }, { v: 'ANULACION', label: 'Anulación', tono: 'bad' },
 ]
@@ -45,7 +46,7 @@ export default function Movimientos() {
                   return (
                     <tr key={m.id}>
                       <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFechaHora(m.fecha)}</td>
-                      <td><span className={`pill ${t?.tono ?? ''}`}>{t?.label ?? m.tipo}</span></td>
+                      <td><Etiqueta tono={t?.tono}>{t?.label ?? m.tipo}</Etiqueta></td>
                       <td className="row-title">{nombreMed(m.medicamento)}</td>
                       <td>{m.numeroLote}</td>
                       <td className="right"><strong>{m.tipo === 'ENTRADA' || m.tipo === 'ANULACION' ? '+' : '-'}{m.cantidad}</strong></td>
