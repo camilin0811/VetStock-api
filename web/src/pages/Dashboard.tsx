@@ -10,7 +10,7 @@ import { ProgressRing } from '../components/ProgressRing'
 import { MiniBars } from '../components/MiniBars'
 import { HeroScene } from '../components/HeroScene'
 import { EmptyState, ErrorState, Skeleton } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, fmtFechaHora, fmtMoney, nombreMed, plural } from '../lib/format'
+import { diasLabel, diasTono, fmtFecha, fmtMoney, nombreMed, plural } from '../lib/format'
 import { tipDelDia } from '../lib/tips'
 
 function saludo() {
@@ -119,7 +119,7 @@ export default function Dashboard() {
                   <span className="list-ico"><Syringe size={20} aria-hidden="true" /></span>
                   <div className="grow">
                     <div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div>
-                    <div className="row-sub">Para {d.mascota} · {d.veterinario} · {fmtFechaHora(d.fecha)}</div>
+                    <div className="row-sub">Para {d.mascota} · {d.veterinario} · {fmtFecha(d.fecha)}</div>
                   </div>
                   <span className={`pill ${d.estado === 'ACTIVA' ? 'ok' : 'bad'}`}>{d.estado === 'ACTIVA' ? 'Activa' : 'Anulada'}</span>
                 </li>

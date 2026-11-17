@@ -8,7 +8,7 @@ import { Page } from '../components/Page'
 import { Modal } from '../components/Modal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { fmtFecha, fmtFechaHora, fmtMoney, nombreMed } from '../lib/format'
+import { fmtFecha, fmtMoney, nombreMed } from '../lib/format'
 
 function Anular({ d, onDone }: { d: Dispensacion; onDone: () => void }) {
   const [errores, setErrores] = useState<string[]>([])
@@ -125,7 +125,7 @@ export default function Dispensar() {
               <tbody>
                 {historial.data.map((d) => (
                   <tr key={d.id} style={d.estado === 'ANULADA' ? { opacity: 0.65 } : undefined}>
-                    <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFechaHora(d.fecha)}</td>
+                    <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFecha(d.fecha)}</td>
                     <td><div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div><div className="row-sub">{d.veterinario}</div></td>
                     <td>{d.mascota}</td>
                     <td className="row-sub">{d.lotesUsados.map((l) => `${l.numeroLote} (${l.cantidad})`).join(', ') || '-'}</td>
