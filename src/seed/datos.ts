@@ -66,6 +66,7 @@ export const PROVEEDORES = [
 
 export interface MedicamentoSeed {
   nombre: string;
+  imagen: string; // ruta base de la foto referencial, sin tamano ni extension
   presentacion: string;
   especie: string;
   precio: number;
@@ -79,6 +80,7 @@ export interface MedicamentoSeed {
 export const MEDICAMENTOS: MedicamentoSeed[] = [
   {
     nombre: 'Amoxicilina 250 mg',
+    imagen: '/img/medicamentos/tabletas',
     presentacion: 'Tabletas x 10',
     especie: 'canino',
     precio: 18000,
@@ -90,6 +92,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Amoxicilina + Acido Clavulanico 500 mg',
+    imagen: '/img/medicamentos/tabletas',
     presentacion: 'Tabletas x 10',
     especie: 'canino',
     precio: 42000,
@@ -101,6 +104,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Enrofloxacina 10%',
+    imagen: '/img/medicamentos/inyectables',
     presentacion: 'Frasco inyectable 50 ml',
     especie: 'general',
     precio: 36000,
@@ -112,6 +116,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Oxitetraciclina LA',
+    imagen: '/img/medicamentos/inyectables',
     presentacion: 'Frasco 100 ml',
     especie: 'bovino',
     precio: 58000,
@@ -123,6 +128,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Ivermectina 1%',
+    imagen: '/img/medicamentos/inyectables',
     presentacion: 'Frasco 50 ml',
     especie: 'bovino',
     precio: 38000,
@@ -134,6 +140,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Desparasitante Albendazol',
+    imagen: '/img/medicamentos/suspension',
     presentacion: 'Suspension 100 ml',
     especie: 'bovino',
     precio: 45000,
@@ -145,6 +152,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Praziquantel + Pirantel',
+    imagen: '/img/medicamentos/tabletas-plato',
     presentacion: 'Tabletas x 4',
     especie: 'canino',
     precio: 22000,
@@ -156,6 +164,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Pipeta antipulgas',
+    imagen: '/img/medicamentos/pipeta',
     presentacion: 'Pipeta 1 ml',
     especie: 'felino',
     precio: 29000,
@@ -167,6 +176,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Vacuna antirrabica',
+    imagen: '/img/medicamentos/vacunas',
     presentacion: 'Frasco 1 ml',
     especie: 'general',
     precio: 25000,
@@ -178,6 +188,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Vacuna triple felina',
+    imagen: '/img/medicamentos/vacunas',
     presentacion: 'Dosis 1 ml',
     especie: 'felino',
     precio: 48000,
@@ -189,6 +200,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Vacuna quintuple canina',
+    imagen: '/img/medicamentos/vacunas',
     presentacion: 'Dosis 1 ml',
     especie: 'canino',
     precio: 52000,
@@ -200,6 +212,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Meloxicam 1.5 mg/ml',
+    imagen: '/img/medicamentos/suspension',
     presentacion: 'Suspension oral 10 ml',
     especie: 'felino',
     precio: 32000,
@@ -211,6 +224,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Tramadol 50 mg',
+    imagen: '/img/medicamentos/tabletas-plato',
     presentacion: 'Tabletas x 10',
     especie: 'canino',
     precio: 27000,
@@ -222,6 +236,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Jeringas 5 ml',
+    imagen: '/img/medicamentos/jeringas',
     presentacion: 'Caja x 100',
     especie: 'general',
     precio: 35000,
@@ -233,6 +248,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Guantes de nitrilo',
+    imagen: '/img/medicamentos/guantes',
     presentacion: 'Caja x 100',
     especie: 'general',
     precio: 28000,
@@ -244,6 +260,7 @@ export const MEDICAMENTOS: MedicamentoSeed[] = [
   },
   {
     nombre: 'Fenilbutazona 20%',
+    imagen: '/img/medicamentos/inyectables',
     presentacion: 'Frasco 50 ml',
     especie: 'equino',
     precio: 41000,
