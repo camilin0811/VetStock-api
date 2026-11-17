@@ -9,7 +9,10 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-vetstock_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vetstock_password}
     ports:
-      - "5432:5432"
+      # Puerto del host configurable. Si el 5432 ya esta ocupado (otro PostgreSQL
+      # instalado en el equipo), define POSTGRES_PORT=55432 en .env y vuelve a
+      # levantar con docker compose up -d. La API local lee el mismo valor de .env.
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
