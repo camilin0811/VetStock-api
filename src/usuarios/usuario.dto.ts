@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
 } from 'class-validator';
 import { Rol } from '../auth/rol.enum';
 
@@ -17,6 +18,7 @@ export class CrearUsuarioDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
   clave: string;
 
   @IsEnum(Rol)
@@ -40,5 +42,6 @@ export class ActualizarUsuarioDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
   clave?: string;
 }

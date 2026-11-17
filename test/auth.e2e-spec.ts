@@ -46,7 +46,11 @@ describe('Auth (e2e)', () => {
   it('POST /auth/registro es publico y asigna rol farmaceutico por defecto', async () => {
     const respuesta = await http()
       .post('/auth/registro')
-      .send({ nombre: 'Laura', correo: 'laura@vetstock.com', clave: '123456' })
+      .send({
+        nombre: 'Laura',
+        correo: 'laura@vetstock.com',
+        clave: '12345678',
+      })
       .expect(201);
 
     expect(respuesta.body.data.usuario.rol).toBe('farmaceutico');
@@ -60,7 +64,7 @@ describe('Auth (e2e)', () => {
       .send({
         nombre: 'Andres',
         correo: USUARIOS_PRUEBA.admin,
-        clave: '123456',
+        clave: '12345678',
       })
       .expect(409);
     await http()
@@ -68,9 +72,13 @@ describe('Auth (e2e)', () => {
       .send({
         nombre: 'Laura',
         correo: 'laura@vetstock.com',
-        clave: '123456',
+        clave: '12345678',
         rol: 'superman',
       })
+      .expect(400);
+    await http()
+      .post('/auth/registro')
+      .send({ nombre: 'Laura', correo: 'laura@vetstock.com', clave: '1234' })
       .expect(400);
   });
 
@@ -78,7 +86,7 @@ describe('Auth (e2e)', () => {
     const datos = {
       nombre: 'Laura',
       correo: 'laura@vetstock.com',
-      clave: '123456',
+      clave: '12345678',
       rol: 'admin',
     };
 
@@ -97,7 +105,7 @@ describe('Auth (e2e)', () => {
       .send({
         nombre: 'Laura',
         correo: 'laura@vetstock.com',
-        clave: '123456',
+        clave: '12345678',
         rol: 'admin',
       })
       .expect(201);
@@ -113,7 +121,7 @@ describe('Auth (e2e)', () => {
       .send({
         nombre: 'Primero',
         correo: 'primero@vetstock.com',
-        clave: '123456',
+        clave: '12345678',
         rol: 'admin',
       })
       .expect(201);

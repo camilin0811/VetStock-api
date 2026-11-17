@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MinLength,
 } from 'class-validator';
 import type { Usuario } from './entities/usuario.entity';
 import { Rol } from './rol.enum';
@@ -19,6 +20,7 @@ export class RegistroDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
   clave: string;
 
   @IsOptional()
