@@ -9,7 +9,7 @@ export interface Un<T> { message: string; data: T }
 
 export interface Categoria { id: number; nombre: string; descripcion: string | null }
 export interface Medicamento {
-  id: number; nombre: string; presentacion: string; especie: Especie; precio: number; stockMinimo: number
+  id: number; nombre: string; imagen: string | null; presentacion: string; especie: Especie; precio: number; stockMinimo: number
   requiereFormula: boolean; categorias: Categoria[]; createdAt: string; updatedAt: string
 }
 export interface Proveedor { id: number; nombre: string; nit: string; telefono: string; ciudad: string; correo: string | null }

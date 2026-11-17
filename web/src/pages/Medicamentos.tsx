@@ -11,6 +11,7 @@ import { ConfirmModal } from '../components/ConfirmModal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
 import { diasLabel, diasTono, fmtFecha, fmtMoney, parseFecha, isoHoy, plural } from '../lib/format'
+import { MedImagen } from '../components/MedImagen'
 import { useMedia } from '../lib/useWide'
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -74,7 +75,7 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div className="detail-head">
-        <span className="list-ico big"><PillIcon size={26} aria-hidden="true" /></span>
+        <span className="det-foto"><MedImagen base={med.imagen} sizes="(min-width: 1100px) 360px, 90vw" eager fallback={<PillIcon size={40} aria-hidden="true" />} /></span>
         <div>
           <h2>{med.nombre}</h2>
           <p className="muted">{med.presentacion} · {cap(med.especie)}</p>
@@ -179,7 +180,7 @@ export default function Medicamentos() {
                 {meds.data.map((m) => (
                   <li key={m.id}>
                     <button type="button" className={`row-btn${sel?.id === m.id ? ' on' : ''}`} aria-pressed={sel?.id === m.id} onClick={() => { setSelId(m.id); if (!wide) setTimeout(() => detalleRef.current?.focus(), 0) }}>
-                      <span className="list-ico"><PillIcon size={20} aria-hidden="true" /></span>
+                      <span className="list-ico thumb"><MedImagen base={m.imagen} sizes="48px" /></span>
                       <span className="grow"><span className="row-title">{m.nombre}</span><span className="row-sub" style={{ display: 'block' }}>{m.presentacion} · {cap(m.especie)}</span></span>
                       <span className="chips" style={{ justifyContent: 'flex-end' }}>{m.categorias.slice(0, 2).map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}</span>
                       <span className="num row-price">{fmtMoney(m.precio)}</span>
