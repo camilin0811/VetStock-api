@@ -16,6 +16,7 @@ describe('Usuarios (e2e)', () => {
   it('responde 401 sin token', async () => {
     const http = () => request(contexto.app.getHttpServer());
     await http().get('/usuarios').expect(401);
+    await http().post('/usuarios').send({}).expect(401);
     await http().get('/usuarios/1').expect(401);
     await http().put('/usuarios/1').send({}).expect(401);
     await http().delete('/usuarios/1').expect(401);
@@ -26,6 +27,7 @@ describe('Usuarios (e2e)', () => {
     async (rol) => {
       const api = contexto.api(rol);
       await api.get('/usuarios').expect(403);
+      await api.post('/usuarios').send({}).expect(403);
       await api.get('/usuarios/1').expect(403);
       await api.put('/usuarios/1').send({ nombre: 'X' }).expect(403);
       await api.delete('/usuarios/3').expect(403);
@@ -38,6 +40,33 @@ describe('Usuarios (e2e)', () => {
     expect(respuesta.body.count).toBe(3);
     expect(respuesta.body.data).toHaveLength(3);
     expect(JSON.stringify(respuesta.body)).not.toContain('clave');
+  });
+
+  it('POST /usuarios crea un usuario (admin) sin devolver la clave', async () => {
+    const cuerpo = {
+      nombre: 'Nuevo',
+      correo: 'nuevo@vetstock.test',
+      clave: 'ClaveNueva123*',
+      rol: 'veterinario',
+    };
+    const respuesta = await contexto
+      .api()
+      .post('/usuarios')
+      .send(cuerpo)
+      .expect(201);
+
+    expect(respuesta.body.data).toMatchObject({
+      nombre: 'Nuevo',
+      rol: 'veterinario',
+    });
+    expect(JSON.stringify(respuesta.body)).not.toContain('clave');
+
+    await contexto.api().post('/usuarios').send(cuerpo).expect(409);
+    await contexto
+      .api()
+      .post('/usuarios')
+      .send({ ...cuerpo, correo: 'otro@vetstock.test', rol: 'root' })
+      .expect(400);
   });
 
   it('GET /usuarios/:id devuelve el usuario y valida el id', async () => {

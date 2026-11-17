@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  Post,
   ParseIntPipe,
   Put,
 } from '@nestjs/common';
@@ -11,7 +12,7 @@ import type { Usuario } from '../auth/entities/usuario.entity';
 import { Rol } from '../auth/rol.enum';
 import { Roles } from '../auth/roles.decorator';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
-import { ActualizarUsuarioDto } from './usuario.dto';
+import { ActualizarUsuarioDto, CrearUsuarioDto } from './usuario.dto';
 import { UsuarioService } from './usuario.service';
 
 @Roles(Rol.Admin)
@@ -22,6 +23,11 @@ export class UsuarioController {
   @Get()
   listar() {
     return this.usuarioService.listar();
+  }
+
+  @Post()
+  crear(@Body() datos: CrearUsuarioDto) {
+    return this.usuarioService.crear(datos);
   }
 
   @Get(':id')

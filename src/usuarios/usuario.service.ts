@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { Not, Repository } from 'typeorm';
 import { Usuario } from '../auth/entities/usuario.entity';
 import { Rol } from '../auth/rol.enum';
-import { ActualizarUsuarioDto } from './usuario.dto';
+import { ActualizarUsuarioDto, CrearUsuarioDto } from './usuario.dto';
 
 const RONDAS_BCRYPT = 10;
 
@@ -39,6 +39,28 @@ export class UsuarioService {
     }
 
     return usuario;
+  }
+
+  async crear(datos: CrearUsuarioDto) {
+    const existente = await this.usuarioRepository.findOneBy({
+      correo: datos.correo,
+    });
+    if (existente !== null) {
+      throw new ConflictException(
+        `El correo ${datos.correo} ya esta registrado`,
+      );
+    }
+
+    const clave = await bcrypt.hash(datos.clave, RONDAS_BCRYPT);
+    const guardado = await this.usuarioRepository.save(
+      this.usuarioRepository.create({ ...datos, clave }),
+    );
+
+    // Se vuelve a leer para no devolver el hash de la clave
+    return {
+      message: 'Usuario creado correctamente',
+      data: await this.obtener(guardado.id),
+    };
   }
 
   async actualizar(id: number, datos: ActualizarUsuarioDto) {

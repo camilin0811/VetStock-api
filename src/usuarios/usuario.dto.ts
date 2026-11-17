@@ -7,6 +7,22 @@ import {
 } from 'class-validator';
 import { Rol } from '../auth/rol.enum';
 
+export class CrearUsuarioDto {
+  @IsString()
+  @IsNotEmpty()
+  nombre: string;
+
+  @IsEmail()
+  correo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  clave: string;
+
+  @IsEnum(Rol)
+  rol: Rol;
+}
+
 export class ActualizarUsuarioDto {
   @IsOptional()
   @IsString()

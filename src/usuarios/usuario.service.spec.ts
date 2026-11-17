@@ -45,6 +45,37 @@ describe('UsuarioService', () => {
     await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
   });
 
+  it('crea un usuario con clave hasheada y sin devolverla', async () => {
+    const { data } = await service.crear({
+      nombre: 'Nuevo',
+      correo: 'nuevo@vetstock.test',
+      clave: 'ClaveNueva123*',
+      rol: Rol.Veterinario,
+    });
+
+    expect(data).toMatchObject({ nombre: 'Nuevo', rol: Rol.Veterinario });
+    expect(data.clave).toBeUndefined();
+    const guardado = await testingModule
+      .get(DataSource)
+      .getRepository(Usuario)
+      .createQueryBuilder('usuario')
+      .addSelect('usuario.clave')
+      .where('usuario.id = :id', { id: data.id })
+      .getOneOrFail();
+    expect(await bcrypt.compare('ClaveNueva123*', guardado.clave)).toBe(true);
+  });
+
+  it('lanza 409 al crear con un correo ya registrado', async () => {
+    await expect(
+      service.crear({
+        nombre: 'Dup',
+        correo: USUARIOS_PRUEBA.admin,
+        clave: 'x',
+        rol: Rol.Admin,
+      }),
+    ).rejects.toThrow(ConflictException);
+  });
+
   it('actualiza nombre y rol sin devolver la clave', async () => {
     const { data } = await service.actualizar(3, {
       nombre: 'Camila Perez',
