@@ -148,7 +148,7 @@ export default function Medicamentos() {
       <div className="page-head" data-reveal>
         <div className="grow">
           <div className="search wide-search" role="search">
-            <input type="search" aria-label="Filtrar por nombre" placeholder="Filtrar por nombre" defaultValue={q} onChange={(e) => setFiltro('q', e.target.value)} />
+            <input type="search" aria-label="Filtrar por nombre" placeholder="Filtrar por nombre" value={q} onChange={(e) => setFiltro('q', e.target.value)} />
           </div>
         </div>
         {escribe && <button type="button" className="btn primary" onClick={() => setForm('nuevo')}><Plus size={18} aria-hidden="true" />Nuevo medicamento</button>}
