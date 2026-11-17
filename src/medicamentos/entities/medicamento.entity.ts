@@ -2,11 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinTable,
+  ManyToMany,
   OneToMany,
   PrimaryGeneratedColumn,
   type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { Categoria } from '../../categorias/entities/categoria.entity';
 import { TIPO_FECHA_HORA } from '../../common/columnas';
 import { numeroDecimal } from '../../common/transformadores';
 import { Dispensacion } from '../../dispensaciones/entities/dispensacion.entity';
@@ -39,6 +42,14 @@ export class Medicamento {
 
   @Column({ type: 'boolean', name: 'requiere_formula' })
   requiereFormula: boolean;
+
+  @ManyToMany(() => Categoria, (categoria) => categoria.medicamentos)
+  @JoinTable({
+    name: 'medicamento_categorias',
+    joinColumn: { name: 'medicamento_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'categoria_id', referencedColumnName: 'id' },
+  })
+  categorias: Relation<Categoria[]>;
 
   @OneToMany(() => Lote, (lote) => lote.medicamento)
   lotes: Relation<Lote[]>;

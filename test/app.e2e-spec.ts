@@ -4,6 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
 import { AuthModule } from './../src/auth/auth.module';
+import { CategoriasModule } from './../src/categorias/categorias.module';
 import { DispensacionesModule } from './../src/dispensaciones/dispensaciones.module';
 import { InventarioModule } from './../src/inventario/inventario.module';
 import { MedicamentosModule } from './../src/medicamentos/medicamentos.module';
@@ -19,6 +20,7 @@ describe('VetStock API (e2e)', () => {
       imports: [
         ...importacionesBdPrueba(),
         AuthModule,
+        CategoriasModule,
         MedicamentosModule,
         ProveedoresModule,
         InventarioModule,
@@ -52,6 +54,57 @@ describe('VetStock API (e2e)', () => {
       .expect(401);
   });
 
+  it('GET /categorias lista con count', () => {
+    return request(app.getHttpServer())
+      .get('/categorias')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.count).toBe(4);
+        expect(respuesta.body.data).toHaveLength(4);
+      });
+  });
+
+  it('POST /categorias registra y GET /categorias/:id la devuelve', async () => {
+    const creada = await request(app.getHttpServer())
+      .post('/categorias')
+      .send({ nombre: 'Suplementos' })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .get(`/categorias/${creada.body.data.id}`)
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.nombre).toBe('Suplementos');
+        expect(respuesta.body.descripcion).toBeNull();
+      });
+  });
+
+  it('POST /categorias responde 409 con nombre duplicado y 400 sin nombre', async () => {
+    await request(app.getHttpServer())
+      .post('/categorias')
+      .send({ nombre: 'Vacunas' })
+      .expect(409);
+    await request(app.getHttpServer()).post('/categorias').send({}).expect(400);
+  });
+
+  it('PUT /categorias/:id actualiza y DELETE /categorias/:id elimina', async () => {
+    await request(app.getHttpServer())
+      .put('/categorias/3')
+      .send({ descripcion: 'Control del dolor' })
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.descripcion).toBe('Control del dolor');
+      });
+    await request(app.getHttpServer()).delete('/categorias/3').expect(200);
+    await request(app.getHttpServer()).get('/categorias/3').expect(404);
+  });
+
+  it('GET /categorias/:id valida el id y responde 404', async () => {
+    await request(app.getHttpServer()).get('/categorias/abc').expect(400);
+    await request(app.getHttpServer()).get('/categorias/999').expect(404);
+    await request(app.getHttpServer()).delete('/categorias/999').expect(404);
+  });
+
   it('GET /medicamentos lista el catalogo', () => {
     return request(app.getHttpServer())
       .get('/medicamentos')
@@ -74,6 +127,84 @@ describe('VetStock API (e2e)', () => {
         expect(typeof respuesta.body.message).toBe('string');
         expect(respuesta.body.data).toHaveLength(total);
         expect(respuesta.body.count).toBe(total);
+      });
+  });
+
+  it('GET /medicamentos/:id y la lista incluyen categorias', async () => {
+    await request(app.getHttpServer())
+      .get('/medicamentos/1')
+      .expect(200)
+      .expect((respuesta) => {
+        expect(respuesta.body.categorias).toEqual([
+          expect.objectContaining({ id: 1, nombre: 'Antibioticos' }),
+        ]);
+      });
+    await request(app.getHttpServer())
+      .get('/medicamentos')
+      .expect((respuesta) => {
+        expect(respuesta.body.data[0].categorias).toHaveLength(1);
+      });
+  });
+
+  it('POST /medicamentos asigna categorias por id', () => {
+    return request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({
+        nombre: 'Ivermectina 1%',
+        presentacion: 'Frasco 50 ml',
+        especie: 'bovino',
+        precio: 38000,
+        stockMinimo: 6,
+        requiereFormula: false,
+        categoriaIds: [1, 4],
+      })
+      .expect(201)
+      .expect((respuesta) => {
+        expect(respuesta.body.data.categorias).toHaveLength(2);
+      });
+  });
+
+  it('POST /medicamentos responde 404 con una categoria inexistente y 400 con ids invalidos', async () => {
+    const base = {
+      nombre: 'Ivermectina 1%',
+      presentacion: 'Frasco 50 ml',
+      especie: 'bovino',
+      precio: 38000,
+      stockMinimo: 6,
+      requiereFormula: false,
+    };
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: [999] })
+      .expect(404);
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: ['a'] })
+      .expect(400);
+    await request(app.getHttpServer())
+      .post('/medicamentos')
+      .send({ ...base, categoriaIds: 3 })
+      .expect(400);
+  });
+
+  it('PUT /medicamentos/:id reemplaza las categorias', () => {
+    return request(app.getHttpServer())
+      .put('/medicamentos/1')
+      .send({ categoriaIds: [2, 3] })
+      .expect(200)
+      .expect((respuesta) => {
+        expect(
+          respuesta.body.data.categorias.map((c: { id: number }) => c.id),
+        ).toEqual([2, 3]);
+      });
+  });
+
+  it('DELETE /categorias/:id quita la categoria de los medicamentos', async () => {
+    await request(app.getHttpServer()).delete('/categorias/1').expect(200);
+    await request(app.getHttpServer())
+      .get('/medicamentos/1')
+      .expect((respuesta) => {
+        expect(respuesta.body.categorias).toEqual([]);
       });
   });
 

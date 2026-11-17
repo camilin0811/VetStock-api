@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CategoriaService } from '../categorias/categoria.service';
 import { ActualizarMedicamentoDto, MedicamentoDto } from './medicamento.dto';
 import { Medicamento } from './entities/medicamento.entity';
 
@@ -13,10 +14,12 @@ export class MedicamentoService {
   constructor(
     @InjectRepository(Medicamento)
     private readonly medicamentoRepository: Repository<Medicamento>,
+    private readonly categoriaService: CategoriaService,
   ) {}
 
   async listar() {
     const medicamentos = await this.medicamentoRepository.find({
+      relations: { categorias: true },
       order: { id: 'ASC' },
     });
 
@@ -28,7 +31,10 @@ export class MedicamentoService {
   }
 
   async obtener(id: number) {
-    const medicamento = await this.medicamentoRepository.findOneBy({ id });
+    const medicamento = await this.medicamentoRepository.findOne({
+      where: { id },
+      relations: { categorias: true },
+    });
     if (medicamento === null) {
       throw new NotFoundException(`Medicamento con ID ${id} no existe`);
     }
@@ -49,8 +55,13 @@ export class MedicamentoService {
       );
     }
 
+    const { categoriaIds, ...campos } = datos;
+    const categorias = await this.categoriaService.obtenerPorIds(
+      categoriaIds ?? [],
+    );
+
     const nuevoMedicamento = await this.medicamentoRepository.save(
-      this.medicamentoRepository.create(datos),
+      this.medicamentoRepository.create({ ...campos, categorias }),
     );
 
     return {
@@ -61,7 +72,13 @@ export class MedicamentoService {
 
   async actualizar(id: number, datos: ActualizarMedicamentoDto) {
     const medicamento = await this.obtener(id);
-    this.medicamentoRepository.merge(medicamento, datos);
+    const { categoriaIds, ...campos } = datos;
+    if (categoriaIds !== undefined) {
+      medicamento.categorias =
+        await this.categoriaService.obtenerPorIds(categoriaIds);
+    }
+
+    this.medicamentoRepository.merge(medicamento, campos);
     const actualizado = await this.medicamentoRepository.save(medicamento);
 
     return {

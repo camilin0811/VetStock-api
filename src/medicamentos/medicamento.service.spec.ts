@@ -70,6 +70,61 @@ describe('MedicamentoService', () => {
     expect(resultado.data.stockMinimo).toBe(30);
   });
 
+  it('incluye las categorias al consultar un medicamento', async () => {
+    const medicamento = await service.obtener(2);
+
+    expect(medicamento.categorias.map((c) => c.nombre)).toEqual(['Vacunas']);
+    expect((await service.listar()).data[0].categorias).toHaveLength(1);
+  });
+
+  it('registra un medicamento con categorias por id', async () => {
+    const { data } = await service.crear({
+      nombre: 'Ivermectina 1%',
+      presentacion: 'Frasco 50 ml',
+      especie: 'bovino',
+      precio: 38000,
+      stockMinimo: 6,
+      requiereFormula: false,
+      categoriaIds: [4, 1, 4],
+    });
+
+    expect(data.categorias.map((c) => c.id)).toEqual([1, 4]);
+    expect((await service.obtener(data.id)).categorias).toHaveLength(2);
+  });
+
+  it('lanza 404 si una categoria no existe al registrar', async () => {
+    await expect(
+      service.crear({
+        nombre: 'Ivermectina 1%',
+        presentacion: 'Frasco 50 ml',
+        especie: 'bovino',
+        precio: 38000,
+        stockMinimo: 6,
+        requiereFormula: false,
+        categoriaIds: [1, 999],
+      }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('reemplaza las categorias al actualizar y las conserva si no se envian', async () => {
+    await service.actualizar(1, { categoriaIds: [2, 3] });
+    expect(
+      (await service.obtener(1)).categorias.map((c) => c.id).sort(),
+    ).toEqual([2, 3]);
+
+    await service.actualizar(1, { stockMinimo: 12 });
+    expect((await service.obtener(1)).categorias).toHaveLength(2);
+
+    await service.actualizar(1, { categoriaIds: [] });
+    expect((await service.obtener(1)).categorias).toHaveLength(0);
+  });
+
+  it('lanza 404 si una categoria no existe al actualizar', async () => {
+    await expect(
+      service.actualizar(1, { categoriaIds: [999] }),
+    ).rejects.toThrow(NotFoundException);
+  });
+
   it('lanza error si el medicamento no existe', async () => {
     await expect(service.obtener(999)).rejects.toThrow(NotFoundException);
   });

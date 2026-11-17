@@ -1,10 +1,12 @@
 import { PartialType } from '@nestjs/mapped-types';
 import {
+  IsArray,
   IsBoolean,
   IsIn,
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   Min,
 } from 'class-validator';
@@ -33,6 +35,11 @@ export class MedicamentoDto {
 
   @IsBoolean()
   requiereFormula: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsInt({ each: true })
+  categoriaIds?: number[];
 }
 
 export class ActualizarMedicamentoDto extends PartialType(MedicamentoDto) {}
