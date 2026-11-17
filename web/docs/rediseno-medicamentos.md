@@ -62,13 +62,13 @@ dónde aparecía la información.
 | --- | --- |
 | F-pattern: la derecha se ignora | El detalle deja de ser una columna estrecha a la derecha: la lista ocupa un ancho fijo a la izquierda (lista de ancho fijo, detalle flexible) y el detalle ocupa el espacio principal, con la foto y el nombre arriba, donde cae la barra horizontal superior de la F. |
 | Polaris: índice de una sola columna | La lista pasa de dos columnas a una sola, con filas tipo tabla y columnas alineadas: imagen, nombre y presentación, especie, stock y precio. |
-| Layer-cake / encabezados | El detalle tiene un H2 con el nombre, y subtítulos (Existencias, Lotes) cortos que empiezan con la palabra clave. |
+| Layer-cake / encabezados | El detalle tiene un H2 con el nombre, y subtítulo (Lotes) corto que empieza con la palabra clave. |
 | Cifras clave primero | Disponible, precio, stock mínimo y vencido se muestran como números grandes con etiquetas pequeñas, justo bajo el nombre (front-loading). |
 | Apple HIG / Cloudscape: selección persistente | La fila elegida tiene fondo, borde y marca lateral fuertes, y se conserva `aria-pressed`; el detalle siempre refleja la selección. El primer elemento se selecciona por defecto en pantallas anchas (SAP). |
 | Conexión visual fila-panel | El panel comparte el acento violeta de la fila elegida y es `sticky`, así que no se pierde al desplazar la lista. |
 | Pantallas compactas | Igual que M3/Android: se ve la lista y el detalle se abre como hoja modal (se mantiene el modal existente, con edición y eliminación). |
 | Cifras tabulares | `font-variant-numeric: tabular-nums` y alineación a la derecha en precio y stock, con el encabezado de columna alineado igual. |
-| Jerarquía por tamaño y peso | Escala de 5 niveles (12, 14, 16, 20, 28 px) y pesos 700 para nombres y cifras, 500 para texto secundario, 600 para etiquetas; las etiquetas en color apagado con contraste AA. |
+| Jerarquía por tamaño y peso | Escala en tokens `--fs-*` (12, 14, 16, 20, 28 px y una cifra destacada de hasta 30 px) y tokens de peso `--fw-*`: 700 para nombres y cifras, 500 para texto secundario, 600 para etiquetas; las etiquetas en color apagado con contraste AA. |
 | Longitud de línea | El texto corrido (descripciones, avisos) se limita a 65ch; las filas no mezclan texto largo. |
 
 ## Pendiente de verificar

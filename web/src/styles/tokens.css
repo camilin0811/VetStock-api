@@ -32,6 +32,18 @@
   --font-logo: 'Fredoka', 'Plus Jakarta Sans', sans-serif;
   --font-serif: 'Fraunces', Georgia, serif;
 
+  /* Escala tipografica (5 niveles + cifra destacada) y pesos: 700 nombres y cifras, 600 etiquetas, 500 secundario */
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 20px;
+  --fs-xl: 28px;
+  --fs-num: clamp(22px, 6.5vw, 30px);
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
   --r-sm: 12px;
   --r-md: 18px;
   --r-lg: 24px;
