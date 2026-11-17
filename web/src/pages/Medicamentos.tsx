@@ -175,7 +175,7 @@ export default function Medicamentos() {
           ) : (
             <>
               <p className="muted" style={{ marginBottom: 10 }}>{meds.data.length} {plural(meds.data.length, 'medicamento')}</p>
-              <ul className="list">
+              <ul className="list fluid">
                 {meds.data.map((m) => (
                   <li key={m.id}>
                     <button type="button" className={`row-btn${sel?.id === m.id ? ' on' : ''}`} aria-pressed={sel?.id === m.id} onClick={() => { setSelId(m.id); if (!wide) setTimeout(() => detalleRef.current?.focus(), 0) }}>
