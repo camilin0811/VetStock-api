@@ -10,9 +10,10 @@ import { Modal } from '../components/Modal'
 import { ConfirmModal } from '../components/ConfirmModal'
 import { FormError } from '../components/FormError'
 import { EmptyState, ErrorState, SkeletonRows } from '../components/States'
-import { diasLabel, diasTono, fmtFecha, fmtMoney, parseFecha, isoHoy, plural } from '../lib/format'
+import { fmtFecha, fmtMoney, parseFecha, isoHoy, plural } from '../lib/format'
 import { MedImagen } from '../components/MedImagen'
 import { useMedia } from '../lib/useWide'
+import { Etiqueta, EtiquetaStock, EtiquetaVencimiento } from '../components/Etiqueta'
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -82,9 +83,9 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
           <p className="det-sub">{med.presentacion} · {cap(med.especie)}</p>
         </div>
         <div className="chips">
-          {item && <span className={`pill ${tono}`}>{item.estado === 'OK' ? 'Stock OK' : item.estado === 'STOCK_BAJO' ? 'Stock bajo' : 'Sin stock'}</span>}
-          {med.requiereFormula && <span className="pill info"><ShieldCheck size={14} aria-hidden="true" />Requiere fórmula</span>}
-          {med.categorias.map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}
+          {item && <EtiquetaStock estado={item.estado} />}
+          {med.requiereFormula && <Etiqueta tono="info" icon={ShieldCheck}>Requiere fórmula</Etiqueta>}
+          {med.categorias.map((c) => <Etiqueta key={c.id}>{c.nombre}</Etiqueta>)}
         </div>
       </div>
       <dl className="facts">
@@ -102,7 +103,7 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
               return (
                 <li key={l.id} className="list-item slim">
                   <div className="grow"><div className="row-title">{l.numeroLote}</div><div className="row-sub">{l.cantidad} u · vence {fmtFecha(l.fechaVencimiento)}</div></div>
-                  <span className={`pill ${diasTono(d)}`}>{diasLabel(d)}</span>
+                  <EtiquetaVencimiento dias={d} />
                 </li>
               )
             })}
@@ -195,7 +196,7 @@ export default function Medicamentos() {
                           <span className="c-esp">{cap(m.especie)}</span>
                           <span className={`c-num c-stock ${tono}`}>
                             <strong className="num">{it ? it.disponible : '-'}</strong>
-                            {it && it.estado !== 'OK' && <small>{it.estado === 'STOCK_BAJO' ? 'Bajo' : 'Agotado'}</small>}
+                            {it && it.estado !== 'OK' && <EtiquetaStock estado={it.estado} corto />}
                           </span>
                           <span className="c-num num c-precio">{fmtMoney(m.precio)}</span>
                         </button>
