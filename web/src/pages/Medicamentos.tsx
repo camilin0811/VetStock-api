@@ -72,28 +72,29 @@ function Detalle({ med, escribe, onEdit, onDelete }: { med: Medicamento; escribe
   const inv = useInventario()
   const item = inv.data?.find((i) => i.medicamento.id === med.id)
   const hoy = isoHoy()
+  const tono = item ? (item.estado === 'OK' ? 'ok' : item.estado === 'STOCK_BAJO' ? 'warn' : 'bad') : ''
   return (
-    <div className="stack" style={{ gap: 16 }}>
+    <div className="stack detalle" style={{ gap: 18 }}>
       <div className="detail-head">
-        <span className="det-foto"><MedImagen base={med.imagen} sizes="(min-width: 1100px) 360px, 90vw" eager fallback={<PillIcon size={40} aria-hidden="true" />} /></span>
-        <div>
+        <span className="det-foto"><MedImagen base={med.imagen} sizes="(min-width: 1100px) 45vw, 90vw" eager fallback={<PillIcon size={40} aria-hidden="true" />} /></span>
+        <div className="det-titulo">
           <h2>{med.nombre}</h2>
-          <p className="muted">{med.presentacion} · {cap(med.especie)}</p>
+          <p className="det-sub">{med.presentacion} · {cap(med.especie)}</p>
+        </div>
+        <div className="chips">
+          {item && <span className={`pill ${tono}`}>{item.estado === 'OK' ? 'Stock OK' : item.estado === 'STOCK_BAJO' ? 'Stock bajo' : 'Sin stock'}</span>}
+          {med.requiereFormula && <span className="pill info"><ShieldCheck size={14} aria-hidden="true" />Requiere fórmula</span>}
+          {med.categorias.map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}
         </div>
       </div>
-      <div className="chips">
-        {item && <span className={`pill ${item.estado === 'OK' ? 'ok' : item.estado === 'STOCK_BAJO' ? 'warn' : 'bad'}`}>{item.estado === 'OK' ? 'Stock OK' : item.estado === 'STOCK_BAJO' ? 'Stock bajo' : 'Sin stock'}</span>}
-        {med.requiereFormula && <span className="pill info"><ShieldCheck size={14} aria-hidden="true" />Requiere fórmula</span>}
-        {med.categorias.map((c) => <span key={c.id} className="pill">{c.nombre}</span>)}
-      </div>
       <dl className="facts">
-        <div><dt>Precio</dt><dd>{fmtMoney(med.precio)}</dd></div>
-        <div><dt>Stock mínimo</dt><dd>{med.stockMinimo}</dd></div>
-        <div><dt>Disponible</dt><dd>{item ? item.disponible : '-'}</dd></div>
-        <div><dt>Vencido</dt><dd>{item ? item.vencido : '-'}</dd></div>
+        <div className={`fact main ${tono}`}><dt>Disponible</dt><dd className="num">{item ? item.disponible : '-'}</dd></div>
+        <div className="fact main"><dt>Precio</dt><dd className="num">{fmtMoney(med.precio)}</dd></div>
+        <div className="fact"><dt>Stock mínimo</dt><dd className="num">{med.stockMinimo}</dd></div>
+        <div className="fact"><dt>Vencido</dt><dd className="num">{item ? item.vencido : '-'}</dd></div>
       </dl>
       <div>
-        <h3 className="mini-title">Lotes</h3>
+        <h3 className="mini-title">Lotes{lotes.data ? ` (${lotes.data.length})` : ''}</h3>
         {lotes.isLoading ? <SkeletonRows rows={2} h={44} /> : !lotes.data?.length ? <p className="muted">Sin lotes registrados.</p> : (
           <ul className="list">
             {lotes.data.map((l) => {
