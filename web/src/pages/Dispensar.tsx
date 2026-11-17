@@ -124,7 +124,7 @@ export default function Dispensar() {
               <thead><tr><th>Fecha</th><th>Medicamento</th><th>Paciente</th><th>Lotes</th><th className="right">Total</th><th>Estado</th>{puedeAnular && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {historial.data.map((d) => (
-                  <tr key={d.id} style={d.estado === 'ANULADA' ? { opacity: 0.65 } : undefined}>
+                  <tr key={d.id} className={d.estado === 'ANULADA' ? 'anulada' : undefined}>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFecha(d.fecha)}</td>
                     <td><div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div><div className="row-sub">{d.veterinario}</div></td>
                     <td>{d.mascota}</td>

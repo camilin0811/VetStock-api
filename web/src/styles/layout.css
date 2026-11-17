@@ -22,12 +22,12 @@
 }
 .nav-link svg { color: var(--violet-600); flex: none; }
 .nav-link:hover { background: var(--violet-100); }
-.nav-link.active { background: var(--violet-100); font-weight: 700; box-shadow: inset 0 0 0 1px var(--violet-300); }
+.nav-link.active { background: var(--violet-100); font-weight: 700; box-shadow: inset 0 0 0 1.5px var(--violet-600); }
 .user-card { margin-top: auto; background: var(--violet-100); border-radius: var(--r-lg); padding: 14px; display: grid; gap: 10px; }
 .user-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--violet-600); color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
 .user-name { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.user-role { font-size: 12.5px; color: var(--muted); text-transform: capitalize; }
+.user-role { font-size: 13px; color: var(--muted); text-transform: capitalize; }
 .user-card .btn { width: 100%; justify-content: center; }
 
 .main { min-width: 0; display: flex; flex-direction: column; background: linear-gradient(180deg, var(--violet-50) 0, #fff 340px); }
@@ -37,7 +37,7 @@
 .topbar-title p { color: var(--muted); font-size: 14px; }
 .search {
   display: flex; align-items: center; gap: 10px; width: clamp(260px, 30vw, 520px); background: var(--violet-100);
-  border-radius: 999px; padding: 0 16px; height: 46px; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line);
+  border-radius: 999px; padding: 0 16px; height: 46px; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 .search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; height: 100%; }
 .search input::placeholder { color: var(--muted); }
@@ -47,7 +47,7 @@
   display: grid; place-items: center; text-decoration: none; transition: background 0.2s;
 }
 .icon-btn:hover { background: var(--violet-300); color: var(--ink); }
-.icon-btn .badge { position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--bad-dot); color: #fff; font-size: 11.5px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
+.icon-btn .badge { position: absolute; top: -2px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--bad-dot); color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 2px #fff; }
 .content { padding: 16px var(--pad-x) 48px; flex: 1; min-width: 0; width: 100%; }
 
 .bottom-nav { display: none; }

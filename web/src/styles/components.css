@@ -6,7 +6,7 @@
 .link-more:hover { text-decoration: underline; }
 
 .btn {
-  display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 0 20px; height: 44px; min-width: 44px;
+  display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 0 20px; min-height: 44px; min-width: 44px;
   font-weight: 700; font-size: 14px; text-decoration: none; background: var(--violet-100); color: var(--violet-700);
   transition: background 0.2s, transform 0.2s var(--ease-out), box-shadow 0.2s;
 }
@@ -16,9 +16,9 @@
 .btn.primary:hover { background: var(--violet-700); color: #fff; }
 .btn.danger { background: var(--bad-bg); color: var(--bad-ink); }
 .btn.danger:hover { background: #f9c6c6; color: var(--bad-ink); }
-.btn.sm { height: 36px; padding: 0 14px; font-size: 13px; }
+.btn.sm { min-height: 36px; padding: 0 14px; font-size: 13px; }
 .btn.icon { padding: 0; width: 40px; height: 40px; justify-content: center; }
-.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn:disabled { background: #e7e4ef; color: #5d5878; box-shadow: none; cursor: not-allowed; transform: none; }
 
 .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; white-space: nowrap; background: var(--violet-100); color: var(--violet-700); }
 .pill.ok { background: var(--ok-bg); color: var(--ok-ink); }
@@ -29,22 +29,22 @@
 .field { display: grid; gap: 6px; font-weight: 600; font-size: 13.5px; }
 .field > span.hint { font-weight: 500; color: var(--muted); font-size: 12.5px; }
 .input, .select, .textarea {
-  width: 100%; min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: #fff; padding: 0 14px; font-weight: 500;
+  width: 100%; min-height: 46px; border-radius: 14px; border: 1px solid var(--line-strong); background: #fff; padding: 0 14px; font-weight: 500;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .textarea { padding: 12px 14px; min-height: 88px; resize: vertical; }
 .input:hover, .select:hover, .textarea:hover { border-color: var(--violet-300); }
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { border-color: var(--violet-600); box-shadow: var(--focus); }
-.input::placeholder { color: #7a7498; }
+.input::placeholder, .textarea::placeholder { color: var(--placeholder); opacity: 1; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .form-grid .full { grid-column: 1 / -1; }
 .check { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; min-height: 44px; }
 .check input { width: 20px; height: 20px; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { border: 0; background: var(--violet-100); color: var(--violet-700); border-radius: 999px; padding: 0 16px; height: 38px; font-weight: 700; font-size: 13px; transition: background 0.2s, color 0.2s; }
-.chip:hover { background: var(--violet-300); color: var(--ink); }
-.chip[aria-pressed='true'] { background: var(--violet-600); color: #fff; }
+.chip { border: 1.5px solid var(--line-strong); background: #fff; color: var(--violet-700); border-radius: 999px; padding: 0 16px; min-height: 38px; font-weight: 700; font-size: 13px; transition: background 0.2s, color 0.2s; }
+.chip:hover { background: var(--violet-100); border-color: var(--violet-600); color: var(--ink); }
+.chip[aria-pressed='true'] { background: var(--violet-600); border-color: var(--violet-600); color: #fff; }
 
 .table-wrap { overflow-x: auto; border-radius: var(--r-md); }
 .table th { text-align: left; font-size: 12.5px; font-weight: 700; color: var(--muted); padding: 10px 14px; white-space: nowrap; }
@@ -52,6 +52,7 @@
 .table tbody tr:hover { background: var(--violet-50); }
 .table .right { text-align: right; }
 .row-title { font-weight: 700; }
+.anulada .row-title, .anulada td.num { text-decoration: line-through; text-decoration-thickness: 1px; }
 .row-sub { color: var(--muted); font-size: 13px; }
 
 .skeleton { position: relative; overflow: hidden; background: var(--violet-100); border-radius: 12px; min-height: 16px; }

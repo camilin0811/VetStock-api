@@ -8,8 +8,10 @@
   --violet-50: #f6f3fe;
   --surface: #ffffff;
   --ink: #251f44;
-  --muted: #5f5980;
-  --line: #e4ddf6;
+  --muted: #4f4970;          /* 8.4:1 sobre blanco, 6.9:1 sobre violet-100 */
+  --line: #e4ddf6;           /* separadores decorativos */
+  --line-strong: #7d75a3;    /* bordes de controles: 4.3:1 sobre blanco (WCAG 1.4.11) */
+  --placeholder: #6a6490;
 
   /* Estados (texto sobre fondo suave, AA) */
   --ok-bg: #e0f4e6;
@@ -17,13 +19,14 @@
   --ok-dot: #3bb273;
   --warn-bg: #fdebdc;
   --warn-ink: #9a4509;
-  --warn-dot: #f0903a;
+  --warn-dot: #c4620f;
   --info-bg: #dfecfd;
   --info-ink: #1b57a0;
-  --info-dot: #4d94e8;
+  --info-dot: #2f78d0;
   --bad-bg: #fde3e3;
   --bad-ink: #a02222;
-  --bad-dot: #e45a5a;
+  --bad-dot: #c62a2a;
+  --viz-soft: #8a76dc;       /* barras secundarias: 3.7:1 sobre blanco */
 
   --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
   --font-logo: 'Fredoka', 'Plus Jakarta Sans', sans-serif;
