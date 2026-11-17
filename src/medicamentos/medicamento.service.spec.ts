@@ -207,9 +207,9 @@ describe('MedicamentoService', () => {
     });
 
     it('lanza 409 si solo tiene dispensaciones', async () => {
-      await testingModule
-        .get(DataSource)
-        .query('DELETE FROM lote WHERE medicamento_id = 1');
+      const dataSource = testingModule.get(DataSource);
+      await dataSource.query('DELETE FROM movimiento WHERE medicamento_id = 1');
+      await dataSource.query('DELETE FROM lote WHERE medicamento_id = 1');
 
       await expect(service.eliminar(1)).rejects.toThrow(ConflictException);
     });

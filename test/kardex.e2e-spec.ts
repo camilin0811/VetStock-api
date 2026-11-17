@@ -1,0 +1,297 @@
+import request from 'supertest';
+import { AppPrueba, crearAppPrueba } from './app-prueba';
+
+describe('Inventario y kardex (e2e)', () => {
+  let contexto: AppPrueba;
+
+  beforeEach(async () => {
+    contexto = await crearAppPrueba();
+  });
+
+  afterEach(async () => {
+    await contexto.cerrar();
+  });
+
+  describe('permisos de escritura', () => {
+    it('responde 403 a un veterinario al registrar, corregir o ajustar lotes', async () => {
+      const api = contexto.api('veterinario');
+      await api.post('/lotes').send({}).expect(403);
+      await api.put('/lotes/1').send({}).expect(403);
+      await api.post('/lotes/1/ajustes').send({}).expect(403);
+    });
+
+    it('un veterinario si puede leer lotes e inventario', async () => {
+      const api = contexto.api('veterinario');
+      await api.get('/lotes').expect(200);
+      await api.get('/inventario').expect(200);
+    });
+
+    it('un farmaceutico pasa el control de rol al ajustar lotes', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .post('/lotes/1/ajustes')
+        .send({});
+      expect(respuesta.status).toBe(400);
+    });
+  });
+
+  describe('movimientos', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .get('/movimientos')
+        .expect(401);
+    });
+
+    it('GET /movimientos lista con la forma del contrato', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/movimientos')
+        .expect(200);
+
+      expect(respuesta.body.count).toBe(8);
+      expect(respuesta.body.data).toHaveLength(8);
+      expect(respuesta.body.data[0]).toEqual(
+        expect.objectContaining({
+          id: expect.any(Number),
+          tipo: expect.any(String),
+          cantidad: expect.any(Number),
+          loteId: expect.any(Number),
+          medicamentoId: expect.any(Number),
+          medicamento: expect.objectContaining({ nombre: expect.any(String) }),
+          numeroLote: expect.any(String),
+          fecha: expect.any(String),
+        }),
+      );
+    });
+
+    it('GET /movimientos filtra por medicamentoId y tipo', async () => {
+      const api = contexto.api();
+      const porMedicamento = await api.get('/movimientos?medicamentoId=3');
+      expect(porMedicamento.body.count).toBe(3);
+
+      const salidas = await api.get('/movimientos?tipo=SALIDA');
+      expect(salidas.body.count).toBe(2);
+
+      const ambos = await api.get('/movimientos?medicamentoId=3&tipo=SALIDA');
+      expect(ambos.body.count).toBe(1);
+      expect(ambos.body.data[0].usuario).toBeNull();
+    });
+
+    it('GET /movimientos valida los filtros', async () => {
+      await contexto.api().get('/movimientos?tipo=OTRO').expect(400);
+      await contexto.api().get('/movimientos?medicamentoId=abc').expect(400);
+    });
+
+    it('POST /lotes registra una ENTRADA a nombre del usuario autenticado', async () => {
+      await contexto
+        .api('farmaceutico')
+        .post('/lotes')
+        .send({
+          medicamentoId: 4,
+          proveedorId: 1,
+          numeroLote: 'ALB-301',
+          cantidad: 10,
+          fechaVencimiento: '2099-12-31',
+        })
+        .expect(201);
+
+      const respuesta = await contexto
+        .api()
+        .get('/movimientos?medicamentoId=4');
+      expect(respuesta.body.data[0]).toMatchObject({
+        tipo: 'ENTRADA',
+        cantidad: 10,
+        numeroLote: 'ALB-301',
+        usuario: { id: 3, nombre: 'Camila' },
+      });
+    });
+  });
+
+  describe('GET /inventario', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .get('/inventario')
+        .expect(401);
+    });
+
+    it('lista el stock de todos los medicamentos con su estado', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/inventario')
+        .expect(200);
+
+      expect(respuesta.body.count).toBe(4);
+      const amoxicilina = respuesta.body.data.find(
+        (item: { medicamento: { id: number } }) => item.medicamento.id === 1,
+      );
+      expect(amoxicilina).toMatchObject({
+        disponible: 15,
+        vencido: 0,
+        estado: 'STOCK_BAJO',
+      });
+      expect(amoxicilina.medicamento.categorias).toHaveLength(1);
+    });
+
+    it('GET /inventario/:medicamentoId conserva la forma anterior', async () => {
+      const respuesta = await contexto.api().get('/inventario/3').expect(200);
+      expect(respuesta.body).toMatchObject({
+        stockDisponible: 10,
+        stockVencido: 4,
+      });
+      await contexto.api().get('/inventario/abc').expect(400);
+    });
+  });
+
+  describe('PUT /lotes/:id', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .put('/lotes/1')
+        .send({ numeroLote: 'X' })
+        .expect(401);
+    });
+
+    it('corrige los datos del lote y devuelve la forma del contrato', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .put('/lotes/1')
+        .send({
+          numeroLote: 'AMX-001B',
+          fechaVencimiento: '2099-06-30',
+          proveedorId: 2,
+        })
+        .expect(200);
+
+      expect(respuesta.body.data).toMatchObject({
+        id: 1,
+        medicamentoId: 1,
+        proveedorId: 2,
+        numeroLote: 'AMX-001B',
+        cantidadInicial: 40,
+        cantidad: 15,
+        fechaVencimiento: '2099-06-30',
+      });
+      expect(respuesta.body.data.medicamento.nombre).toBe('Amoxicilina 250 mg');
+      expect(respuesta.body.data.proveedor.id).toBe(2);
+    });
+
+    it('ignora campos de cantidad (whitelist) y valida los demas', async () => {
+      const api = contexto.api();
+      const respuesta = await api.put('/lotes/1').send({ cantidad: 999 });
+      expect(respuesta.status).toBe(200);
+      expect(respuesta.body.data.cantidad).toBe(15);
+
+      await api.put('/lotes/1').send({ fechaVencimiento: 'ayer' }).expect(400);
+      await api.put('/lotes/1').send({ proveedorId: 0 }).expect(400);
+      await api.put('/lotes/abc').send({}).expect(400);
+    });
+
+    it('responde 404 y 409', async () => {
+      const api = contexto.api();
+      await api.put('/lotes/999').send({ numeroLote: 'X' }).expect(404);
+      await api.put('/lotes/1').send({ proveedorId: 999 }).expect(404);
+      await api.put('/lotes/2').send({ numeroLote: 'VAR-102' }).expect(409);
+    });
+  });
+
+  describe('POST /lotes/:id/ajustes', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer())
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 1, motivo: 'DANO' })
+        .expect(401);
+    });
+
+    it('descuenta, crea el movimiento AJUSTE y refleja el stock', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 5, motivo: 'DANO', observacion: 'Frasco roto' })
+        .expect(201);
+
+      expect(respuesta.body.data).toMatchObject({
+        tipo: 'AJUSTE',
+        cantidad: 5,
+        loteId: 1,
+        medicamentoId: 1,
+        numeroLote: 'AMX-001',
+        detalle: 'DANO: Frasco roto',
+        usuario: { id: 3, nombre: 'Camila' },
+        cantidadRestante: 10,
+      });
+
+      const lotes = await contexto.api().get('/lotes?medicamentoId=1');
+      expect(lotes.body.data[0].cantidad).toBe(10);
+      const kardex = await contexto.api().get('/movimientos?tipo=AJUSTE');
+      expect(kardex.body.count).toBe(1);
+    });
+
+    it('valida cantidad, motivo y existencia del lote', async () => {
+      const api = contexto.api();
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 0, motivo: 'DANO' })
+        .expect(400);
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 1, motivo: 'ROBO' })
+        .expect(400);
+      await api.post('/lotes/1/ajustes').send({ cantidad: 1 }).expect(400);
+      await api
+        .post('/lotes/1/ajustes')
+        .send({ cantidad: 16, motivo: 'PERDIDA' })
+        .expect(400);
+      await api
+        .post('/lotes/999/ajustes')
+        .send({ cantidad: 1, motivo: 'OTRO' })
+        .expect(404);
+      await api
+        .post('/lotes/abc/ajustes')
+        .send({ cantidad: 1, motivo: 'OTRO' })
+        .expect(400);
+    });
+  });
+
+  describe('GET /alertas', () => {
+    it('responde 401 sin token', () => {
+      return request(contexto.app.getHttpServer()).get('/alertas').expect(401);
+    });
+
+    it('devuelve todas las alertas con la forma del contrato', async () => {
+      const respuesta = await contexto
+        .api('veterinario')
+        .get('/alertas')
+        .expect(200);
+
+      expect(respuesta.body.count).toBe(3);
+      const porVencer = respuesta.body.data.find(
+        (a: { tipo: string }) => a.tipo === 'POR_VENCER',
+      );
+      expect(porVencer).toMatchObject({
+        loteId: 2,
+        diasRestantes: 20,
+        medicamento: expect.objectContaining({ nombre: 'Vacuna antirrabica' }),
+      });
+      expect(porVencer.fechaVencimiento).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
+
+    it('filtra por tipo y dias', async () => {
+      const api = contexto.api();
+      const vencidos = await api.get('/alertas?tipo=VENCIDO');
+      expect(
+        vencidos.body.data.map((a: { loteId: number }) => a.loteId),
+      ).toEqual([4]);
+
+      const sinVentana = await api.get('/alertas?tipo=POR_VENCER&dias=10');
+      expect(sinVentana.body).toMatchObject({ data: [], count: 0 });
+
+      const amplia = await api.get('/alertas?tipo=POR_VENCER&dias=250');
+      expect(amplia.body.count).toBe(3);
+    });
+
+    it('valida tipo y dias', async () => {
+      await contexto.api().get('/alertas?tipo=OTRO').expect(400);
+      await contexto.api().get('/alertas?dias=0').expect(400);
+      await contexto.api().get('/alertas?dias=abc').expect(400);
+    });
+  });
+});

@@ -7,6 +7,7 @@ import { Categoria } from '../src/categorias/entities/categoria.entity';
 import { diasDesdeHoy } from '../src/common/fechas';
 import { Dispensacion } from '../src/dispensaciones/entities/dispensacion.entity';
 import { Lote } from '../src/inventario/entities/lote.entity';
+import { Movimiento } from '../src/inventario/entities/movimiento.entity';
 import { Medicamento } from '../src/medicamentos/entities/medicamento.entity';
 import { Proveedor } from '../src/proveedores/entities/proveedor.entity';
 
@@ -25,6 +26,7 @@ const ENTIDADES = [
   Proveedor,
   Lote,
   Dispensacion,
+  Movimiento,
 ];
 
 // BD sqlite en memoria; cada prueba importa ademas los modulos que necesita
@@ -222,6 +224,41 @@ export async function sembrarBd(dataSource: DataSource) {
       fecha: diasDesdeHoy(-100),
       total: 192000,
       lotesUsados: [{ loteId: 4, numeroLote: 'MLX-050', cantidad: 6 }],
+    },
+  ]);
+
+  // Kardex: una ENTRADA por lote (cantidad inicial) y las salidas de las dispensaciones
+  await dataSource.getRepository(Movimiento).save([
+    ...[
+      [1, 1, 40],
+      [2, 2, 30],
+      [3, 2, 12],
+      [4, 3, 10],
+      [5, 3, 10],
+      [6, 4, 25],
+    ].map(([loteId, medicamentoId, cantidad]) => ({
+      tipo: 'ENTRADA' as const,
+      cantidad,
+      lote: { id: loteId },
+      medicamento: { id: medicamentoId },
+      usuario: { id: 3 },
+      detalle: 'Ingreso inicial',
+    })),
+    {
+      tipo: 'SALIDA' as const,
+      cantidad: 25,
+      lote: { id: 1 },
+      medicamento: { id: 1 },
+      usuario: { id: 2 },
+      detalle: 'Dispensacion 1 - Max',
+    },
+    {
+      tipo: 'SALIDA' as const,
+      cantidad: 6,
+      lote: { id: 4 },
+      medicamento: { id: 3 },
+      usuario: null,
+      detalle: 'Dispensacion 2 - Luna',
     },
   ]);
 }

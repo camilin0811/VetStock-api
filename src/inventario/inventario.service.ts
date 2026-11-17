@@ -2,14 +2,27 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { diasHasta, hoy } from '../common/fechas';
+import { LessThanOrEqual, MoreThan, Not, Repository } from 'typeorm';
+import { bloqueoPesimista } from '../common/bloqueo';
+import { diasDesdeHoy, diasHasta, hoy } from '../common/fechas';
+import type { Usuario } from '../auth/entities/usuario.entity';
+import { Medicamento } from '../medicamentos/entities/medicamento.entity';
 import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { ProveedorService } from '../proveedores/proveedor.service';
 import { Lote } from './entities/lote.entity';
-import { InventarioDto, LoteRequestDto } from './lote.dto';
+import { Movimiento } from './entities/movimiento.entity';
+import { MovimientoService } from './movimiento.service';
+import {
+  EstadoStock,
+  InventarioDto,
+  ActualizarLoteDto,
+  AjusteDto,
+  InventarioItemDto,
+  LoteRequestDto,
+} from './lote.dto';
 
 @Injectable()
 export class InventarioService {
@@ -18,9 +31,10 @@ export class InventarioService {
     private readonly loteRepository: Repository<Lote>,
     private readonly medicamentoService: MedicamentoService,
     private readonly proveedorService: ProveedorService,
+    private readonly movimientoService: MovimientoService,
   ) {}
 
-  async registrarLote(datos: LoteRequestDto) {
+  async registrarLote(datos: LoteRequestDto, usuario?: Usuario) {
     const medicamento = await this.medicamentoService.obtener(
       datos.medicamentoId,
     );
@@ -42,21 +56,140 @@ export class InventarioService {
       );
     }
 
-    const nuevoLote = await this.loteRepository.save(
-      this.loteRepository.create({
-        ...datos,
-        medicamento,
-        proveedor,
-        cantidadInicial: datos.cantidad,
-        fechaIngreso: hoy(),
-        fechaVencimiento: datos.fechaVencimiento.slice(0, 10),
-      }),
+    // El lote y su movimiento de ENTRADA se guardan juntos o no se guardan
+    const nuevoLote = await this.loteRepository.manager.transaction(
+      async (manager) => {
+        const lote = await manager.save(
+          manager.create(Lote, {
+            ...datos,
+            medicamento,
+            proveedor,
+            cantidadInicial: datos.cantidad,
+            fechaIngreso: hoy(),
+            fechaVencimiento: datos.fechaVencimiento.slice(0, 10),
+          }),
+        );
+        await manager.save(
+          manager.create(Movimiento, {
+            tipo: 'ENTRADA',
+            cantidad: lote.cantidad,
+            lote: { id: lote.id },
+            medicamento: { id: medicamento.id },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle: `Ingreso del lote ${lote.numeroLote} de ${proveedor.nombre}`,
+          }),
+        );
+        return lote;
+      },
     );
 
     return {
       message: 'Lote registrado correctamente',
       data: nuevoLote,
     };
+  }
+
+  async obtenerLote(id: number) {
+    const lote = await this.loteRepository.findOne({
+      where: { id },
+      relations: { medicamento: true, proveedor: true },
+    });
+    if (lote === null) {
+      throw new NotFoundException(`Lote con ID ${id} no existe`);
+    }
+
+    return lote;
+  }
+
+  async actualizarLote(id: number, datos: ActualizarLoteDto) {
+    const lote = await this.obtenerLote(id);
+
+    if (
+      datos.proveedorId !== undefined &&
+      datos.proveedorId !== lote.proveedorId
+    ) {
+      lote.proveedor = await this.proveedorService.obtener(datos.proveedorId);
+      lote.proveedorId = datos.proveedorId;
+    }
+
+    if (
+      datos.numeroLote !== undefined &&
+      datos.numeroLote !== lote.numeroLote
+    ) {
+      const existente = await this.loteRepository.findOneBy({
+        medicamentoId: lote.medicamentoId,
+        numeroLote: datos.numeroLote,
+        id: Not(id),
+      });
+      if (existente !== null) {
+        throw new ConflictException(
+          `El lote ${datos.numeroLote} ya esta registrado para este medicamento`,
+        );
+      }
+      lote.numeroLote = datos.numeroLote;
+    }
+
+    if (datos.fechaVencimiento !== undefined) {
+      lote.fechaVencimiento = datos.fechaVencimiento.slice(0, 10);
+    }
+
+    const actualizado = await this.loteRepository.save(lote);
+
+    return { message: 'Lote actualizado correctamente', data: actualizado };
+  }
+
+  // Baja de stock por perdida, dano, vencimiento u otro motivo. Descuenta del
+  // lote y deja un movimiento AJUSTE en el kardex, todo en una transaccion.
+  async ajustarLote(id: number, datos: AjusteDto, usuario?: Usuario) {
+    const movimiento = await this.loteRepository.manager.transaction(
+      async (manager) => {
+        const lote = await manager.findOne(Lote, {
+          where: { id },
+          // Sin relations: Postgres no permite FOR UPDATE sobre un LEFT JOIN
+          lock: bloqueoPesimista(manager),
+        });
+        if (lote === null) {
+          throw new NotFoundException(`Lote con ID ${id} no existe`);
+        }
+        if (datos.cantidad > lote.cantidad) {
+          throw new BadRequestException(
+            `El lote ${lote.numeroLote} solo tiene ${lote.cantidad} unidades`,
+          );
+        }
+
+        const medicamento = await manager.findOneByOrFail(Medicamento, {
+          id: lote.medicamentoId,
+        });
+        lote.cantidad -= datos.cantidad;
+        await manager.save(lote);
+
+        const detalle = datos.observacion
+          ? `${datos.motivo}: ${datos.observacion}`
+          : datos.motivo;
+        const guardado = await manager.save(
+          manager.create(Movimiento, {
+            tipo: 'AJUSTE',
+            cantidad: datos.cantidad,
+            lote: { id: lote.id },
+            medicamento: { id: lote.medicamentoId },
+            usuario: usuario ? { id: usuario.id } : null,
+            detalle,
+          }),
+        );
+
+        return {
+          ...this.movimientoService.aDto({
+            ...guardado,
+            lote,
+            medicamento,
+            usuario: usuario ?? null,
+          }),
+          cantidadRestante: lote.cantidad,
+        };
+      },
+    );
+
+    return { message: 'Ajuste registrado correctamente', data: movimiento };
   }
 
   async listarLotes(medicamentoId?: number) {
@@ -67,6 +200,17 @@ export class InventarioService {
       data: lotes,
       count: lotes.length,
     };
+  }
+
+  // Lotes con unidades que ya vencieron o vencen en los proximos `dias`
+  buscarLotesPorVencer(dias: number) {
+    return this.loteRepository.find({
+      where: {
+        cantidad: MoreThan(0),
+        fechaVencimiento: LessThanOrEqual(diasDesdeHoy(dias)),
+      },
+      order: { fechaVencimiento: 'ASC', id: 'ASC' },
+    });
   }
 
   async buscarLotes(medicamentoId?: number, conRelaciones = false) {
@@ -89,6 +233,65 @@ export class InventarioService {
       stockVencido: this.sumar(lotes.filter((lote) => this.vencido(lote))),
       lotes,
     };
+  }
+
+  // Stock de todos los medicamentos con 2 consultas (medicamentos + suma de lotes),
+  // sin consultar lote por lote
+  async listarInventario() {
+    const [medicamentos, filas] = await Promise.all([
+      this.medicamentoService.listar(),
+      this.loteRepository
+        .createQueryBuilder('lote')
+        .select('lote.medicamentoId', 'medicamentoId')
+        .addSelect(
+          'SUM(CASE WHEN lote.fechaVencimiento > :hoy THEN lote.cantidad ELSE 0 END)',
+          'disponible',
+        )
+        .addSelect(
+          'SUM(CASE WHEN lote.fechaVencimiento <= :hoy THEN lote.cantidad ELSE 0 END)',
+          'vencido',
+        )
+        .setParameter('hoy', hoy())
+        .groupBy('lote.medicamentoId')
+        .getRawMany<{
+          medicamentoId: number | string;
+          disponible: number | string;
+          vencido: number | string;
+        }>(),
+    ]);
+
+    const stock = new Map(
+      filas.map((fila) => [
+        Number(fila.medicamentoId),
+        { disponible: Number(fila.disponible), vencido: Number(fila.vencido) },
+      ]),
+    );
+
+    const data: InventarioItemDto[] = medicamentos.data.map((medicamento) => {
+      const { disponible, vencido } = stock.get(medicamento.id) ?? {
+        disponible: 0,
+        vencido: 0,
+      };
+      return {
+        medicamento,
+        disponible,
+        vencido,
+        estado: this.estadoStock(disponible, medicamento.stockMinimo),
+      };
+    });
+
+    return {
+      message: 'Inventario obtenido correctamente',
+      data,
+      count: data.length,
+    };
+  }
+
+  estadoStock(disponible: number, stockMinimo: number): EstadoStock {
+    if (disponible <= 0) {
+      return 'SIN_STOCK';
+    }
+    return disponible < stockMinimo ? 'STOCK_BAJO' : 'OK';
   }
 
   vencido(lote: Lote) {

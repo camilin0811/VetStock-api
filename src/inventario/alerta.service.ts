@@ -1,55 +1,78 @@
 import { Injectable } from '@nestjs/common';
 import { diasHasta } from '../common/fechas';
-import { MedicamentoService } from '../medicamentos/medicamento.service';
 import { InventarioService } from './inventario.service';
-import { AlertaDto } from './lote.dto';
+import { AlertaDto, AlertaQueryDto } from './lote.dto';
 
 const DIAS_POR_VENCER = 30;
 
 @Injectable()
 export class AlertaService {
-  constructor(
-    private readonly medicamentoService: MedicamentoService,
-    private readonly inventarioService: InventarioService,
-  ) {}
+  constructor(private readonly inventarioService: InventarioService) {}
 
-  async generar() {
+  // Siempre 3 consultas como maximo, sin importar cuantos medicamentos haya:
+  // stock agregado (2) y lotes con unidades que vencen dentro de la ventana (1)
+  async generar(filtro: AlertaQueryDto = {}) {
+    const dias = filtro.dias ?? DIAS_POR_VENCER;
+    const incluir = (tipo: AlertaDto['tipo']) =>
+      filtro.tipo === undefined || filtro.tipo === tipo;
+
+    const { data: inventario } =
+      await this.inventarioService.listarInventario();
     const alertas: AlertaDto[] = [];
 
-    for (const medicamento of (await this.medicamentoService.listar()).data) {
-      const inventario = await this.inventarioService.obtenerInventario(
-        medicamento.id,
-      );
-
-      if (inventario.stockDisponible < medicamento.stockMinimo) {
-        alertas.push({
-          tipo: 'STOCK_BAJO',
-          medicamento,
-          mensaje: `Quedan ${inventario.stockDisponible} unidades, el minimo es ${medicamento.stockMinimo}`,
-        });
+    if (incluir('STOCK_BAJO')) {
+      for (const item of inventario) {
+        if (item.estado !== 'OK') {
+          alertas.push({
+            tipo: 'STOCK_BAJO',
+            medicamento: item.medicamento,
+            mensaje: `Quedan ${item.disponible} unidades, el minimo es ${item.medicamento.stockMinimo}`,
+          });
+        }
       }
+    }
 
-      for (const lote of inventario.lotes) {
-        if (lote.cantidad === 0) {
+    if (incluir('VENCIDO') || incluir('POR_VENCER')) {
+      const medicamentos = new Map(
+        inventario.map((item) => [item.medicamento.id, item.medicamento]),
+      );
+      const lotes = await this.inventarioService.buscarLotesPorVencer(dias);
+
+      const vencidos: AlertaDto[] = [];
+      const porVencer: AlertaDto[] = [];
+      for (const lote of lotes) {
+        const medicamento = medicamentos.get(lote.medicamentoId);
+        if (medicamento === undefined) {
           continue;
         }
 
-        const dias = diasHasta(lote.fechaVencimiento);
-        if (dias <= 0) {
-          alertas.push({
+        const diasRestantes = diasHasta(lote.fechaVencimiento);
+        if (diasRestantes <= 0) {
+          vencidos.push({
             tipo: 'VENCIDO',
             medicamento,
-            loteId: lote.id,
             mensaje: `El lote ${lote.numeroLote} esta vencido y tiene ${lote.cantidad} unidades`,
+            loteId: lote.id,
+            fechaVencimiento: lote.fechaVencimiento,
+            diasRestantes,
           });
-        } else if (dias <= DIAS_POR_VENCER) {
-          alertas.push({
+        } else {
+          porVencer.push({
             tipo: 'POR_VENCER',
             medicamento,
+            mensaje: `El lote ${lote.numeroLote} vence en ${diasRestantes} dias`,
             loteId: lote.id,
-            mensaje: `El lote ${lote.numeroLote} vence en ${dias} dias`,
+            fechaVencimiento: lote.fechaVencimiento,
+            diasRestantes,
           });
         }
+      }
+
+      if (incluir('VENCIDO')) {
+        alertas.push(...vencidos);
+      }
+      if (incluir('POR_VENCER')) {
+        alertas.push(...porVencer);
       }
     }
 
