@@ -142,11 +142,12 @@ Las respuestas de creación y actualización son `{ message, data }`, las listas
 | Método | Ruta | Acceso |
 | --- | --- | --- |
 | GET | `/usuarios` | Admin |
+| POST | `/usuarios` | Admin |
 | GET | `/usuarios/:id` | Admin |
 | PUT | `/usuarios/:id` | Admin |
 | DELETE | `/usuarios/:id` | Admin |
 
-Los usuarios se crean con `POST /auth/registro`.
+`POST /usuarios` crea una cuenta (body: `nombre`, `correo`, `clave`, `rol`; 409 si el correo ya existe) y devuelve `{ message, data }` con el usuario sin la clave. Es la vía que usa el frontend. `POST /auth/registro` sigue disponible como ruta pública de autoregistro.
 
 ### Categorías
 
@@ -180,14 +181,14 @@ Los usuarios se crean con `POST /auth/registro`.
 
 ### Inventario, lotes, alertas y movimientos
 
-Estas rutas no tienen restricción de rol adicional: cualquier usuario autenticado puede usarlas.
+Las lecturas (`GET`) están abiertas a cualquier usuario autenticado. Registrar, corregir y ajustar lotes (`POST /lotes`, `PUT /lotes/:id`, `POST /lotes/:id/ajustes`) solo lo pueden hacer `admin` y `farmaceutico`; un veterinario recibe 403.
 
 | Método | Ruta | Acceso | Notas |
 | --- | --- | --- | --- |
-| POST | `/lotes` | Autenticado | Body: `medicamentoId`, `proveedorId`, `numeroLote`, `cantidad`, `fechaVencimiento` |
+| POST | `/lotes` | Admin, farmaceutico | Body: `medicamentoId`, `proveedorId`, `numeroLote`, `cantidad`, `fechaVencimiento` |
 | GET | `/lotes` | Autenticado | Filtro: `medicamentoId` |
-| PUT | `/lotes/:id` | Autenticado | Corrige datos del lote; no cambia cantidades |
-| POST | `/lotes/:id/ajustes` | Autenticado | Body: `cantidad`, `motivo` (`PERDIDA`, `DANO`, `VENCIDO`, `OTRO`), `observacion` opcional. Genera un movimiento `AJUSTE` |
+| PUT | `/lotes/:id` | Admin, farmaceutico | Corrige datos del lote; no cambia cantidades |
+| POST | `/lotes/:id/ajustes` | Admin, farmaceutico | Body: `cantidad`, `motivo` (`PERDIDA`, `DANO`, `VENCIDO`, `OTRO`), `observacion` opcional. Genera un movimiento `AJUSTE` |
 | GET | `/inventario` | Autenticado | Stock de todos los medicamentos |
 | GET | `/inventario/:medicamentoId` | Autenticado | Stock de un medicamento |
 | GET | `/alertas` | Autenticado | Filtros: `tipo` (`STOCK_BAJO`, `POR_VENCER`, `VENCIDO`) y `dias` (ventana para `POR_VENCER`, 30 por defecto) |
@@ -204,7 +205,7 @@ Estas rutas no tienen restricción de rol adicional: cualquier usuario autentica
 
 ### Reportes
 
-Todos requieren autenticación y no tienen restricción de rol.
+Todos requieren autenticación y no tienen restricción de rol. `consumo` y `proveedores` usan los últimos 30 días cuando faltan `desde` y `hasta`. Los días se calculan en la zona horaria de la clínica (`TZ_CLINICA`, por defecto `America/Bogota`), no en UTC.
 
 | Método | Ruta | Filtros |
 | --- | --- | --- |
@@ -246,6 +247,7 @@ Todos requieren autenticación y no tienen restricción de rol.
 | `EADDRINUSE: address already in use :::3000` | El puerto 3000 está ocupado. Cambia `PORT` en `.env` y actualiza `VITE_API_URL` en `web/.env` |
 | `ECONNREFUSED` al arrancar la API o el seed | PostgreSQL todavía no está listo. Espera unos segundos (`docker compose ps` debe mostrar `healthy` o `Up`) y reintenta |
 | 401 `Token invalido o expirado` después de unos minutos | El access token dura 15 minutos (`JWT_EXPIRES_IN`). El frontend lo renueva solo; desde la API llama a `POST /auth/refresh` con el `refreshToken`. Si también expiró (7 días, `JWT_REFRESH_EXPIRES_IN`), inicia sesión de nuevo |
+| Fechas corridas un día cerca de la medianoche | Las fechas (hoy, vencimientos, dispensaciones) usan `TZ_CLINICA` (por defecto `America/Bogota`). Cámbiala en `.env` si la clínica está en otra zona y reinicia la API |
 | 403 `No tienes permisos para realizar esta accion` | El rol del usuario no permite la ruta. Revisa la tabla de endpoints |
 | Error de CORS en el navegador | `WEB_ORIGIN` no coincide con la URL del frontend. Si Vite usó otro puerto (por ejemplo 5174 porque 5173 estaba ocupado), cambia `WEB_ORIGIN` en `.env` y reinicia la API |
 | El seed responde `El seed borra todos los datos. Con NODE_ENV=production se exige SEED_FORCE=true` | Estás en modo producción. Usa `SEED_FORCE=true` solo si de verdad quieres borrar los datos |

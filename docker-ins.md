@@ -105,6 +105,8 @@ JWT_SECRET=cambia-este-secreto-de-acceso
 JWT_REFRESH_SECRET=cambia-este-secreto-de-refresh
 JWT_EXPIRES_IN=15m
 JWT_REFRESH_EXPIRES_IN=7d
+# Zona horaria de la clinica (define el cambio de dia en fechas); por defecto America/Bogota
+TZ_CLINICA=America/Bogota
 
 # Solo para el servicio pgadmin de docker compose (http://localhost:5050)
 PGADMIN_DEFAULT_EMAIL=admin@vetstock.com
@@ -120,6 +122,7 @@ PGADMIN_DEFAULT_PASSWORD=admin
 | `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | `vetstock_db`, `vetstock_user`, `vetstock_password` | Los mismos que usa el contenedor |
 | `JWT_SECRET`, `JWT_REFRESH_SECRET` | Valores de ejemplo | Firman los tokens. Cámbialos si el entorno es compartido |
 | `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN` | `15m`, `7d` | Duración del access token y del refresh token |
+| `TZ_CLINICA` | `America/Bogota` | Zona horaria que define "hoy" para vencimientos, dispensaciones y reportes. Cámbiala solo si la clínica está en otra zona |
 | `PGADMIN_DEFAULT_EMAIL`, `PGADMIN_DEFAULT_PASSWORD` | `admin@vetstock.com`, `admin` | Login de pgAdmin |
 
 > Si cambias un usuario, clave o base en `.env`, el contenedor de PostgreSQL usa esos mismos valores solo la primera vez que se crea su volumen. Si ya existía, revisa la sección 11.
@@ -328,6 +331,7 @@ Los roles son `admin`, `veterinario` y `farmaceutico`. "Autenticado" significa c
 | POST | `/auth/login` | Público | Login (`correo`, `clave`) → `accessToken` y `refreshToken` |
 | POST | `/auth/refresh` | Público | Renueva tokens (`refreshToken`) |
 | GET | `/auth/perfil` | Autenticado | Datos del usuario del token |
+| POST | `/usuarios` | Admin | Crea usuario (`nombre`, `correo`, `clave`, `rol`) |
 | GET | `/usuarios` | Admin | Lista usuarios |
 | GET | `/medicamentos` | Autenticado | Lista medicamentos (filtros `q`, `especie`, `categoriaId`) |
 | POST | `/medicamentos` | Admin, farmaceutico | Crea medicamento |
@@ -335,9 +339,9 @@ Los roles son `admin`, `veterinario` y `farmaceutico`. "Autenticado" significa c
 | GET | `/categorias` | Autenticado | Lista categorías |
 | GET | `/proveedores` | Autenticado | Lista proveedores |
 | POST | `/proveedores` | Admin, farmaceutico | Crea proveedor |
-| POST | `/lotes` | Autenticado | Registra lote (`medicamentoId`, `proveedorId`, `numeroLote`, `cantidad`, `fechaVencimiento`) |
+| POST | `/lotes` | Admin, farmaceutico | Registra lote (`medicamentoId`, `proveedorId`, `numeroLote`, `cantidad`, `fechaVencimiento`) |
 | GET | `/lotes` | Autenticado | Lista lotes (filtro `?medicamentoId=1`) |
-| POST | `/lotes/{id}/ajustes` | Autenticado | Ajuste de stock (`cantidad`, `motivo`, `observacion` opcional) |
+| POST | `/lotes/{id}/ajustes` | Admin, farmaceutico | Ajuste de stock (`cantidad`, `motivo`, `observacion` opcional) |
 | GET | `/inventario` | Autenticado | Stock de todos los medicamentos |
 | GET | `/inventario/{medicamentoId}` | Autenticado | Stock de un medicamento |
 | GET | `/alertas` | Autenticado | Alertas de stock bajo, por vencer y vencidos (`?tipo=`, `?dias=`) |

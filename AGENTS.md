@@ -24,7 +24,8 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 - `src/app.module.ts` solo tiene `ConfigModule.forRoot({ isGlobal: true })`, `TypeOrmModule.forRootAsync` (con `autoLoadEntities` y `synchronize: true`) e `imports` de los modulos. Un modulo que necesita otro service lo importa (no re-registra el service); `forFeature` de una entidad ajena solo si basta el repositorio.
 - `src/main.ts`: `ValidationPipe({ transform: true, whitelist: true })` global y CORS con origen `WEB_ORIGIN` (por defecto `http://localhost:5173`). Variables `PORT` y `WEB_ORIGIN` en `.env.example`.
 - Helpers en `src/common/`: `fechas.ts`, `columnas.ts` (`TIPO_FECHA_HORA`: `timestamptz` en Postgres, `datetime` si `NODE_ENV=test` por sqlite) y `transformadores.ts` (`numeroDecimal` para columnas `decimal`).
-- `src/env.model.ts`: interfaz `Env` con las variables tipadas que usa `ConfigService` (incluye `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`).
+- `src/env.model.ts`: interfaz `Env` con las variables tipadas que usa `ConfigService` (incluye `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `TZ_CLINICA` opcional).
+- `src/common/fechas.ts`: `hoy()`, `diasDesdeHoy()` y `diasHasta()` calculan el dia en la zona de la clinica (`TZ_CLINICA`, por defecto `America/Bogota`) con `Intl.DateTimeFormat('en-CA')`, no en UTC. Aceptan un `ahora` opcional para tests deterministas; no pasarlos directo a `.map()`.
 
 ## Auth, guards y roles
 
@@ -36,6 +37,7 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 - `@Roles(...)` restringe una ruta o controller (ej. `UsuarioController` completo es solo admin).
 - `@UsuarioActual()` inyecta el usuario autenticado en el controller (para auditoria: dispensaciones, ajustes, movimientos).
 - Login y refresh: `POST /auth/login` y `POST /auth/refresh` devuelven `{ message, data: { accessToken, refreshToken, usuario } }`. El access token dura `JWT_EXPIRES_IN` (15m) y el refresh `JWT_REFRESH_EXPIRES_IN` (7d). Las claves se guardan con bcrypt.
+- Alta de usuarios: `POST /usuarios` (solo admin, `{ nombre, correo, clave, rol }`, devuelve `{ message, data }` sin la clave). El frontend usa esta ruta.
 - Registro: `POST /auth/registro` asigna `farmaceutico` por defecto. Asignar `admin` requiere un admin autenticado, salvo que el sistema no tenga usuarios todavia.
 
 ## Relaciones y columnas
@@ -58,15 +60,15 @@ Todas las rutas exigen Bearer token salvo las `Publico`. "Autenticado" = cualqui
 | AuthController | POST /auth/login | Publico | AuthService |
 | AuthController | POST /auth/refresh | Publico | AuthService |
 | AuthController | GET /auth/perfil | Autenticado | AuthService |
-| UsuarioController | GET /usuarios, GET /usuarios/{id}, PUT /usuarios/{id}, DELETE /usuarios/{id} | Admin | UsuarioService |
+| UsuarioController | POST /usuarios (alta por admin, 409 si el correo existe), GET /usuarios, GET /usuarios/{id}, PUT /usuarios/{id}, DELETE /usuarios/{id} | Admin | UsuarioService |
 | CategoriaController | GET /categorias, GET /categorias/{id} | Autenticado | CategoriaService |
 | CategoriaController | POST /categorias, PUT /categorias/{id}, DELETE /categorias/{id} | Admin, farmaceutico | CategoriaService |
 | MedicamentoController | GET /medicamentos (?q, ?especie, ?categoriaId), GET /medicamentos/{id} | Autenticado | MedicamentoService |
 | MedicamentoController | POST /medicamentos, PUT /medicamentos/{id}, DELETE /medicamentos/{id} | Admin, farmaceutico | MedicamentoService |
 | ProveedorController | GET /proveedores, GET /proveedores/{id} | Autenticado | ProveedorService |
 | ProveedorController | POST /proveedores, PUT /proveedores/{id}, DELETE /proveedores/{id} | Admin, farmaceutico | ProveedorService |
-| InventarioController | POST /lotes, GET /lotes (?medicamentoId), PUT /lotes/{id} | Autenticado | InventarioService |
-| InventarioController | POST /lotes/{id}/ajustes | Autenticado | InventarioService |
+| InventarioController | GET /lotes (?medicamentoId) | Autenticado | InventarioService |
+| InventarioController | POST /lotes, PUT /lotes/{id}, POST /lotes/{id}/ajustes | Admin, farmaceutico | InventarioService |
 | InventarioController | GET /inventario, GET /inventario/{medicamentoId} | Autenticado | InventarioService |
 | InventarioController | GET /alertas (?tipo, ?dias) | Autenticado | AlertaService |
 | InventarioController | GET /movimientos (?medicamentoId, ?tipo) | Autenticado | MovimientoService |
@@ -74,7 +76,7 @@ Todas las rutas exigen Bearer token salvo las `Publico`. "Autenticado" = cualqui
 | DispensacionController | POST /dispensaciones/{id}/anular | Admin, farmaceutico | DispensacionService |
 | ReporteController | GET /reportes/consumo, GET /reportes/vencimientos, GET /reportes/stock, GET /reportes/proveedores, GET /reportes/resumen | Autenticado | ReporteService |
 
-Nota: las rutas de inventario, dispensacion y reportes no tienen restriccion de rol adicional. Si se quiere restringir (ej. solo farmaceutico para ajustes), agregar `@Roles()` en el controller, no en el service.
+Nota: las lecturas de inventario, dispensaciones y reportes no tienen restriccion de rol adicional; la escritura de lotes y ajustes lleva `@Roles(Rol.Admin, Rol.Farmaceutico)` en el controller (no en el service). `GET /dispensaciones` ordena de la mas reciente a la mas antigua y `GET /reportes/proveedores` usa los ultimos 30 dias si faltan `desde` y `hasta` (igual que consumo).
 
 DTOs clave:
 
