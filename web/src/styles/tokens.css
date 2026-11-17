@@ -1,0 +1,43 @@
+:root {
+  /* Marca: lavanda de fondo, violeta de accion, tintas violaceas (nunca gris puro) */
+  --lav-500: #8e7bd8;
+  --violet-700: #563cb0;
+  --violet-600: #6a4fcb;
+  --violet-300: #bcaef0;
+  --violet-100: #ece7fc;
+  --violet-50: #f6f3fe;
+  --surface: #ffffff;
+  --ink: #251f44;
+  --muted: #5f5980;
+  --line: #e4ddf6;
+
+  /* Estados (texto sobre fondo suave, AA) */
+  --ok-bg: #e0f4e6;
+  --ok-ink: #1b6b38;
+  --ok-dot: #3bb273;
+  --warn-bg: #fdebdc;
+  --warn-ink: #9a4509;
+  --warn-dot: #f0903a;
+  --info-bg: #dfecfd;
+  --info-ink: #1b57a0;
+  --info-dot: #4d94e8;
+  --bad-bg: #fde3e3;
+  --bad-ink: #a02222;
+  --bad-dot: #e45a5a;
+
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-logo: 'Fredoka', 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Fraunces', Georgia, serif;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 34px;
+
+  --shadow-sm: 0 1px 2px rgb(70 45 150 / 0.06), 0 2px 8px -2px rgb(70 45 150 / 0.08);
+  --shadow-md: 0 2px 4px rgb(70 45 150 / 0.05), 0 14px 32px -12px rgb(70 45 150 / 0.2);
+  --shadow-lg: 0 4px 8px rgb(40 20 110 / 0.08), 0 30px 60px -20px rgb(40 20 110 / 0.35);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --focus: 0 0 0 2px #fff, 0 0 0 4px var(--violet-600);
+}
