@@ -175,7 +175,10 @@ describe('ReporteService', () => {
 
   describe('proveedores', () => {
     it('suma lotes, unidades recibidas y valor por proveedor', async () => {
-      const data = await service.proveedores({});
+      const data = await service.proveedores({
+        desde: diasDesdeHoy(-400),
+        hasta: diasDesdeHoy(0),
+      });
 
       // Agrovet: lotes 1 (40 amox), 4 (10 melox), 5 (10 melox), 6 (25 albendazol)
       // Pet Salud: lotes 2 (30 vacuna) y 3 (12 vacuna)
@@ -195,6 +198,36 @@ describe('ReporteService', () => {
       ]);
     });
 
+    it('sin fechas usa los ultimos 30 dias', async () => {
+      const data = await service.proveedores({});
+
+      // Ingresos de los ultimos 30 dias: lotes 3 (-10), 5 (-20) y 6 (-30)
+      expect(data).toEqual([
+        {
+          proveedor: { id: 1, nombre: 'Distribuidora Agrovet Narino' },
+          lotes: 2,
+          unidades: 35,
+          valor: 10 * 32000 + 25 * 45000,
+        },
+        {
+          proveedor: { id: 2, nombre: 'Laboratorios Pet Salud' },
+          lotes: 1,
+          unidades: 12,
+          valor: 12 * 25000,
+        },
+      ]);
+    });
+
+    it('con solo desde, hasta es hoy; con solo hasta, desde es hace 30 dias', async () => {
+      // Solo desde: llega hasta hoy y queda el lote 3 (-10, Pet Salud)
+      const desdeSolo = await service.proveedores({ desde: diasDesdeHoy(-15) });
+      expect(desdeSolo.map((p) => p.proveedor.id)).toEqual([2]);
+
+      // Solo hasta: parte de hace 30 dias y queda el lote 6 (-30, Agrovet)
+      const hastaSolo = await service.proveedores({ hasta: diasDesdeHoy(-25) });
+      expect(hastaSolo.map((p) => p.proveedor.id)).toEqual([1]);
+    });
+
     it('filtra por fecha de ingreso del lote', async () => {
       const data = await service.proveedores({
         desde: diasDesdeHoy(-35),
@@ -209,7 +242,15 @@ describe('ReporteService', () => {
     });
 
     it('devuelve vacio sin lotes en el rango y 400 si el rango es invalido', async () => {
-      expect(await service.proveedores({ desde: diasDesdeHoy(1) })).toEqual([]);
+      expect(
+        await service.proveedores({
+          desde: diasDesdeHoy(-3),
+          hasta: diasDesdeHoy(-1),
+        }),
+      ).toEqual([]);
+      await expect(
+        service.proveedores({ desde: diasDesdeHoy(1) }),
+      ).rejects.toThrow(BadRequestException);
       await expect(
         service.proveedores({ desde: '2030-01-02', hasta: '2030-01-01' }),
       ).rejects.toThrow(BadRequestException);
@@ -237,7 +278,7 @@ describe('ReporteService', () => {
       const { consumoUltimos7Dias } = await service.resumen();
 
       expect(consumoUltimos7Dias.map((d) => d.fecha)).toEqual(
-        [-6, -5, -4, -3, -2, -1, 0].map(diasDesdeHoy),
+        [-6, -5, -4, -3, -2, -1, 0].map((dias) => diasDesdeHoy(dias)),
       );
       expect(consumoUltimos7Dias.every((d) => d.unidades === 0)).toBe(true);
     });

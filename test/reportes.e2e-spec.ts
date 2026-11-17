@@ -1,4 +1,5 @@
 import request from 'supertest';
+import { diasDesdeHoy } from '../src/common/fechas';
 import { AppPrueba, crearAppPrueba } from './app-prueba';
 
 describe('Reportes (e2e)', () => {
@@ -102,7 +103,7 @@ describe('Reportes (e2e)', () => {
     it('devuelve la lista por proveedor segun el contrato', async () => {
       const respuesta = await contexto
         .api('veterinario')
-        .get('/reportes/proveedores')
+        .get(`/reportes/proveedores?desde=${diasDesdeHoy(-400)}`)
         .expect(200);
 
       expect(respuesta.body.data).toEqual([
@@ -121,13 +122,29 @@ describe('Reportes (e2e)', () => {
       ]);
     });
 
-    it('acepta desde y hasta y los valida', async () => {
-      const hace = (dias: number) =>
-        new Date(Date.now() - dias * 86_400_000).toISOString().slice(0, 10);
-
+    it('por defecto toma los ultimos 30 dias', async () => {
       const respuesta = await contexto
         .api()
-        .get(`/reportes/proveedores?desde=${hace(15)}`)
+        .get('/reportes/proveedores')
+        .expect(200);
+
+      expect(
+        respuesta.body.data.map(
+          (p: { proveedor: { id: number }; lotes: number }) => [
+            p.proveedor.id,
+            p.lotes,
+          ],
+        ),
+      ).toEqual([
+        [1, 2],
+        [2, 1],
+      ]);
+    });
+
+    it('acepta desde y hasta y los valida', async () => {
+      const respuesta = await contexto
+        .api()
+        .get(`/reportes/proveedores?desde=${diasDesdeHoy(-15)}`)
         .expect(200);
       expect(
         respuesta.body.data.map(

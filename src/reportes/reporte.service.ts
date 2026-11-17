@@ -134,15 +134,8 @@ export class ReporteService {
   async proveedores(
     filtro: ProveedoresQueryDto,
   ): Promise<ProveedorRecibidoDto[]> {
-    if (
-      filtro.desde !== undefined &&
-      filtro.hasta !== undefined &&
-      filtro.desde.slice(0, 10) > filtro.hasta.slice(0, 10)
-    ) {
-      throw new BadRequestException(
-        'La fecha desde no puede ser mayor que la fecha hasta',
-      );
-    }
+    // Igual que el consumo: sin fechas se usan los ultimos 30 dias
+    const { desde, hasta } = this.rango(filtro, diasDesdeHoy(-30), hoy());
 
     const consulta = this.loteRepository
       .createQueryBuilder('lote')
@@ -157,16 +150,9 @@ export class ReporteService {
       .addGroupBy('proveedor.nombre')
       .orderBy('SUM(lote.cantidadInicial)', 'DESC')
       .addOrderBy('proveedor.id', 'ASC');
-    if (filtro.desde !== undefined) {
-      consulta.andWhere('lote.fechaIngreso >= :desde', {
-        desde: filtro.desde.slice(0, 10),
-      });
-    }
-    if (filtro.hasta !== undefined) {
-      consulta.andWhere('lote.fechaIngreso <= :hasta', {
-        hasta: filtro.hasta.slice(0, 10),
-      });
-    }
+    consulta
+      .andWhere('lote.fechaIngreso >= :desde', { desde })
+      .andWhere('lote.fechaIngreso <= :hasta', { hasta });
 
     const filas = await consulta.getRawMany<{
       id: number | string;
