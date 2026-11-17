@@ -10,7 +10,7 @@ export function HeroScene() {
   const { ref, visible, reduced } = useGate<HTMLDivElement>()
   const fallback = <HeroVisual />
   return (
-    <div className="hero-visual" ref={ref} aria-hidden="true">
+    <div className="hero-visual" ref={ref} role="img" aria-label="Ilustración decorativa: un frasco de medicamento con cápsulas girando a su alrededor">
       {reduced ? fallback : (
         <CanvasBoundary fallback={fallback}>
           <Suspense fallback={fallback}><HeroCanvas active={visible} /></Suspense>

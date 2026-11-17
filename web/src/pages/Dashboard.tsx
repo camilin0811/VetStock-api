@@ -113,7 +113,7 @@ export default function Dashboard() {
           {isLoading ? <Skeleton h={120} r={16} /> : !r?.ultimasDispensaciones.length ? (
             <EmptyState title="Aún no hay dispensaciones" text="Cuando entregues un medicamento aparecerá aquí." action={<Link to="/dispensar" className="btn primary">Dispensar ahora</Link>} />
           ) : (
-            <ul className="list">
+            <ul className="list dash-recent">
               {r.ultimasDispensaciones.map((d) => (
                 <li key={d.id} className="list-item">
                   <span className="list-ico"><Syringe size={20} aria-hidden="true" /></span>

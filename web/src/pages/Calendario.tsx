@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useLotes } from '../api/hooks'
 import type { Lote } from '../api/types'
@@ -14,6 +14,22 @@ export default function Calendario() {
   const [mes, setMes] = useState(() => { const h = parseFecha(hoyKey); return new Date(h.getFullYear(), h.getMonth(), 1) })
   const [sel, setSel] = useState(hoyKey)
   const lotes = useLotes()
+  const grid = useRef<HTMLDivElement>(null)
+
+  // Navegacion de rejilla con flechas, Inicio y Fin (patron de calendario); Tab sigue funcionando
+  function teclas(e: KeyboardEvent<HTMLDivElement>) {
+    const paso: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }
+    const dias = Array.from(grid.current?.querySelectorAll<HTMLButtonElement>('button.cal-day') ?? [])
+    const i = dias.indexOf(document.activeElement as HTMLButtonElement)
+    if (i < 0) return
+    let n = i
+    if (e.key in paso) n = Math.min(dias.length - 1, Math.max(0, i + paso[e.key]))
+    else if (e.key === 'Home') n = 0
+    else if (e.key === 'End') n = dias.length - 1
+    else return
+    e.preventDefault()
+    dias[n].focus()
+  }
 
   const porDia = useMemo(() => {
     const m = new Map<string, Lote[]>()
@@ -41,15 +57,15 @@ export default function Calendario() {
       <div className="split">
         <section className="card" data-reveal aria-label="Calendario de vencimientos">
           <div className="card-head">
-            <h2 aria-live="polite">{titulo}</h2>
+            <h2 aria-live="polite" aria-atomic="true">{titulo}</h2>
             <div className="chips">
               <button type="button" className="btn sm" onClick={() => { const h = parseFecha(hoyKey); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); setSel(hoyKey) }}>Hoy</button>
-              <button type="button" className="btn icon" aria-label="Mes anterior" onClick={() => mover(-1)}><ChevronLeft size={18} /></button>
-              <button type="button" className="btn icon" aria-label="Mes siguiente" onClick={() => mover(1)}><ChevronRight size={18} /></button>
+              <button type="button" className="btn icon" aria-label="Mes anterior" onClick={() => mover(-1)}><ChevronLeft size={18} aria-hidden="true" /></button>
+              <button type="button" className="btn icon" aria-label="Mes siguiente" onClick={() => mover(1)}><ChevronRight size={18} aria-hidden="true" /></button>
             </div>
           </div>
           {lotes.isLoading ? <Skeleton h={320} r={20} /> : lotes.error ? <ErrorState error={lotes.error} onRetry={() => lotes.refetch()} /> : (
-            <div className="cal" role="group" aria-label={titulo}>
+            <div className="cal" role="group" aria-label={`${titulo}. Usa las flechas para moverte entre días`} ref={grid} onKeyDown={teclas}>
               {SEMANA.map((d) => <div key={d} className="cal-dow" aria-hidden="true">{d}</div>)}
               {celdas.map((d, i) => {
                 if (!d) return <div key={`v${i}`} />
@@ -73,7 +89,7 @@ export default function Calendario() {
           <p className="muted cal-legend"><span className="dot bad" /> hasta 7 días o vencido <span className="dot warn" /> hasta 30 días <span className="dot info" /> más adelante</p>
         </section>
 
-        <aside className="card detail" data-reveal aria-label="Vencimientos del día seleccionado" aria-live="polite">
+        <aside className="card detail" data-reveal aria-label="Vencimientos del día seleccionado" aria-live="polite" aria-atomic="true">
           <h2 style={{ fontSize: 17, marginBottom: 12 }}>{fmtFecha(sel, { weekday: 'long', day: 'numeric', month: 'long' })}</h2>
           {!delDia.length ? <EmptyState title="Sin vencimientos" text="Ningun lote con existencias vence este día." /> : (
             <ul className="list">

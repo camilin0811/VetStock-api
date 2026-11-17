@@ -147,7 +147,7 @@ export default function Medicamentos() {
     <Page deps={[meds.isLoading]}>
       <div className="page-head" data-reveal>
         <div className="grow">
-          <div className="search wide-search" role="search">
+          <div className="search wide-search" role="search" aria-label="Filtrar medicamentos">
             <input type="search" aria-label="Filtrar por nombre" placeholder="Filtrar por nombre" value={q} onChange={(e) => setFiltro('q', e.target.value)} />
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function Medicamentos() {
           ) : (
             <>
               <p className="muted" style={{ marginBottom: 10 }}>{meds.data.length} {plural(meds.data.length, 'medicamento')}</p>
-              <ul className="list">
+              <ul className="list fluid">
                 {meds.data.map((m) => (
                   <li key={m.id}>
                     <button type="button" className={`row-btn${sel?.id === m.id ? ' on' : ''}`} aria-pressed={sel?.id === m.id} onClick={() => { setSelId(m.id); if (!wide) setTimeout(() => detalleRef.current?.focus(), 0) }}>

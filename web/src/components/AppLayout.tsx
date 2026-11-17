@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Bell, LogOut, MoreHorizontal, Search } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
@@ -22,12 +22,31 @@ export function AppLayout() {
   const primeros = items.filter((i) => i.mobile)
   const resto = items.filter((i) => !i.mobile)
 
+  const moreBtn = useRef<HTMLButtonElement>(null)
+  const morePanel = useRef<HTMLDivElement>(null)
+  const mainRef = useRef<HTMLElement>(null)
+  const ultimaRuta = useRef(pathname)
+
   useEffect(() => {
     if (!more) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setMoreAt(null)
+    morePanel.current?.querySelector<HTMLElement>('a, button')?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMoreAt(null)
+      moreBtn.current?.focus()
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [more])
+
+  // SPA: titulo por ruta (2.4.2) y foco al contenido tras navegar para lectores de pantalla y teclado
+  const titulo = current?.label === 'Inicio' ? 'Panel' : current?.label
+  useEffect(() => {
+    document.title = titulo ? `${titulo} | VetStock` : 'VetStock'
+    if (ultimaRuta.current === pathname) return
+    ultimaRuta.current = pathname
+    mainRef.current?.focus({ preventScroll: true })
+  }, [pathname, titulo])
 
   const subtitle = pathname === '/' && usuario ? `Bienvenido de nuevo, ${usuario.nombre.split(' ')[0]}` : current?.subtitle
 
@@ -35,7 +54,7 @@ export function AppLayout() {
     <div className="app-bg">
       <a className="skip-link" href="#contenido">Saltar al contenido</a>
       <div className="app">
-        <aside className="sidebar" aria-label="Barra lateral">
+        <aside className="sidebar" aria-label="Marca y sesión">
           <Link to="/" className="brand" aria-label="VetStock, inicio">
             <span className="brand-mark"><LogoMark size={28} /></span>
             <span className="brand-name">VetStock</span>
@@ -74,14 +93,15 @@ export function AppLayout() {
             <form
               className="search"
               role="search"
+              aria-label="Buscar en el catálogo"
               onSubmit={(e) => { e.preventDefault(); navigate(`/medicamentos?q=${encodeURIComponent(q.trim())}`) }}
             >
               <Search size={18} aria-hidden="true" />
               <input type="search" aria-label="Buscar medicamentos" placeholder="Buscar medicamentos" value={q} onChange={(e) => setQ(e.target.value)} />
             </form>
-            <Link to="/alertas" className="icon-btn" aria-label={nAlertas ? `Ver alertas (${nAlertas})` : 'Ver alertas'}><Bell size={20} aria-hidden="true" />{nAlertas > 0 && <span className="badge" aria-hidden="true">{nAlertas > 99 ? '99+' : nAlertas}</span>}</Link>
+            <Link to="/alertas" className="icon-btn"><Bell size={20} aria-hidden="true" /><span className="sr-only">Alertas</span>{nAlertas > 0 && <span className="badge"><span className="sr-only"> pendientes: </span>{nAlertas > 99 ? '99+' : nAlertas}</span>}</Link>
           </header>
-          <main id="contenido" className="content" tabIndex={-1}>
+          <main id="contenido" ref={mainRef} className="content" tabIndex={-1}>
             <Suspense fallback={<SkeletonRows rows={4} h={72} />}><Outlet /></Suspense>
           </main>
         </div>
@@ -93,12 +113,12 @@ export function AppLayout() {
             <Icon size={21} aria-hidden="true" />{short ?? label}
           </NavLink>
         ))}
-        <button type="button" className="bn-item" aria-expanded={more} aria-controls="mas-nav" onClick={() => setMore((v) => !v)}>
+        <button type="button" ref={moreBtn} className="bn-item" aria-expanded={more} aria-controls="mas-nav" onClick={() => setMore((v) => !v)}>
           <MoreHorizontal size={21} aria-hidden="true" />Más
         </button>
       </nav>
       <div className="more-sheet" hidden={!more} onClick={() => setMore(false)}>
-        <div className="more-panel" id="mas-nav" onClick={(e) => e.stopPropagation()}>
+        <div className="more-panel" id="mas-nav" ref={morePanel} onClick={(e) => e.stopPropagation()}>
           {resto.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} className="nav-link"><Icon size={19} aria-hidden="true" />{label}</NavLink>
           ))}

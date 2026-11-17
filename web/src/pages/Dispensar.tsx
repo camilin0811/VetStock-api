@@ -71,11 +71,11 @@ export default function Dispensar() {
           <form className="stack" style={{ gap: 14 }} onSubmit={enviar} key={formKey}>
             <div className="form-grid">
               <label className="field full">Medicamento
-                <select className="select" required value={medId} onChange={(e) => setMedId(e.target.value)}>
+                <select className="select" required aria-describedby="hint-stock" value={medId} onChange={(e) => setMedId(e.target.value)}>
                   <option value="" disabled>Elige un medicamento</option>
                   {meds.data?.map((m) => <option key={m.id} value={m.id}>{m.nombre} ({m.presentacion})</option>)}
                 </select>
-                {medId && <span className="hint">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
+                {medId && <span className="hint" id="hint-stock" role="status">{disponible === undefined ? 'Consultando stock...' : `${disponible} unidades disponibles`} {med?.requiereFormula && '· requiere fórmula'}</span>}
               </label>
               <label className="field">Cantidad<input className="input" name="cantidad" type="number" min="1" max={disponible || undefined} step="1" required /></label>
               <label className="field">Paciente (mascota)<input className="input" name="mascota" required maxLength={100} /></label>
@@ -112,19 +112,20 @@ export default function Dispensar() {
       <section className="card" data-reveal aria-labelledby="h-hist">
         <div className="card-head">
           <h2 id="h-hist">Historial</h2>
-          <div className="search wide-search" role="search" style={{ width: 'min(260px, 100%)', height: 40 }}>
+          <div className="search wide-search" role="search" aria-label="Filtrar historial" style={{ width: 'min(260px, 100%)', height: 40 }}>
             <input type="search" aria-label="Filtrar por paciente" placeholder="Filtrar por paciente" value={mascota} onChange={(e) => setMascota(e.target.value)} />
           </div>
         </div>
         {historial.isLoading ? <SkeletonRows /> : historial.error ? <ErrorState error={historial.error} onRetry={() => historial.refetch()} /> : !historial.data?.length ? (
           <EmptyState title="Sin dispensaciones" text={mascota ? 'No hay resultados para ese paciente.' : 'Aún no se ha dispensado nada.'} />
         ) : (
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
             <table className="table">
-              <thead><tr><th>Fecha</th><th>Medicamento</th><th>Paciente</th><th>Lotes</th><th className="right">Total</th><th>Estado</th>{puedeAnular && <th><span className="sr-only">Acciones</span></th>}</tr></thead>
+              <caption className="sr-only">Historial de dispensaciones</caption>
+              <thead><tr><th scope="col">Fecha</th><th scope="col">Medicamento</th><th scope="col">Paciente</th><th scope="col">Lotes</th><th scope="col" className="right">Total</th><th scope="col">Estado</th>{puedeAnular && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {historial.data.map((d) => (
-                  <tr key={d.id} style={d.estado === 'ANULADA' ? { opacity: 0.65 } : undefined}>
+                  <tr key={d.id} className={d.estado === 'ANULADA' ? 'anulada' : undefined}>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFecha(d.fecha)}</td>
                     <td><div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div><div className="row-sub">{d.veterinario}</div></td>
                     <td>{d.mascota}</td>
