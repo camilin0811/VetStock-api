@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import type { Usuario } from './entities/usuario.entity';
@@ -12,15 +13,18 @@ import { Rol } from './rol.enum';
 export class RegistroDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre: string;
 
   @IsEmail()
   @IsNotEmpty()
+  @MaxLength(255)
   correo: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave: string;
 
   @IsOptional()
@@ -35,6 +39,7 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(72)
   clave: string;
 }
 

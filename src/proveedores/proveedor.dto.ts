@@ -10,18 +10,22 @@ import {
 export class ProveedorDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(30)
   nit: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(30)
   telefono: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   ciudad: string;
 
   @IsOptional()

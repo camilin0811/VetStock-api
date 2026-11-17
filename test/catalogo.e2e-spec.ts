@@ -228,3 +228,83 @@ describe('Catalogo (e2e)', () => {
     });
   });
 });
+
+describe('Validaciones de DTOs (e2e)', () => {
+  let contexto: AppPrueba;
+
+  beforeEach(async () => {
+    contexto = await crearAppPrueba();
+  });
+
+  afterEach(async () => {
+    await contexto.cerrar();
+  });
+
+  const medicamento = {
+    nombre: 'Nuevo',
+    presentacion: 'Caja',
+    especie: 'canino',
+    precio: 10,
+    stockMinimo: 1,
+    requiereFormula: false,
+  };
+
+  it.each([
+    ['nombre muy largo', { nombre: 'a'.repeat(256) }],
+    ['presentacion muy larga', { presentacion: 'a'.repeat(256) }],
+    ['precio con 3 decimales', { precio: 1.234 }],
+    ['precio fuera de rango', { precio: 1e12 }],
+    ['stockMinimo fuera de rango', { stockMinimo: 3e9 }],
+    ['categoriaIds repetidos', { categoriaIds: [1, 1] }],
+    ['categoriaIds no positivos', { categoriaIds: [0] }],
+  ])('POST /medicamentos rechaza %s con 400', async (_n, cambio) => {
+    await contexto
+      .api()
+      .post('/medicamentos')
+      .send({ ...medicamento, ...cambio })
+      .expect(400);
+  });
+
+  it('POST /proveedores rechaza campos mas largos que la columna', async () => {
+    const base = { nombre: 'P', nit: '1', telefono: '1', ciudad: 'C' };
+    for (const cambio of [
+      { nit: '1'.repeat(31) },
+      { telefono: '1'.repeat(31) },
+      { ciudad: 'c'.repeat(101) },
+    ]) {
+      await contexto
+        .api()
+        .post('/proveedores')
+        .send({ ...base, ...cambio })
+        .expect(400);
+    }
+  });
+
+  it('POST /lotes rechaza numeroLote largo y cantidad fuera de rango', async () => {
+    const base = {
+      medicamentoId: 1,
+      proveedorId: 1,
+      numeroLote: 'L-1',
+      cantidad: 1,
+      fechaVencimiento: '2099-01-01',
+    };
+    await contexto
+      .api()
+      .post('/lotes')
+      .send({ ...base, numeroLote: 'a'.repeat(101) })
+      .expect(400);
+    await contexto
+      .api()
+      .post('/lotes')
+      .send({ ...base, cantidad: 3e9 })
+      .expect(400);
+  });
+
+  it('POST /auth/registro rechaza claves de mas de 72 caracteres (limite de bcrypt)', async () => {
+    await contexto
+      .api()
+      .post('/auth/registro')
+      .send({ nombre: 'X', correo: 'x@x.com', clave: 'a'.repeat(73) })
+      .expect(400);
+  });
+});

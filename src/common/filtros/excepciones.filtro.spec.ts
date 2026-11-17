@@ -95,6 +95,10 @@ describe('ExcepcionesFiltro', () => {
     expect(ejecutar(errorBd('23502')).codigo).toBe(400);
   });
 
+  it.each(['22003', '22P02'])('traduce el valor invalido %s a 400', (c) => {
+    expect(ejecutar(errorBd(c)).codigo).toBe(400);
+  });
+
   it('traduce EntityNotFoundError a 404', () => {
     const { codigo, cuerpo } = ejecutar(new EntityNotFoundError('Lote', {}));
     expect(codigo).toBe(404);

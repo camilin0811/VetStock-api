@@ -12,14 +12,17 @@ import { Rol } from '../auth/rol.enum';
 export class CrearUsuarioDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre: string;
 
   @IsEmail()
+  @MaxLength(255)
   correo: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave: string;
 
   @IsEnum(Rol)
@@ -44,6 +47,7 @@ export class ReemplazarUsuarioDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave?: string;
 }
 
@@ -57,10 +61,12 @@ export class ActualizarUsuarioDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre?: string;
 
   @IsOptional()
   @IsEmail()
+  @MaxLength(255)
   correo?: string;
 
   @IsOptional()
@@ -71,5 +77,6 @@ export class ActualizarUsuarioDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave?: string;
 }

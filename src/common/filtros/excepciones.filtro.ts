@@ -42,6 +42,8 @@ const UNICO = [
 ];
 const LLAVE_FORANEA = ['23503', 'SQLITE_CONSTRAINT_FOREIGNKEY'];
 const NO_NULO = ['23502', 'SQLITE_CONSTRAINT_NOTNULL'];
+// 22003: numero fuera de rango (p. ej. un id enorme); 22P02: texto con formato invalido
+const VALOR_INVALIDO = ['22003', '22P02'];
 
 // Respuesta de error uniforme para toda la API. Traduce los errores de TypeORM
 // a codigos HTTP y nunca devuelve SQL, nombres de tablas ni valores de la BD.
@@ -147,6 +149,14 @@ export class ExcepcionesFiltro implements ExceptionFilter {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         message: 'Falta un dato obligatorio',
+      };
+    }
+
+    if (VALOR_INVALIDO.includes(codigo)) {
+      return {
+        statusCode: HttpStatus.BAD_REQUEST,
+        message:
+          'Un valor enviado esta fuera de rango o tiene formato invalido',
       };
     }
 

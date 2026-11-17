@@ -24,10 +24,12 @@ export class LoteRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   numeroLote: string;
 
   @IsInt()
   @Min(1)
+  @Max(2147483647)
   cantidad: number;
 
   @IsDateString()
@@ -52,6 +54,7 @@ export type MotivoAjuste = (typeof MOTIVOS_AJUSTE)[number];
 export class AjusteDto {
   @IsInt()
   @Min(1)
+  @Max(2147483647)
   cantidad: number;
 
   @IsIn(MOTIVOS_AJUSTE)
