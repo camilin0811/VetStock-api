@@ -183,7 +183,8 @@ export class DispensacionService {
       .createQueryBuilder('dispensacion')
       .leftJoinAndSelect('dispensacion.medicamento', 'medicamento')
       .leftJoinAndSelect('dispensacion.usuario', 'usuario')
-      .orderBy('dispensacion.id', 'ASC');
+      .orderBy('dispensacion.fecha', 'DESC')
+      .addOrderBy('dispensacion.id', 'DESC');
 
     if (desde !== undefined) {
       consulta.andWhere('dispensacion.fecha >= :desde', { desde });

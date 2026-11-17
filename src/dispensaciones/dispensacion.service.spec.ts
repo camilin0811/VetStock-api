@@ -253,6 +253,15 @@ describe('DispensacionService', () => {
       expect(data.map((d) => d.id)).toEqual([1, 2]);
     });
 
+    it('ordena de la mas reciente a la mas antigua (fecha e id descendentes)', async () => {
+      await dispensar('Toby');
+      await dispensar('Max');
+
+      const { data } = await service.listar();
+
+      expect(data.map((d) => d.id)).toEqual([4, 3, 1, 2]);
+    });
+
     it('filtra por rango de fechas inclusivo', async () => {
       const ids = async (desde?: string, hasta?: string) =>
         (await service.listar({ desde, hasta })).data.map((d) => d.id);

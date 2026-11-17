@@ -41,6 +41,17 @@ describe('Dispensaciones (e2e)', () => {
       },
     );
 
+    it('responde 400 si un texto excede el largo de su columna', async () => {
+      const api = contexto.api('veterinario');
+      const enviar = (campos: object) =>
+        api.post('/dispensaciones').send({ ...dispensacion, ...campos });
+
+      await enviar({ mascota: 'a'.repeat(101) }).expect(400);
+      await enviar({ veterinario: 'a'.repeat(256) }).expect(400);
+      await enviar({ formula: 'a'.repeat(101) }).expect(400);
+      await enviar({ mascota: 'a'.repeat(100) }).expect(201);
+    });
+
     it('devuelve la forma del contrato con lotes usados y usuario', async () => {
       const respuesta = await contexto
         .api('veterinario')
@@ -79,8 +90,9 @@ describe('Dispensaciones (e2e)', () => {
 
       const lista = await contexto.api().get('/dispensaciones').expect(200);
       expect(lista.body.count).toBe(3);
-      expect(lista.body.data[2].usuario).toEqual({ id: 3, nombre: 'Camila' });
-      expect(lista.body.data[0]).toMatchObject({
+      // La mas reciente va primero
+      expect(lista.body.data[0].usuario).toEqual({ id: 3, nombre: 'Camila' });
+      expect(lista.body.data[2]).toMatchObject({
         estado: 'ACTIVA',
         usuario: null,
       });
@@ -199,6 +211,16 @@ describe('Dispensaciones (e2e)', () => {
           .send(dispensacion)
           .expect(201)
       ).body.data.id as number;
+
+    it('responde 400 si el motivo excede 255 caracteres', async () => {
+      const id = await crear();
+
+      await contexto
+        .api('admin')
+        .post(`/dispensaciones/${id}/anular`)
+        .send({ motivo: 'a'.repeat(256) })
+        .expect(400);
+    });
 
     it('responde 401 sin token y 403 a un veterinario', async () => {
       const id = await crear();

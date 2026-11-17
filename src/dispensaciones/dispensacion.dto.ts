@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 
@@ -19,15 +20,18 @@ export class DispensacionRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   mascota: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   veterinario: string;
 
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   formula?: string;
 }
 
@@ -55,6 +59,7 @@ export class DispensacionQueryDto {
 export class AnularDispensacionDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   motivo: string;
 }
 
