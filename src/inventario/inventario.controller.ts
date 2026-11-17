@@ -1,3 +1,4 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -25,6 +26,8 @@ import {
 import { MovimientoQueryDto } from './movimiento.dto';
 import { MovimientoService } from './movimiento.service';
 
+@ApiTags('Inventario')
+@ApiBearerAuth()
 @Controller()
 export class InventarioController {
   constructor(
@@ -33,6 +36,7 @@ export class InventarioController {
     private readonly movimientoService: MovimientoService,
   ) {}
 
+  /** Registra un lote y su movimiento ENTRADA */
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post('lotes')
   registrarLote(
@@ -42,6 +46,7 @@ export class InventarioController {
     return this.inventarioService.registrarLote(datos, usuario);
   }
 
+  /** Reemplaza los datos corregibles de un lote (proveedor, numero y vencimiento) */
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put('lotes/:id')
   reemplazarLote(
@@ -51,6 +56,7 @@ export class InventarioController {
     return this.inventarioService.actualizarLote(id, datos);
   }
 
+  /** Corrige parcialmente un lote (no cambia cantidades) */
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Patch('lotes/:id')
   actualizarLote(
@@ -60,6 +66,7 @@ export class InventarioController {
     return this.inventarioService.actualizarLote(id, datos);
   }
 
+  /** Ajusta el stock de un lote por perdida, dano, vencimiento u otro motivo */
   @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post('lotes/:id/ajustes')
   ajustarLote(
@@ -70,6 +77,7 @@ export class InventarioController {
     return this.inventarioService.ajustarLote(id, datos, usuario);
   }
 
+  /** Lista los lotes, opcionalmente por medicamento */
   @Get('lotes')
   listarLotes(
     @Query('medicamentoId', new ParseIntPipe({ optional: true }))
@@ -78,11 +86,13 @@ export class InventarioController {
     return this.inventarioService.listarLotes(medicamentoId);
   }
 
+  /** Stock disponible y vencido por medicamento */
   @Get('inventario')
   listarInventario() {
     return this.inventarioService.listarInventario();
   }
 
+  /** Stock y lotes de un medicamento */
   @Get('inventario/:medicamentoId')
   obtenerInventario(
     @Param('medicamentoId', ParseIntPipe) medicamentoId: number,
@@ -90,11 +100,13 @@ export class InventarioController {
     return this.inventarioService.obtenerInventario(medicamentoId);
   }
 
+  /** Alertas de stock bajo, por vencer y vencidos */
   @Get('alertas')
   listarAlertas(@Query() filtro: AlertaQueryDto) {
     return this.alertaService.generar(filtro);
   }
 
+  /** Kardex de movimientos de stock */
   @Get('movimientos')
   listarMovimientos(@Query() filtro: MovimientoQueryDto) {
     return this.movimientoService.listar(filtro);

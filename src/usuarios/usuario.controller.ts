@@ -1,3 +1,4 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -22,25 +23,31 @@ import {
 import { UsuarioService } from './usuario.service';
 
 @Roles(Rol.Admin)
+@ApiTags('Usuarios')
+@ApiBearerAuth()
 @Controller('usuarios')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
+  /** Lista los usuarios (solo admin) */
   @Get()
   listar() {
     return this.usuarioService.listar();
   }
 
+  /** Crea un usuario (solo admin) */
   @Post()
   crear(@Body() datos: CrearUsuarioDto) {
     return this.usuarioService.crear(datos);
   }
 
+  /** Obtiene un usuario por id */
   @Get(':id')
   obtener(@Param('id', ParseIntPipe) id: number) {
     return this.usuarioService.obtener(id);
   }
 
+  /** Reemplaza un usuario (nombre, correo y rol obligatorios; la clave es opcional) */
   @Put(':id')
   reemplazar(
     @Param('id', ParseIntPipe) id: number,
@@ -49,6 +56,7 @@ export class UsuarioController {
     return this.usuarioService.actualizar(id, datos);
   }
 
+  /** Cambia unicamente el rol de un usuario */
   @Patch(':id/rol')
   cambiarRol(
     @Param('id', ParseIntPipe) id: number,
@@ -57,6 +65,7 @@ export class UsuarioController {
     return this.usuarioService.actualizar(id, datos);
   }
 
+  /** Actualiza parcialmente un usuario */
   @Patch(':id')
   actualizar(
     @Param('id', ParseIntPipe) id: number,
@@ -65,6 +74,7 @@ export class UsuarioController {
     return this.usuarioService.actualizar(id, datos);
   }
 
+  /** Elimina un usuario (no puede ser el propio) */
   @Delete(':id')
   eliminar(
     @Param('id', ParseIntPipe) id: number,
