@@ -14,7 +14,7 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 - Persistencia en PostgreSQL con TypeORM. Los repositorios se inyectan en los Services; no hay datos mock en memoria. Relaciones TypeORM explicitas (ver Relaciones). Configuracion de BD por variables de entorno (`.env`, ver `.env.example`) y `docker compose up -d`.
 - IDs numericos en la BD y en las rutas; los controllers los validan con `ParseIntPipe`.
 - Nombres de clases, DTOs y rutas en espanol. No renombrar.
-- Simplicidad: seguir el estilo de `IvonneBarco/book-nestjs-5b` (DTOs con class-validator, excepciones de Nest con mensajes en espanol). Respuestas: crear/actualizar `{ message, data }`, listas `{ message, data, count }`, eliminar `{ message }`, GET por id devuelve la entidad. Los reportes devuelven `{ message, data }`.
+- Simplicidad: seguir el estilo habitual de NestJS (DTOs con class-validator, excepciones de Nest con mensajes en espanol). Respuestas: crear/actualizar `{ message, data }`, listas `{ message, data, count }`, eliminar `{ message }`, GET por id devuelve la entidad. Los reportes devuelven `{ message, data }`.
 - Excepciones: lanzarlas en los Services con las clases de Nest (`NotFoundException`, `ConflictException`, `BadRequestException`, `UnauthorizedException`, `ForbiddenException`) y mensajes en espanol. Los controllers no validan a mano: el `ValidationPipe` global responde 400.
 
 ## Estructura (capas)
@@ -22,7 +22,7 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 - Una carpeta por recurso en `src/`: `auth/`, `usuarios/`, `categorias/`, `medicamentos/`, `proveedores/`, `inventario/`, `dispensaciones/`, `reportes/`. Ademas `seed/` (datos demo, ver Seed).
 - Archivos por recurso: `<recurso>.module.ts` (uno por carpeta, con `TypeOrmModule.forFeature([...])`, controllers, providers y `exports` de los services que usan otros modulos), `<recurso>.controller.ts`, `<recurso>.service.ts`, `<singular>.dto.ts` (todas las clases Dto del recurso en ese unico archivo) y `entities/<singular>.entity.ts`.
 - `src/app.module.ts` solo tiene `ConfigModule.forRoot({ isGlobal: true })`, `TypeOrmModule.forRootAsync` (con `autoLoadEntities` y `synchronize: true`) e `imports` de los modulos. Un modulo que necesita otro service lo importa (no re-registra el service); `forFeature` de una entidad ajena solo si basta el repositorio.
-- `src/main.ts`: `ValidationPipe({ transform: true, whitelist: true })` global y CORS con origen `WEB_ORIGIN` (por defecto `http://localhost:5173`). Variables `PORT` y `WEB_ORIGIN` en `.env.example`.
+- `src/main.ts`: `configurarApp` (`src/app.config.ts`: `ValidationPipe({ transform: true, whitelist: true })` y filtro de excepciones globales), Swagger y CORS con origen `WEB_ORIGIN` (por defecto `http://localhost:5173`). Variables `PORT` y `WEB_ORIGIN` en `.env.example`.
 - Helpers en `src/common/`: `fechas.ts`, `columnas.ts` (`TIPO_FECHA_HORA`: `timestamptz` en Postgres, `datetime` si `NODE_ENV=test` por sqlite) y `transformadores.ts` (`numeroDecimal` para columnas `decimal`).
 - `src/env.model.ts`: interfaz `Env` con las variables tipadas que usa `ConfigService` (incluye `JWT_SECRET`, `JWT_REFRESH_SECRET`, `JWT_EXPIRES_IN`, `JWT_REFRESH_EXPIRES_IN`, `TZ_CLINICA` opcional).
 - `src/common/fechas.ts`: `hoy()`, `diasDesdeHoy()` y `diasHasta()` calculan el dia en la zona de la clinica (`TZ_CLINICA`, por defecto `America/Bogota`) con `Intl.DateTimeFormat('en-CA')`, no en UTC. Aceptan un `ahora` opcional para tests deterministas; no pasarlos directo a `.map()`.
@@ -48,7 +48,12 @@ API REST en NestJS para el inventario y la farmacia de una clinica veterinaria: 
 - En entidades, el tipo de las propiedades de relacion va con `Relation<T>` (evita referencias circulares en ESM).
 - Para guardar relaciones desde un DTO: `{ ...dto, medicamento: { id: dto.medicamentoId } }`; `categoriaIds` se resuelve con `CategoriaService.obtenerPorIds` (404 si falta alguna).
 - Columnas en snake_case con `name:` (`stock_minimo`, `numero_lote`, `created_at`, ...). `precio` y `total` son `decimal(12,2)` con transformer a `number`.
-- DTOs de actualizacion: `Actualizar<X>Dto extends PartialType(<X>Dto)` de `@nestjs/mapped-types`.
+- DTOs de actualizacion: `Actualizar<X>Dto extends PartialType(<X>Dto)` de `@nestjs/swagger` (mismos tipos mapeados que `@nestjs/mapped-types`, pero conservan el esquema OpenAPI). Se usan en `PATCH`.
+- PUT vs PATCH: `PUT /<recurso>/:id` recibe el DTO completo (`<X>Dto`; lotes: `ReemplazarLoteDto`; usuarios: `ReemplazarUsuarioDto`) y lo opcional omitido se borra (`reemplazar` en el service); `PATCH` recibe `Actualizar<X>Dto` y solo cambia lo enviado (`actualizar`). `PATCH /usuarios/{id}/rol` usa `CambiarRolDto`. El frontend edita con PATCH.
+- Codigos HTTP: 201 al crear (POST), 200 al actualizar/eliminar y en login, refresh y anular (`@HttpCode(200)`).
+- Errores: `src/common/filtros/excepciones.filtro.ts` (filtro global, registrado en `configurarApp` de `src/app.config.ts`, compartido con las pruebas e2e) responde `{ statusCode, message, error, path, timestamp }` y traduce errores de TypeORM (unicidad/llave foranea a 409, `EntityNotFoundError` a 404) sin exponer SQL.
+- Swagger: `/docs` (`src/swagger.config.ts`); el plugin de `@nestjs/swagger` en `nest-cli.json` genera los esquemas de los DTOs y usa los comentarios JSDoc de los controllers como resumen. Cada controller lleva `@ApiTags` y `@ApiBearerAuth`.
+- Documentacion: `docs/arquitectura.md` y la coleccion de Postman en `docs/`. Al agregar un endpoint, actualizar ambos y la tabla de arriba.
 
 ## Endpoints
 
@@ -60,15 +65,15 @@ Todas las rutas exigen Bearer token salvo las `Publico`. "Autenticado" = cualqui
 | AuthController | POST /auth/login | Publico | AuthService |
 | AuthController | POST /auth/refresh | Publico | AuthService |
 | AuthController | GET /auth/perfil | Autenticado | AuthService |
-| UsuarioController | POST /usuarios (alta por admin, 409 si el correo existe), GET /usuarios, GET /usuarios/{id}, PUT /usuarios/{id}, DELETE /usuarios/{id} | Admin | UsuarioService |
+| UsuarioController | POST /usuarios (alta por admin, 409 si el correo existe), GET /usuarios, GET /usuarios/{id}, PUT /usuarios/{id}, PATCH /usuarios/{id}, PATCH /usuarios/{id}/rol, DELETE /usuarios/{id} | Admin | UsuarioService |
 | CategoriaController | GET /categorias, GET /categorias/{id} | Autenticado | CategoriaService |
-| CategoriaController | POST /categorias, PUT /categorias/{id}, DELETE /categorias/{id} | Admin, farmaceutico | CategoriaService |
+| CategoriaController | POST /categorias, PUT /categorias/{id}, PATCH /categorias/{id}, DELETE /categorias/{id} | Admin, farmaceutico | CategoriaService |
 | MedicamentoController | GET /medicamentos (?q, ?especie, ?categoriaId), GET /medicamentos/{id} | Autenticado | MedicamentoService |
-| MedicamentoController | POST /medicamentos, PUT /medicamentos/{id}, DELETE /medicamentos/{id} | Admin, farmaceutico | MedicamentoService |
+| MedicamentoController | POST /medicamentos, PUT /medicamentos/{id}, PATCH /medicamentos/{id}, DELETE /medicamentos/{id} | Admin, farmaceutico | MedicamentoService |
 | ProveedorController | GET /proveedores, GET /proveedores/{id} | Autenticado | ProveedorService |
-| ProveedorController | POST /proveedores, PUT /proveedores/{id}, DELETE /proveedores/{id} | Admin, farmaceutico | ProveedorService |
+| ProveedorController | POST /proveedores, PUT /proveedores/{id}, PATCH /proveedores/{id}, DELETE /proveedores/{id} | Admin, farmaceutico | ProveedorService |
 | InventarioController | GET /lotes (?medicamentoId) | Autenticado | InventarioService |
-| InventarioController | POST /lotes, PUT /lotes/{id}, POST /lotes/{id}/ajustes | Admin, farmaceutico | InventarioService |
+| InventarioController | POST /lotes, PUT /lotes/{id}, PATCH /lotes/{id}, POST /lotes/{id}/ajustes | Admin, farmaceutico | InventarioService |
 | InventarioController | GET /inventario, GET /inventario/{medicamentoId} | Autenticado | InventarioService |
 | InventarioController | GET /alertas (?tipo, ?dias) | Autenticado | AlertaService |
 | InventarioController | GET /movimientos (?medicamentoId, ?tipo) | Autenticado | MovimientoService |
@@ -88,7 +93,7 @@ DTOs clave:
 - `MovimientoQueryDto`: medicamentoId y tipo (`ENTRADA`, `SALIDA`, `AJUSTE`, `ANULACION`).
 - `DispensacionRequestDto`: medicamentoId, cantidad, mascota, veterinario, formula. `DispensacionDto`: dispensacion + lotes usados. Siempre incluir los lotes usados.
 - `AnularDispensacionDto`: motivo (obligatorio). Anular devuelve el stock a sus lotes y deja movimientos `ANULACION`.
-- `ActualizarUsuarioDto` (nombre, correo, rol), solo para admin. No hay POST: los usuarios se crean con `/auth/registro`.
+- `ActualizarUsuarioDto` (nombre, correo, rol, clave; PATCH), `ReemplazarUsuarioDto` (PUT) y `CambiarRolDto`, solo para admin. Los usuarios se crean con `POST /usuarios` (admin) o `/auth/registro`.
 - Regla FEFO: al dispensar se descuenta primero del lote que vence antes. Nunca dispensar de un lote vencido.
 
 ## Kardex (Movimiento)
