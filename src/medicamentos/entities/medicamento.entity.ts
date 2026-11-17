@@ -2,9 +2,15 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { TIPO_FECHA_HORA } from '../../common/columnas';
+import { numeroDecimal } from '../../common/transformadores';
+import { Dispensacion } from '../../dispensaciones/entities/dispensacion.entity';
+import { Lote } from '../../inventario/entities/lote.entity';
 
 @Entity({ name: 'medicamento' })
 export class Medicamento {
@@ -20,7 +26,12 @@ export class Medicamento {
   @Column({ type: 'varchar', length: 30 })
   especie: string;
 
-  @Column({ type: 'int' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    transformer: numeroDecimal,
+  })
   precio: number;
 
   @Column({ type: 'int', name: 'stock_minimo' })
@@ -29,9 +40,15 @@ export class Medicamento {
   @Column({ type: 'boolean', name: 'requiere_formula' })
   requiereFormula: boolean;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @OneToMany(() => Lote, (lote) => lote.medicamento)
+  lotes: Relation<Lote[]>;
+
+  @OneToMany(() => Dispensacion, (dispensacion) => dispensacion.medicamento)
+  dispensaciones: Relation<Dispensacion[]>;
+
+  @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: TIPO_FECHA_HORA, name: 'updated_at' })
   updatedAt: Date;
 }

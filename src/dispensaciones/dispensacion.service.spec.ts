@@ -47,6 +47,20 @@ describe('DispensacionService', () => {
     );
   });
 
+  it('guarda la relacion con el medicamento y la expone al consultar', async () => {
+    const { data } = await service.dispensar({
+      medicamentoId: 2,
+      cantidad: 1,
+      mascota: 'Toby',
+      veterinario: 'Dra. Paola Rosero',
+    });
+
+    const dispensacion = await service.obtener(data.id);
+
+    expect(dispensacion.medicamentoId).toBe(2);
+    expect(dispensacion.medicamento.nombre).toBe('Vacuna antirrabica');
+  });
+
   it('no dispensa de lotes vencidos', async () => {
     const resultado = await service.dispensar({
       medicamentoId: 3,

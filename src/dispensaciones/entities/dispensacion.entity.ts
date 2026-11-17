@@ -2,15 +2,27 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
+  type Relation,
   UpdateDateColumn,
 } from 'typeorm';
+import { TIPO_FECHA_HORA } from '../../common/columnas';
+import { numeroDecimal } from '../../common/transformadores';
+import { Medicamento } from '../../medicamentos/entities/medicamento.entity';
 import type { LoteUsadoDto } from '../dispensacion.dto';
 
 @Entity({ name: 'dispensacion' })
 export class Dispensacion {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @ManyToOne(() => Medicamento, (medicamento) => medicamento.dispensaciones, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'medicamento_id' })
+  medicamento: Relation<Medicamento>;
 
   @Column({ type: 'int', name: 'medicamento_id' })
   medicamentoId: number;
@@ -30,15 +42,20 @@ export class Dispensacion {
   @Column({ type: 'date' })
   fecha: string;
 
-  @Column({ type: 'int' })
+  @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    transformer: numeroDecimal,
+  })
   total: number;
 
   @Column({ type: 'simple-json', name: 'lotes_usados' })
   lotesUsados: LoteUsadoDto[];
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: TIPO_FECHA_HORA, name: 'updated_at' })
   updatedAt: Date;
 }

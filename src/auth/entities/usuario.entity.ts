@@ -5,6 +5,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { TIPO_FECHA_HORA } from '../../common/columnas';
 
 @Entity({ name: 'usuario' })
 export class Usuario {
@@ -20,9 +21,9 @@ export class Usuario {
   @Column({ type: 'varchar', length: 255 })
   clave: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn({ type: TIPO_FECHA_HORA, name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ type: TIPO_FECHA_HORA, name: 'updated_at' })
   updatedAt: Date;
 }
