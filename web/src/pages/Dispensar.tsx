@@ -112,7 +112,7 @@ export default function Dispensar() {
       <section className="card" data-reveal aria-labelledby="h-hist">
         <div className="card-head">
           <h2 id="h-hist">Historial</h2>
-          <div className="search wide-search" role="search" style={{ width: 'min(260px, 100%)', height: 40 }}>
+          <div className="search wide-search" role="search" aria-label="Filtrar historial" style={{ width: 'min(260px, 100%)', height: 40 }}>
             <input type="search" aria-label="Filtrar por paciente" placeholder="Filtrar por paciente" value={mascota} onChange={(e) => setMascota(e.target.value)} />
           </div>
         </div>

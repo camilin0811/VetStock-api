@@ -35,7 +35,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 t.messages[0]
               )}
             </div>
-            <button type="button" aria-label="Cerrar aviso" onClick={() => dismiss(t.id)}><X size={16} /></button>
+            <button type="button" aria-label="Cerrar aviso" onClick={() => dismiss(t.id)}><X size={16} aria-hidden="true" /></button>
           </div>
         ))}
       </div>

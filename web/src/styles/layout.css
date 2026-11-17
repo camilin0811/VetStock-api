@@ -41,7 +41,7 @@
 }
 .search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; height: 100%; }
 .search input::placeholder { color: var(--muted); }
-.search:focus-within { box-shadow: var(--focus); }
+.search:focus-within { outline: 3px solid var(--violet-600); outline-offset: 2px; }
 .icon-btn {
   position: relative; width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--violet-100); color: var(--violet-600);
   display: grid; place-items: center; text-decoration: none; transition: background 0.2s;

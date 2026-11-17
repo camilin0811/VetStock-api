@@ -147,7 +147,7 @@ export default function Medicamentos() {
     <Page deps={[meds.isLoading]}>
       <div className="page-head" data-reveal>
         <div className="grow">
-          <div className="search wide-search" role="search">
+          <div className="search wide-search" role="search" aria-label="Filtrar medicamentos">
             <input type="search" aria-label="Filtrar por nombre" placeholder="Filtrar por nombre" value={q} onChange={(e) => setFiltro('q', e.target.value)} />
           </div>
         </div>

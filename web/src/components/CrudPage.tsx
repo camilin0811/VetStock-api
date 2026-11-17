@@ -57,8 +57,8 @@ export function CrudPage<T extends { id: number }>({ singular, base, query, fiel
                     {columns.map((c) => <td key={c.header} className={c.right ? 'right' : ''}>{c.cell(t)}</td>)}
                     {canWrite && (
                       <td className="right" style={{ whiteSpace: 'nowrap' }}>
-                        <button type="button" className="btn icon" aria-label={`Editar ${nameOf(t)}`} onClick={() => abrir(t)}><Pencil size={16} /></button>{' '}
-                        {(!canDelete || canDelete(t)) && <button type="button" className="btn icon danger" aria-label={`Eliminar ${nameOf(t)}`} onClick={() => setBorrando(t)}><Trash2 size={16} /></button>}
+                        <button type="button" className="btn icon" aria-label={`Editar ${nameOf(t)}`} onClick={() => abrir(t)}><Pencil size={16} aria-hidden="true" /></button>{' '}
+                        {(!canDelete || canDelete(t)) && <button type="button" className="btn icon danger" aria-label={`Eliminar ${nameOf(t)}`} onClick={() => setBorrando(t)}><Trash2 size={16} aria-hidden="true" /></button>}
                       </td>
                     )}
                   </tr>
