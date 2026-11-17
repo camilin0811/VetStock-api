@@ -3,9 +3,13 @@ const mf = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', 
 export const fmtNum = (n: number) => nf.format(n)
 export const fmtMoney = (n: number) => mf.format(n)
 
-/** Fecha 'YYYY-MM-DD' (o ISO) sin corrimiento por zona horaria. */
+/**
+ * Fecha 'YYYY-MM-DD' sin corrimiento por zona horaria. Si llega un timestamp
+ * ISO completo (createdAt) se convierte a la hora local.
+ */
 export function parseFecha(s: string): Date {
-  const [y, m, d] = s.slice(0, 10).split('-').map(Number)
+  if (s.length > 10) return new Date(s)
+  const [y, m, d] = s.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
 export const fmtFecha = (s: string, o: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' }) =>
