@@ -133,6 +133,15 @@
   .c-stock .pill { order: -1; }
   .sub-esp { display: none; }
 }
+/* Contenedor estrecho: foto | nombre + precio | stock, sin aplastar el nombre */
+@container (max-width: 459px) {
+  .med-head { display: none; }
+  .med-row { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-areas: 'foto main stock' 'foto precio stock'; row-gap: 2px; }
+  .med-row .list-ico { grid-area: foto; align-self: start; }
+  .med-row .c-main { grid-area: main; }
+  .med-row .c-precio { grid-area: precio; justify-self: start; text-align: left; color: var(--muted); font-weight: var(--fw-medium); font-size: var(--fs-xs); }
+  .med-row .c-stock { grid-area: stock; min-width: 72px; }
+}
 .wide-search { width: 100%; max-width: 560px; }
 .wide-search input { padding-left: 4px; }
 @media (max-width: 1099px) { .split { grid-template-columns: 1fr; } .detail { position: static; } }
@@ -159,4 +168,6 @@
 .cal-day.sel .dot { box-shadow: 0 0 0 2px var(--violet-600); }
 .dot.bad { background: var(--bad-dot); } .dot.warn { background: var(--warn-dot); } .dot.info { background: var(--info-dot); }
 .cal-legend { margin-top: 14px; font-size: 13px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.cal-nav { flex-wrap: nowrap; flex: none; }
+.card-head h2 { min-width: 0; }
 @media (max-width: 520px) { .cal { gap: 4px; } .cal-day { aspect-ratio: 1; } .cal-day { border-radius: 12px; } }

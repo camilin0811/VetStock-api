@@ -160,12 +160,12 @@ export default function Medicamentos() {
       </div>
 
       <div className="card soft stack" style={{ gap: 12 }} data-reveal>
-        <div className="chips" role="group" aria-label="Filtrar por especie">
+        <div className="chips chips-scroll" role="group" aria-label="Filtrar por especie">
           <button type="button" className="chip" aria-pressed={!especie} onClick={() => setFiltro('especie', '')}>Todas las especies</button>
           {ESPECIES.map((e) => <button key={e} type="button" className="chip" aria-pressed={especie === e} onClick={() => setFiltro('especie', e)}>{cap(e)}</button>)}
         </div>
         {!!cats.data?.length && (
-          <div className="chips" role="group" aria-label="Filtrar por categoría">
+          <div className="chips chips-scroll" role="group" aria-label="Filtrar por categoría">
             <button type="button" className="chip" aria-pressed={!cat} onClick={() => setFiltro('cat', '')}>Todas las categorías</button>
             {cats.data.map((c) => <button key={c.id} type="button" className="chip" aria-pressed={cat === c.id} onClick={() => setFiltro('cat', String(c.id))}>{c.nombre}</button>)}
           </div>

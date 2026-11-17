@@ -59,7 +59,7 @@ export default function Calendario() {
         <section className="card" data-reveal aria-label="Calendario de vencimientos">
           <div className="card-head">
             <h2 aria-live="polite" aria-atomic="true">{titulo}</h2>
-            <div className="chips">
+            <div className="chips cal-nav">
               <button type="button" className="btn sm" onClick={() => { const h = parseFecha(hoyKey); setMes(new Date(h.getFullYear(), h.getMonth(), 1)); setSel(hoyKey) }}>Hoy</button>
               <button type="button" className="btn icon" aria-label="Mes anterior" onClick={() => mover(-1)}><ChevronLeft size={18} aria-hidden="true" /></button>
               <button type="button" className="btn icon" aria-label="Mes siguiente" onClick={() => mover(1)}><ChevronRight size={18} aria-hidden="true" /></button>

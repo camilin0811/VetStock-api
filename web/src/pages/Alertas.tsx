@@ -21,7 +21,7 @@ export default function Alertas() {
   return (
     <Page deps={[alertas.isLoading]}>
       <div className="card soft page-head" data-reveal>
-        <div className="chips" role="group" aria-label="Filtrar por tipo">
+        <div className="chips chips-scroll" role="group" aria-label="Filtrar por tipo">
           <button type="button" className="chip" aria-pressed={!tipo} onClick={() => setTipo('')}>Todas</button>
           {TIPOS.map((t) => <button key={t.v} type="button" className="chip" aria-pressed={tipo === t.v} onClick={() => setTipo(t.v)}>{t.label}</button>)}
         </div>
