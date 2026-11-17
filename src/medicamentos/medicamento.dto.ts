@@ -1,4 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -40,6 +41,22 @@ export class MedicamentoDto {
   @IsArray()
   @IsInt({ each: true })
   categoriaIds?: number[];
+}
+
+export class MedicamentoQueryDto {
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @IsIn(ESPECIES)
+  especie?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoriaId?: number;
 }
 
 export class ActualizarMedicamentoDto extends PartialType(MedicamentoDto) {}

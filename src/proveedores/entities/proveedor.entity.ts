@@ -27,6 +27,9 @@ export class Proveedor {
   @Column({ type: 'varchar', length: 100 })
   ciudad: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  correo: string | null;
+
   @OneToMany(() => Lote, (lote) => lote.proveedor)
   lotes: Relation<Lote[]>;
 

@@ -4,15 +4,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
+import { Lote } from '../inventario/entities/lote.entity';
 import { Proveedor } from './entities/proveedor.entity';
-import { ProveedorDto } from './proveedor.dto';
+import { ActualizarProveedorDto, ProveedorDto } from './proveedor.dto';
 
 @Injectable()
 export class ProveedorService {
   constructor(
     @InjectRepository(Proveedor)
     private readonly proveedorRepository: Repository<Proveedor>,
+    @InjectRepository(Lote)
+    private readonly loteRepository: Repository<Lote>,
   ) {}
 
   async listar() {
@@ -54,5 +57,43 @@ export class ProveedorService {
       message: 'Proveedor registrado correctamente',
       data: nuevoProveedor,
     };
+  }
+
+  async actualizar(id: number, datos: ActualizarProveedorDto) {
+    const proveedor = await this.obtener(id);
+
+    if (datos.nit !== undefined && datos.nit !== proveedor.nit) {
+      const existente = await this.proveedorRepository.findOneBy({
+        nit: datos.nit,
+        id: Not(id),
+      });
+      if (existente !== null) {
+        throw new ConflictException(
+          `El proveedor con NIT ${datos.nit} ya esta registrado`,
+        );
+      }
+    }
+
+    this.proveedorRepository.merge(proveedor, datos);
+    const actualizado = await this.proveedorRepository.save(proveedor);
+
+    return {
+      message: 'Proveedor actualizado correctamente',
+      data: actualizado,
+    };
+  }
+
+  async eliminar(id: number) {
+    const proveedor = await this.obtener(id);
+
+    if ((await this.loteRepository.countBy({ proveedorId: id })) > 0) {
+      throw new ConflictException(
+        `No se puede eliminar ${proveedor.nombre}: tiene lotes registrados`,
+      );
+    }
+
+    await this.proveedorRepository.remove(proveedor);
+
+    return { message: 'Proveedor eliminado correctamente' };
   }
 }
