@@ -43,6 +43,10 @@
   --fw-medium: 500;
   --fw-semibold: 600;
   --fw-bold: 700;
+  /* Etiquetas de columna y de dato: un solo tamano, peso y color (AA sobre blanco y violet-50) */
+  --label-fs: var(--fs-xs);
+  --label-fw: var(--fw-semibold);
+  --label-color: var(--muted);
 
   --r-sm: 12px;
   --r-md: 18px;
