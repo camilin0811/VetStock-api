@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   Max,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { MedicamentoResponseDto } from '../medicamentos/medicamento.dto';
@@ -52,6 +53,7 @@ export class AjusteDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(240)
   observacion?: string;
 }
 
