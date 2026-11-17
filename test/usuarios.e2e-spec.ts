@@ -18,7 +18,7 @@ describe('Usuarios (e2e)', () => {
     await http().get('/usuarios').expect(401);
     await http().post('/usuarios').send({}).expect(401);
     await http().get('/usuarios/1').expect(401);
-    await http().put('/usuarios/1').send({}).expect(401);
+    await http().patch('/usuarios/1').send({}).expect(401);
     await http().delete('/usuarios/1').expect(401);
   });
 
@@ -29,7 +29,7 @@ describe('Usuarios (e2e)', () => {
       await api.get('/usuarios').expect(403);
       await api.post('/usuarios').send({}).expect(403);
       await api.get('/usuarios/1').expect(403);
-      await api.put('/usuarios/1').send({ nombre: 'X' }).expect(403);
+      await api.patch('/usuarios/1').send({ nombre: 'X' }).expect(403);
       await api.delete('/usuarios/3').expect(403);
     },
   );
@@ -82,10 +82,10 @@ describe('Usuarios (e2e)', () => {
     await contexto.api().get('/usuarios/abc').expect(400);
   });
 
-  it('PUT /usuarios/:id actualiza rol y nombre', async () => {
+  it('PATCH /usuarios/:id actualiza rol y nombre', async () => {
     const respuesta = await contexto
       .api()
-      .put('/usuarios/3')
+      .patch('/usuarios/3')
       .send({ nombre: 'Camila Perez', rol: 'veterinario' })
       .expect(200);
 
@@ -96,10 +96,10 @@ describe('Usuarios (e2e)', () => {
     expect(respuesta.body.data).not.toHaveProperty('clave');
   });
 
-  it('PUT /usuarios/:id cambia la clave y el usuario puede ingresar con ella', async () => {
+  it('PATCH /usuarios/:id cambia la clave y el usuario puede ingresar con ella', async () => {
     await contexto
       .api()
-      .put('/usuarios/3')
+      .patch('/usuarios/3')
       .send({ clave: 'NuevaClave456*' })
       .expect(200);
 
@@ -111,18 +111,18 @@ describe('Usuarios (e2e)', () => {
     await http()
       .post('/auth/login')
       .send({ correo: USUARIOS_PRUEBA.farmaceutico, clave: 'NuevaClave456*' })
-      .expect(201);
+      .expect(200);
   });
 
-  it('PUT /usuarios/:id valida datos y correo repetido', async () => {
+  it('PATCH /usuarios/:id valida datos y correo repetido', async () => {
     const api = contexto.api();
-    await api.put('/usuarios/3').send({ rol: 'superman' }).expect(400);
-    await api.put('/usuarios/3').send({ correo: 'no-es-correo' }).expect(400);
+    await api.patch('/usuarios/3').send({ rol: 'superman' }).expect(400);
+    await api.patch('/usuarios/3').send({ correo: 'no-es-correo' }).expect(400);
     await api
-      .put('/usuarios/3')
+      .patch('/usuarios/3')
       .send({ correo: USUARIOS_PRUEBA.admin })
       .expect(409);
-    await api.put('/usuarios/999').send({ nombre: 'X' }).expect(404);
+    await api.patch('/usuarios/999').send({ nombre: 'X' }).expect(404);
   });
 
   it('DELETE /usuarios/:id elimina a otro usuario y su token deja de servir', async () => {

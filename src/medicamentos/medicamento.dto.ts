@@ -1,6 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
+import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  ArrayUnique,
   IsArray,
   IsBoolean,
   IsIn,
@@ -8,7 +9,9 @@ import {
   IsNotEmpty,
   IsNumber,
   IsOptional,
+  IsPositive,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -18,10 +21,12 @@ export const ESPECIES = ['canino', 'felino', 'equino', 'bovino', 'general'];
 export class MedicamentoDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   presentacion: string;
 
   @IsOptional()
@@ -32,12 +37,14 @@ export class MedicamentoDto {
   @IsIn(ESPECIES)
   especie: string;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
+  @Max(9999999999.99)
   precio: number;
 
   @IsInt()
   @Min(0)
+  @Max(2147483647)
   stockMinimo: number;
 
   @IsBoolean()
@@ -45,13 +52,16 @@ export class MedicamentoDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayUnique()
   @IsInt({ each: true })
+  @IsPositive({ each: true })
   categoriaIds?: number[];
 }
 
 export class MedicamentoQueryDto {
   @IsOptional()
   @IsString()
+  @MaxLength(100)
   q?: string;
 
   @IsOptional()
@@ -61,7 +71,7 @@ export class MedicamentoQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(1)
+  @IsPositive()
   categoriaId?: number;
 }
 

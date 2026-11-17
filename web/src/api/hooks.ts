@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiError, del, get, post, put, unwrap } from './client'
+import { ApiError, del, get, patch, post, unwrap } from './client'
 import type {
   Alerta, Categoria, Dispensacion, ItemInventario, Lista, Lote, Medicamento, Movimiento, Proveedor,
   ReporteProveedor, ReporteStock, Resumen, Un, Usuario,
@@ -56,5 +56,5 @@ export function useAccion<V, R = unknown>(fn: (v: V) => Promise<R>, ok: string, 
 
 type Obj = Record<string, unknown>
 export const crear = (base: string) => (b: Obj) => post(base, b)
-export const actualizar = (base: string) => ({ id, ...b }: Obj & { id: number }) => put(`${base}/${id}`, b)
+export const actualizar = (base: string) => ({ id, ...b }: Obj & { id: number }) => patch(`${base}/${id}`, b)
 export const borrar = (base: string) => (id: number) => del(`${base}/${id}`)

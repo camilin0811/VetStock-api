@@ -4,7 +4,7 @@ Sistema de inventario y farmacia para una clínica veterinaria. Registra medicam
 
 El repositorio contiene dos piezas:
 
-- **API REST** (raíz del repo): NestJS 12, TypeORM y PostgreSQL 15, con autenticación JWT.
+- **API REST** (raíz del repo): NestJS 12, TypeORM y PostgreSQL 15, con autenticación JWT y documentación Swagger en `/docs`.
 - **Frontend** (carpeta `web/`): React 19, Vite 8, TypeScript, React Router, TanStack Query, GSAP y Three.js (react-three-fiber).
 
 ## Stack
@@ -36,7 +36,7 @@ Reglas generales:
 - Todas las rutas exigen un token Bearer, salvo las marcadas con `@Publico()` (registro, login y refresh).
 - Los roles se controlan con `@Roles()`. Sin ese decorador, cualquier usuario autenticado puede llamar la ruta.
 - `ValidationPipe` global con `whitelist` y `transform`: los datos que no están en el DTO se descartan y los inválidos responden 400.
-- `synchronize: true`: las tablas se crean solas al arrancar. No hay migraciones (es un atajo válido para el curso, pero no para producción).
+- `synchronize: true`: las tablas se crean solas al arrancar. No hay migraciones (sirve para desarrollo, pero no para producción).
 
 ## Requisitos
 
@@ -70,6 +70,26 @@ npm run dev                 # http://localhost:5173
 
 Abre <http://localhost:5173> e inicia sesión con uno de los usuarios demo.
 
+## Configuración de la base de datos
+
+La API usa PostgreSQL 15 y lee su configuración de variables de entorno (archivo `.env`, plantilla en `.env.example`). `docker compose up -d` levanta PostgreSQL con esos mismos valores. Las tablas se crean al arrancar (`synchronize: true`).
+
+| Variable | Valor por defecto | Descripción |
+| --- | --- | --- |
+| `PORT` | `3000` | Puerto de la API |
+| `WEB_ORIGIN` | `http://localhost:5173` | Origen permitido por CORS (el frontend) |
+| `POSTGRES_HOST` | `localhost` | Host de PostgreSQL |
+| `POSTGRES_PORT` | `5432` | Puerto de PostgreSQL (también el publicado por Docker) |
+| `POSTGRES_DB` | `vetstock_db` | Nombre de la base |
+| `POSTGRES_USER` | `vetstock_user` | Usuario |
+| `POSTGRES_PASSWORD` | `vetstock_password` | Clave |
+| `JWT_SECRET` | `cambia-este-secreto-de-acceso` | Secreto del access token (cambiarlo fuera de desarrollo) |
+| `JWT_REFRESH_SECRET` | `cambia-este-secreto-de-refresh` | Secreto del refresh token |
+| `JWT_EXPIRES_IN` | `15m` | Duración del access token |
+| `JWT_REFRESH_EXPIRES_IN` | `7d` | Duración del refresh token |
+| `TZ_CLINICA` | `America/Bogota` | Zona horaria que define el cambio de día |
+| `PGADMIN_DEFAULT_EMAIL` / `PGADMIN_DEFAULT_PASSWORD` | `admin@vetstock.com` / `admin` | Solo para el servicio pgAdmin |
+
 ## Usuarios demo
 
 Los crea `npm run seed`. Todos comparten la misma clave.
@@ -81,6 +101,19 @@ Los crea `npm run seed`. Todos comparten la misma clave.
 | farmacia@vetstock.com | VetStock123* | farmaceutico |
 
 > `npm run seed` **borra todos los datos** antes de recrearlos.
+
+## Swagger (OpenAPI)
+
+Con la API en marcha, la documentación interactiva está en <http://localhost:3000/docs>. Pulsa **Authorize**, pega el `accessToken` de `POST /auth/login` y prueba cualquier endpoint. Los esquemas de los DTOs se generan con el plugin de `@nestjs/swagger` (configurado en `nest-cli.json`), así que requieren compilar con `nest build` / `npm run start:dev`.
+
+## Postman
+
+En `docs/` hay una colección y un entorno listos para importar:
+
+- `docs/VetStock.postman_collection.json`: todos los endpoints agrupados por módulo, con cuerpos de ejemplo.
+- `docs/VetStock.postman_environment.json`: entorno `VetStock local` con `baseUrl`.
+
+Ejecuta primero **Auth > Login**: su script guarda `accessToken` y `refreshToken` en variables de la colección y el resto de peticiones los usa como Bearer. Las peticiones de creación guardan el id nuevo (`categoriaId`, `medicamentoId`, ...) para las siguientes. También funciona con Insomnia (importar la colección).
 
 ## Puertos
 
@@ -128,6 +161,10 @@ Todas las rutas van con `Authorization: Bearer <accessToken>` salvo las pública
 
 Las respuestas de creación y actualización son `{ message, data }`, las listas `{ message, data, count }` (salvo las de reportes) y las eliminaciones `{ message }`.
 
+**PUT y PATCH.** `PUT /<recurso>/:id` reemplaza el recurso completo: exige el cuerpo completo y lo opcional que se omite se borra (descripción de una categoría, correo de un proveedor, categorías de un medicamento). `PATCH /<recurso>/:id` solo cambia los campos enviados. Los códigos son 201 al crear y 200 al actualizar, eliminar y en las acciones que no crean un recurso (login, refresh, anular).
+
+**Errores.** Todos tienen el cuerpo `{ statusCode, message, error, path, timestamp }`: 400 datos inválidos, 401 sin token o token inválido, 403 rol insuficiente, 404 no existe, 409 duplicado o registro en uso. Nunca incluyen SQL.
+
 ### Auth
 
 | Método | Ruta | Acceso | Notas |
@@ -145,7 +182,11 @@ Las respuestas de creación y actualización son `{ message, data }`, las listas
 | POST | `/usuarios` | Admin |
 | GET | `/usuarios/:id` | Admin |
 | PUT | `/usuarios/:id` | Admin |
+| PATCH | `/usuarios/:id` | Admin |
+| PATCH | `/usuarios/:id/rol` | Admin |
 | DELETE | `/usuarios/:id` | Admin |
+
+`PUT /usuarios/:id` exige `nombre`, `correo` y `rol` (la `clave` es opcional y, si falta, se conserva). `PATCH /usuarios/:id` cambia solo lo enviado y `PATCH /usuarios/:id/rol` solo el rol (body: `rol`).
 
 `POST /usuarios` crea una cuenta (body: `nombre`, `correo`, `clave`, `rol`; 409 si el correo ya existe) y devuelve `{ message, data }` con el usuario sin la clave. Es la vía que usa el frontend. `POST /auth/registro` sigue disponible como ruta pública de autoregistro.
 
@@ -157,6 +198,7 @@ Las respuestas de creación y actualización son `{ message, data }`, las listas
 | GET | `/categorias/:id` | Autenticado |
 | POST | `/categorias` | Admin, farmaceutico |
 | PUT | `/categorias/:id` | Admin, farmaceutico |
+| PATCH | `/categorias/:id` | Admin, farmaceutico |
 | DELETE | `/categorias/:id` | Admin, farmaceutico |
 
 ### Medicamentos
@@ -166,7 +208,8 @@ Las respuestas de creación y actualización son `{ message, data }`, las listas
 | GET | `/medicamentos` | Autenticado | Filtros: `q`, `especie`, `categoriaId` |
 | GET | `/medicamentos/:id` | Autenticado | Incluye sus `categorias` |
 | POST | `/medicamentos` | Admin, farmaceutico | `categoriaIds` opcional |
-| PUT | `/medicamentos/:id` | Admin, farmaceutico | `categoriaIds: []` quita las categorías |
+| PUT | `/medicamentos/:id` | Admin, farmaceutico | Cuerpo completo; sin `categoriaIds` (o `[]`) quita las categorías |
+| PATCH | `/medicamentos/:id` | Admin, farmaceutico | Solo los campos enviados |
 | DELETE | `/medicamentos/:id` | Admin, farmaceutico | |
 
 ### Proveedores
@@ -177,17 +220,19 @@ Las respuestas de creación y actualización son `{ message, data }`, las listas
 | GET | `/proveedores/:id` | Autenticado |
 | POST | `/proveedores` | Admin, farmaceutico |
 | PUT | `/proveedores/:id` | Admin, farmaceutico |
+| PATCH | `/proveedores/:id` | Admin, farmaceutico |
 | DELETE | `/proveedores/:id` | Admin, farmaceutico |
 
 ### Inventario, lotes, alertas y movimientos
 
-Las lecturas (`GET`) están abiertas a cualquier usuario autenticado. Registrar, corregir y ajustar lotes (`POST /lotes`, `PUT /lotes/:id`, `POST /lotes/:id/ajustes`) solo lo pueden hacer `admin` y `farmaceutico`; un veterinario recibe 403.
+Las lecturas (`GET`) están abiertas a cualquier usuario autenticado. Registrar, corregir y ajustar lotes (`POST /lotes`, `PUT`/`PATCH /lotes/:id`, `POST /lotes/:id/ajustes`) solo lo pueden hacer `admin` y `farmaceutico`; un veterinario recibe 403.
 
 | Método | Ruta | Acceso | Notas |
 | --- | --- | --- | --- |
 | POST | `/lotes` | Admin, farmaceutico | Body: `medicamentoId`, `proveedorId`, `numeroLote`, `cantidad`, `fechaVencimiento` |
 | GET | `/lotes` | Autenticado | Filtro: `medicamentoId` |
-| PUT | `/lotes/:id` | Admin, farmaceutico | Corrige datos del lote; no cambia cantidades |
+| PUT | `/lotes/:id` | Admin, farmaceutico | Exige `proveedorId`, `numeroLote` y `fechaVencimiento`; no cambia cantidades |
+| PATCH | `/lotes/:id` | Admin, farmaceutico | Corrige solo los campos enviados; no cambia cantidades |
 | POST | `/lotes/:id/ajustes` | Admin, farmaceutico | Body: `cantidad`, `motivo` (`PERDIDA`, `DANO`, `VENCIDO`, `OTRO`), `observacion` opcional. Genera un movimiento `AJUSTE` |
 | GET | `/inventario` | Autenticado | Stock de todos los medicamentos |
 | GET | `/inventario/:medicamentoId` | Autenticado | Stock de un medicamento |
@@ -230,6 +275,16 @@ Todos requieren autenticación y no tienen restricción de rol. `consumo` y `pro
 | `npm test` | Pruebas unitarias (`src/**/*.spec.ts`) |
 | `npm run test:e2e` | Pruebas end-to-end |
 
+## Tests
+
+No necesitan PostgreSQL: usan sqlite en memoria (`better-sqlite3`).
+
+```bash
+npm test            # unitarias (services, guards, filtro de errores)
+npm run test:e2e    # HTTP completo con supertest: auth, roles, CRUD, PUT/PATCH, FEFO, kardex, reportes
+npm run lint && npm run build
+```
+
 ### `web/` (frontend)
 
 | Comando | Descripción |
@@ -261,6 +316,7 @@ Antes de compartir el entorno, cambia `JWT_SECRET` y `JWT_REFRESH_SECRET` en `.e
 
 ## Documentación adicional
 
+- [docs/arquitectura.md](docs/arquitectura.md): arquitectura, módulos, ciclo de vida de una petición, modelo entidad-relación, FEFO, autenticación, decisiones técnicas y preguntas frecuentes.
 - [AGENTS.md](AGENTS.md): reglas de arquitectura, convenciones y comandos para desarrolladores y agentes.
 - [docker-ins.md](docker-ins.md): guía paso a paso para Windows.
 - [web/README.md](web/README.md): detalles del frontend.

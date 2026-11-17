@@ -1,21 +1,27 @@
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Controller, Get, Query } from '@nestjs/common';
 import { ConsumoQueryDto, ProveedoresQueryDto } from './reporte.dto';
 import { ReporteService } from './reporte.service';
 
+@ApiTags('Reportes')
+@ApiBearerAuth()
 @Controller('reportes')
 export class ReporteController {
   constructor(private readonly reporteService: ReporteService) {}
 
+  /** Consumo por medicamento en un rango de fechas */
   @Get('consumo')
   consumo(@Query() filtro: ConsumoQueryDto) {
     return this.reporteService.consumo(filtro);
   }
 
+  /** Lotes vencidos y su perdida */
   @Get('vencimientos')
   vencimientos() {
     return this.reporteService.vencimientos();
   }
 
+  /** Stock valorizado por medicamento */
   @Get('stock')
   async stock() {
     return {
@@ -24,6 +30,7 @@ export class ReporteController {
     };
   }
 
+  /** Unidades y valor recibidos por proveedor */
   @Get('proveedores')
   async proveedores(@Query() filtro: ProveedoresQueryDto) {
     return {
@@ -32,6 +39,7 @@ export class ReporteController {
     };
   }
 
+  /** Indicadores generales del inventario */
   @Get('resumen')
   async resumen() {
     return {

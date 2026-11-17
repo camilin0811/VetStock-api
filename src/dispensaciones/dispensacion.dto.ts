@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -16,6 +17,7 @@ export class DispensacionRequestDto {
 
   @IsInt()
   @Min(1)
+  @Max(2147483647)
   cantidad: number;
 
   @IsString()
@@ -53,6 +55,7 @@ export class DispensacionQueryDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   mascota?: string;
 }
 

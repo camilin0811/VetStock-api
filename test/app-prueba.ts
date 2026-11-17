@@ -1,8 +1,9 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { DataSource } from 'typeorm';
+import { configurarApp } from '../src/app.config';
 import { AuthModule } from '../src/auth/auth.module';
 import { CategoriasModule } from '../src/categorias/categorias.module';
 import { DispensacionesModule } from '../src/dispensaciones/dispensaciones.module';
@@ -46,7 +47,7 @@ export async function crearAppPrueba(): Promise<AppPrueba> {
   await sembrarBd(moduleFixture.get(DataSource));
 
   const app = moduleFixture.createNestApplication<INestApplication<App>>();
-  app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
+  configurarApp(app);
   await app.init();
 
   const tokens = {} as Record<RolPrueba, string>;
@@ -54,7 +55,7 @@ export async function crearAppPrueba(): Promise<AppPrueba> {
     const respuesta = await request(app.getHttpServer())
       .post('/auth/login')
       .send({ correo: USUARIOS_PRUEBA[rol], clave: CLAVE_PRUEBA })
-      .expect(201);
+      .expect(200);
     tokens[rol] = respuesta.body.data.accessToken;
   }
 

@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { Rol } from '../auth/rol.enum';
@@ -11,28 +12,61 @@ import { Rol } from '../auth/rol.enum';
 export class CrearUsuarioDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre: string;
 
   @IsEmail()
+  @MaxLength(255)
   correo: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave: string;
 
   @IsEnum(Rol)
   rol: Rol;
 }
 
+// PUT: nombre, correo y rol obligatorios; la clave es opcional (si falta, se conserva)
+export class ReemplazarUsuarioDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  nombre: string;
+
+  @IsEmail()
+  @MaxLength(255)
+  correo: string;
+
+  @IsEnum(Rol)
+  rol: Rol;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
+  clave?: string;
+}
+
+export class CambiarRolDto {
+  @IsEnum(Rol)
+  rol: Rol;
+}
+
+// PATCH: solo cambia los campos enviados
 export class ActualizarUsuarioDto {
   @IsOptional()
   @IsString()
   @IsNotEmpty()
+  @MaxLength(255)
   nombre?: string;
 
   @IsOptional()
   @IsEmail()
+  @MaxLength(255)
   correo?: string;
 
   @IsOptional()
@@ -43,5 +77,6 @@ export class ActualizarUsuarioDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'La clave debe tener al menos 8 caracteres' })
+  @MaxLength(72, { message: 'La clave no puede superar 72 caracteres' })
   clave?: string;
 }

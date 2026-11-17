@@ -1,4 +1,4 @@
-import { PartialType, PickType } from '@nestjs/mapped-types';
+import { PartialType, PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDateString,
@@ -24,10 +24,12 @@ export class LoteRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   numeroLote: string;
 
   @IsInt()
   @Min(1)
+  @Max(2147483647)
   cantidad: number;
 
   @IsDateString()
@@ -39,12 +41,20 @@ export class ActualizarLoteDto extends PartialType(
   PickType(LoteRequestDto, ['proveedorId', 'numeroLote', 'fechaVencimiento']),
 ) {}
 
+// PUT: reemplazo completo de los datos corregibles (los tres campos son obligatorios)
+export class ReemplazarLoteDto extends PickType(LoteRequestDto, [
+  'proveedorId',
+  'numeroLote',
+  'fechaVencimiento',
+]) {}
+
 export const MOTIVOS_AJUSTE = ['PERDIDA', 'DANO', 'VENCIDO', 'OTRO'] as const;
 export type MotivoAjuste = (typeof MOTIVOS_AJUSTE)[number];
 
 export class AjusteDto {
   @IsInt()
   @Min(1)
+  @Max(2147483647)
   cantidad: number;
 
   @IsIn(MOTIVOS_AJUSTE)

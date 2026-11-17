@@ -16,7 +16,7 @@ describe('Inventario y kardex (e2e)', () => {
     it('responde 403 a un veterinario al registrar, corregir o ajustar lotes', async () => {
       const api = contexto.api('veterinario');
       await api.post('/lotes').send({}).expect(403);
-      await api.put('/lotes/1').send({}).expect(403);
+      await api.patch('/lotes/1').send({}).expect(403);
       await api.post('/lotes/1/ajustes').send({}).expect(403);
     });
 
@@ -142,10 +142,10 @@ describe('Inventario y kardex (e2e)', () => {
     });
   });
 
-  describe('PUT /lotes/:id', () => {
+  describe('PATCH /lotes/:id', () => {
     it('responde 401 sin token', () => {
       return request(contexto.app.getHttpServer())
-        .put('/lotes/1')
+        .patch('/lotes/1')
         .send({ numeroLote: 'X' })
         .expect(401);
     });
@@ -153,7 +153,7 @@ describe('Inventario y kardex (e2e)', () => {
     it('corrige los datos del lote y devuelve la forma del contrato', async () => {
       const respuesta = await contexto
         .api('farmaceutico')
-        .put('/lotes/1')
+        .patch('/lotes/1')
         .send({
           numeroLote: 'AMX-001B',
           fechaVencimiento: '2099-06-30',
@@ -176,20 +176,23 @@ describe('Inventario y kardex (e2e)', () => {
 
     it('ignora campos de cantidad (whitelist) y valida los demas', async () => {
       const api = contexto.api();
-      const respuesta = await api.put('/lotes/1').send({ cantidad: 999 });
+      const respuesta = await api.patch('/lotes/1').send({ cantidad: 999 });
       expect(respuesta.status).toBe(200);
       expect(respuesta.body.data.cantidad).toBe(15);
 
-      await api.put('/lotes/1').send({ fechaVencimiento: 'ayer' }).expect(400);
-      await api.put('/lotes/1').send({ proveedorId: 0 }).expect(400);
-      await api.put('/lotes/abc').send({}).expect(400);
+      await api
+        .patch('/lotes/1')
+        .send({ fechaVencimiento: 'ayer' })
+        .expect(400);
+      await api.patch('/lotes/1').send({ proveedorId: 0 }).expect(400);
+      await api.patch('/lotes/abc').send({}).expect(400);
     });
 
     it('responde 404 y 409', async () => {
       const api = contexto.api();
-      await api.put('/lotes/999').send({ numeroLote: 'X' }).expect(404);
-      await api.put('/lotes/1').send({ proveedorId: 999 }).expect(404);
-      await api.put('/lotes/2').send({ numeroLote: 'VAR-102' }).expect(409);
+      await api.patch('/lotes/999').send({ numeroLote: 'X' }).expect(404);
+      await api.patch('/lotes/1').send({ proveedorId: 999 }).expect(404);
+      await api.patch('/lotes/2').send({ numeroLote: 'VAR-102' }).expect(409);
     });
   });
 

@@ -72,7 +72,21 @@ export class CategoriaService {
     };
   }
 
-  async actualizar(id: number, datos: ActualizarCategoriaDto) {
+  // PUT: reemplazo completo; la descripcion omitida se borra
+  reemplazar(id: number, datos: CategoriaDto) {
+    return this.actualizar(id, {
+      ...datos,
+      descripcion: datos.descripcion ?? null,
+    });
+  }
+
+  // PATCH: solo cambia los campos enviados
+  async actualizar(
+    id: number,
+    datos: Omit<ActualizarCategoriaDto, 'descripcion'> & {
+      descripcion?: string | null;
+    },
+  ) {
     const categoria = await this.obtener(id);
     if (datos.nombre !== undefined) {
       await this.validarNombreLibre(datos.nombre, id);

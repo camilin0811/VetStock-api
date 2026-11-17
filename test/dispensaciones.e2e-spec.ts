@@ -245,7 +245,7 @@ describe('Dispensaciones (e2e)', () => {
           .api(rol)
           .post(`/dispensaciones/${id}/anular`)
           .send({ motivo: 'Error de digitacion' })
-          .expect(201);
+          .expect(200);
 
         expect(respuesta.body.data).toMatchObject({
           id,
@@ -274,7 +274,7 @@ describe('Dispensaciones (e2e)', () => {
         .api()
         .post(`/dispensaciones/${id}/anular`)
         .send({ motivo: 'Primera' })
-        .expect(201);
+        .expect(200);
 
       await contexto
         .api()

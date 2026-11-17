@@ -100,6 +100,7 @@ export async function api<T = unknown>(path: string, o: Opts = {}): Promise<T> {
 export const get = <T>(path: string, query?: Query) => api<T>(path, { query })
 export const post = <T>(path: string, body?: unknown, auth = true) => api<T>(path, { method: 'POST', body: body ?? {}, auth })
 export const put = <T>(path: string, body: unknown) => api<T>(path, { method: 'PUT', body })
+export const patch = <T>(path: string, body: unknown) => api<T>(path, { method: 'PATCH', body })
 export const del = <T>(path: string) => api<T>(path, { method: 'DELETE' })
 
 /** Desenvuelve `{message,data,count}`; si la API devuelve la entidad directa, la deja igual. */

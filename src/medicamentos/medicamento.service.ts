@@ -109,6 +109,15 @@ export class MedicamentoService {
     };
   }
 
+  // PUT: reemplazo completo; sin categoriaIds se quitan todas las categorias
+  reemplazar(id: number, datos: MedicamentoDto) {
+    return this.actualizar(id, {
+      ...datos,
+      categoriaIds: datos.categoriaIds ?? [],
+    });
+  }
+
+  // PATCH: solo cambia los campos enviados
   async actualizar(id: number, datos: ActualizarMedicamentoDto) {
     const medicamento = await this.obtener(id);
     if (datos.nombre !== undefined) {

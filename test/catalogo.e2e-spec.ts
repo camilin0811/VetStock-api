@@ -55,12 +55,12 @@ describe('Catalogo (e2e)', () => {
       await api.get('/medicamentos?categoriaId=abc').expect(400);
     });
 
-    it('PUT /medicamentos/:id responde 409 con el nombre de otro medicamento', async () => {
+    it('PATCH /medicamentos/:id responde 409 con el nombre de otro medicamento', async () => {
       const api = contexto.api();
       const otro = await api.get('/medicamentos/2').expect(200);
 
       await api
-        .put('/medicamentos/1')
+        .patch('/medicamentos/1')
         .send({ nombre: otro.body.nombre.toUpperCase() })
         .expect(409);
     });
@@ -89,14 +89,14 @@ describe('Catalogo (e2e)', () => {
 
     it('responde 401 sin token en las rutas de escritura', async () => {
       await http().post('/medicamentos').send(medicamentoNuevo).expect(401);
-      await http().put('/medicamentos/1').send({}).expect(401);
+      await http().patch('/medicamentos/1').send({}).expect(401);
       await http().delete('/medicamentos/1').expect(401);
     });
 
     it('responde 403 a un veterinario al escribir medicamentos', async () => {
       const api = contexto.api('veterinario');
       await api.post('/medicamentos').send(medicamentoNuevo).expect(403);
-      await api.put('/medicamentos/1').send({ stockMinimo: 5 }).expect(403);
+      await api.patch('/medicamentos/1').send({ stockMinimo: 5 }).expect(403);
       await api.delete('/medicamentos/1').expect(403);
     });
 
@@ -107,7 +107,7 @@ describe('Catalogo (e2e)', () => {
         .send(medicamentoNuevo)
         .expect(201);
       await api
-        .put(`/medicamentos/${creado.body.data.id}`)
+        .patch(`/medicamentos/${creado.body.data.id}`)
         .send({ stockMinimo: 5 })
         .expect(200);
       await api.delete(`/medicamentos/${creado.body.data.id}`).expect(200);
@@ -152,10 +152,10 @@ describe('Catalogo (e2e)', () => {
       expect(respuesta.body.correo).toBeNull();
     });
 
-    it('PUT /proveedores/:id actualiza parcialmente', async () => {
+    it('PATCH /proveedores/:id actualiza parcialmente', async () => {
       const respuesta = await contexto
         .api('farmaceutico')
-        .put('/proveedores/1')
+        .patch('/proveedores/1')
         .send({ ciudad: 'Ipiales', correo: 'info@agrovet.com' })
         .expect(200);
 
@@ -167,11 +167,14 @@ describe('Catalogo (e2e)', () => {
       });
     });
 
-    it('PUT /proveedores/:id responde 409, 404 y 400', async () => {
+    it('PATCH /proveedores/:id responde 409, 404 y 400', async () => {
       const api = contexto.api();
-      await api.put('/proveedores/1').send({ nit: '800987654-2' }).expect(409);
-      await api.put('/proveedores/999').send({ ciudad: 'X' }).expect(404);
-      await api.put('/proveedores/1').send({ correo: 'mal' }).expect(400);
+      await api
+        .patch('/proveedores/1')
+        .send({ nit: '800987654-2' })
+        .expect(409);
+      await api.patch('/proveedores/999').send({ ciudad: 'X' }).expect(404);
+      await api.patch('/proveedores/1').send({ correo: 'mal' }).expect(400);
     });
 
     it('DELETE /proveedores/:id elimina uno sin lotes y responde 409 con lotes', async () => {
@@ -186,12 +189,12 @@ describe('Catalogo (e2e)', () => {
 
     it('responde 401 sin token y 403 a un veterinario al escribir', async () => {
       const http = () => request(contexto.app.getHttpServer());
-      await http().put('/proveedores/1').send({}).expect(401);
+      await http().patch('/proveedores/1').send({}).expect(401);
       await http().delete('/proveedores/1').expect(401);
 
       const vet = contexto.api('veterinario');
       await vet.post('/proveedores').send(proveedorNuevo).expect(403);
-      await vet.put('/proveedores/1').send({ ciudad: 'X' }).expect(403);
+      await vet.patch('/proveedores/1').send({ ciudad: 'X' }).expect(403);
       await vet.delete('/proveedores/1').expect(403);
       await vet.get('/proveedores').expect(200);
     });
@@ -201,12 +204,12 @@ describe('Catalogo (e2e)', () => {
     it('responde 401 sin token y 403 a un veterinario al escribir', async () => {
       const http = () => request(contexto.app.getHttpServer());
       await http().post('/categorias').send({ nombre: 'X' }).expect(401);
-      await http().put('/categorias/1').send({}).expect(401);
+      await http().patch('/categorias/1').send({}).expect(401);
       await http().delete('/categorias/1').expect(401);
 
       const vet = contexto.api('veterinario');
       await vet.post('/categorias').send({ nombre: 'Suplementos' }).expect(403);
-      await vet.put('/categorias/1').send({ nombre: 'X' }).expect(403);
+      await vet.patch('/categorias/1').send({ nombre: 'X' }).expect(403);
       await vet.delete('/categorias/1').expect(403);
       await vet.get('/categorias').expect(200);
     });
@@ -223,5 +226,85 @@ describe('Catalogo (e2e)', () => {
         .send({ nombre: 'Insumos' })
         .expect(201);
     });
+  });
+});
+
+describe('Validaciones de DTOs (e2e)', () => {
+  let contexto: AppPrueba;
+
+  beforeEach(async () => {
+    contexto = await crearAppPrueba();
+  });
+
+  afterEach(async () => {
+    await contexto.cerrar();
+  });
+
+  const medicamento = {
+    nombre: 'Nuevo',
+    presentacion: 'Caja',
+    especie: 'canino',
+    precio: 10,
+    stockMinimo: 1,
+    requiereFormula: false,
+  };
+
+  it.each([
+    ['nombre muy largo', { nombre: 'a'.repeat(256) }],
+    ['presentacion muy larga', { presentacion: 'a'.repeat(256) }],
+    ['precio con 3 decimales', { precio: 1.234 }],
+    ['precio fuera de rango', { precio: 1e12 }],
+    ['stockMinimo fuera de rango', { stockMinimo: 3e9 }],
+    ['categoriaIds repetidos', { categoriaIds: [1, 1] }],
+    ['categoriaIds no positivos', { categoriaIds: [0] }],
+  ])('POST /medicamentos rechaza %s con 400', async (_n, cambio) => {
+    await contexto
+      .api()
+      .post('/medicamentos')
+      .send({ ...medicamento, ...cambio })
+      .expect(400);
+  });
+
+  it('POST /proveedores rechaza campos mas largos que la columna', async () => {
+    const base = { nombre: 'P', nit: '1', telefono: '1', ciudad: 'C' };
+    for (const cambio of [
+      { nit: '1'.repeat(31) },
+      { telefono: '1'.repeat(31) },
+      { ciudad: 'c'.repeat(101) },
+    ]) {
+      await contexto
+        .api()
+        .post('/proveedores')
+        .send({ ...base, ...cambio })
+        .expect(400);
+    }
+  });
+
+  it('POST /lotes rechaza numeroLote largo y cantidad fuera de rango', async () => {
+    const base = {
+      medicamentoId: 1,
+      proveedorId: 1,
+      numeroLote: 'L-1',
+      cantidad: 1,
+      fechaVencimiento: '2099-01-01',
+    };
+    await contexto
+      .api()
+      .post('/lotes')
+      .send({ ...base, numeroLote: 'a'.repeat(101) })
+      .expect(400);
+    await contexto
+      .api()
+      .post('/lotes')
+      .send({ ...base, cantidad: 3e9 })
+      .expect(400);
+  });
+
+  it('POST /auth/registro rechaza claves de mas de 72 caracteres (limite de bcrypt)', async () => {
+    await contexto
+      .api()
+      .post('/auth/registro')
+      .send({ nombre: 'X', correo: 'x@x.com', clave: 'a'.repeat(73) })
+      .expect(400);
   });
 });

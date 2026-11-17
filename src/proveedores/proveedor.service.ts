@@ -59,7 +59,16 @@ export class ProveedorService {
     };
   }
 
-  async actualizar(id: number, datos: ActualizarProveedorDto) {
+  // PUT: reemplazo completo; el correo omitido se borra
+  reemplazar(id: number, datos: ProveedorDto) {
+    return this.actualizar(id, { ...datos, correo: datos.correo ?? null });
+  }
+
+  // PATCH: solo cambia los campos enviados
+  async actualizar(
+    id: number,
+    datos: Omit<ActualizarProveedorDto, 'correo'> & { correo?: string | null },
+  ) {
     const proveedor = await this.obtener(id);
 
     if (datos.nit !== undefined && datos.nit !== proveedor.nit) {
