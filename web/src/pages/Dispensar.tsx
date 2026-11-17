@@ -121,19 +121,19 @@ export default function Dispensar() {
           <EmptyState title="Sin dispensaciones" text={mascota ? 'No hay resultados para ese paciente.' : 'Aún no se ha dispensado nada.'} />
         ) : (
           <div className="table-wrap" tabIndex={0} role="region" aria-label="Tabla de datos, desplazable">
-            <table className="table">
+            <table className="table cards">
               <caption className="sr-only">Historial de dispensaciones</caption>
               <thead><tr><th scope="col">Fecha</th><th scope="col">Medicamento</th><th scope="col">Paciente</th><th scope="col">Lotes</th><th scope="col" className="right">Total</th><th scope="col">Estado</th>{puedeAnular && <th scope="col"><span className="sr-only">Acciones</span></th>}</tr></thead>
               <tbody>
                 {historial.data.map((d) => (
                   <tr key={d.id} className={d.estado === 'ANULADA' ? 'anulada' : undefined}>
-                    <td className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFecha(d.fecha)}</td>
-                    <td><div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div><div className="row-sub">{d.veterinario}</div></td>
-                    <td>{d.mascota}</td>
-                    <td className="row-sub">{d.lotesUsados.map((l) => `${l.numeroLote} (${l.cantidad})`).join(', ') || '-'}</td>
-                    <td className="right num">{fmtMoney(d.total)}</td>
-                    <td><EtiquetaDispensacion estado={d.estado} /></td>
-                    {puedeAnular && <td className="right">{d.estado === 'ACTIVA' && <button type="button" className="btn sm danger" onClick={() => setAnulando(d)}><Ban size={15} aria-hidden="true" />Anular</button>}</td>}
+                    <td data-label="Fecha" className="num" style={{ whiteSpace: 'nowrap' }}>{fmtFecha(d.fecha)}</td>
+                    <td className="cell-title"><div className="row-title">{nombreMed(d.medicamento)} x {d.cantidad}</div><div className="row-sub">{d.veterinario}</div></td>
+                    <td data-label="Paciente">{d.mascota}</td>
+                    <td data-label="Lotes" className="row-sub">{d.lotesUsados.map((l) => `${l.numeroLote} (${l.cantidad})`).join(', ') || '-'}</td>
+                    <td data-label="Total" className="right num">{fmtMoney(d.total)}</td>
+                    <td data-label="Estado"><EtiquetaDispensacion estado={d.estado} /></td>
+                    {puedeAnular && <td className="right cell-actions">{d.estado === 'ACTIVA' && <button type="button" className="btn sm danger" onClick={() => setAnulando(d)}><Ban size={15} aria-hidden="true" />Anular</button>}</td>}
                   </tr>
                 ))}
               </tbody>
