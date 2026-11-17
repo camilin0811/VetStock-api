@@ -55,6 +55,16 @@ describe('Catalogo (e2e)', () => {
       await api.get('/medicamentos?categoriaId=abc').expect(400);
     });
 
+    it('PUT /medicamentos/:id responde 409 con el nombre de otro medicamento', async () => {
+      const api = contexto.api();
+      const otro = await api.get('/medicamentos/2').expect(200);
+
+      await api
+        .put('/medicamentos/1')
+        .send({ nombre: otro.body.nombre.toUpperCase() })
+        .expect(409);
+    });
+
     it('DELETE /medicamentos/:id elimina uno sin lotes', async () => {
       const creado = await contexto
         .api()

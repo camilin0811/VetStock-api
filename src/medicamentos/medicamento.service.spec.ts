@@ -64,6 +64,23 @@ describe('MedicamentoService', () => {
     ).rejects.toThrow(ConflictException);
   });
 
+  it('lanza 409 al renombrar con el nombre de otro medicamento', async () => {
+    const otro = (await service.obtener(2)).nombre;
+
+    await expect(
+      service.actualizar(1, { nombre: otro.toUpperCase() }),
+    ).rejects.toThrow(ConflictException);
+  });
+
+  it('permite actualizar conservando su propio nombre', async () => {
+    const propio = (await service.obtener(1)).nombre;
+
+    const { data } = await service.actualizar(1, {
+      nombre: propio.toUpperCase(),
+    });
+    expect(data.nombre).toBe(propio.toUpperCase());
+  });
+
   it('actualiza el stock minimo de un medicamento', async () => {
     const resultado = await service.actualizar(1, { stockMinimo: 30 });
 

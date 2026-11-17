@@ -77,18 +77,22 @@ export class MedicamentoService {
     return medicamento;
   }
 
-  async crear(datos: MedicamentoDto) {
-    const existente = await this.medicamentoRepository
+  private async validarNombreLibre(nombre: string, excluirId?: number) {
+    const consulta = this.medicamentoRepository
       .createQueryBuilder('medicamento')
-      .where('LOWER(medicamento.nombre) = LOWER(:nombre)', {
-        nombre: datos.nombre,
-      })
-      .getOne();
-    if (existente !== null) {
+      .where('LOWER(medicamento.nombre) = LOWER(:nombre)', { nombre });
+    if (excluirId !== undefined) {
+      consulta.andWhere('medicamento.id != :excluirId', { excluirId });
+    }
+    if ((await consulta.getOne()) !== null) {
       throw new ConflictException(
-        `El medicamento ${datos.nombre} ya esta registrado`,
+        `El medicamento ${nombre} ya esta registrado`,
       );
     }
+  }
+
+  async crear(datos: MedicamentoDto) {
+    await this.validarNombreLibre(datos.nombre);
 
     const { categoriaIds, ...campos } = datos;
     const categorias = await this.categoriaService.obtenerPorIds(
@@ -107,6 +111,9 @@ export class MedicamentoService {
 
   async actualizar(id: number, datos: ActualizarMedicamentoDto) {
     const medicamento = await this.obtener(id);
+    if (datos.nombre !== undefined) {
+      await this.validarNombreLibre(datos.nombre, id);
+    }
     const { categoriaIds, ...campos } = datos;
     if (categoriaIds !== undefined) {
       medicamento.categorias =
