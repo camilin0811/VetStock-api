@@ -12,6 +12,29 @@ describe('Inventario y kardex (e2e)', () => {
     await contexto.cerrar();
   });
 
+  describe('permisos de escritura', () => {
+    it('responde 403 a un veterinario al registrar, corregir o ajustar lotes', async () => {
+      const api = contexto.api('veterinario');
+      await api.post('/lotes').send({}).expect(403);
+      await api.put('/lotes/1').send({}).expect(403);
+      await api.post('/lotes/1/ajustes').send({}).expect(403);
+    });
+
+    it('un veterinario si puede leer lotes e inventario', async () => {
+      const api = contexto.api('veterinario');
+      await api.get('/lotes').expect(200);
+      await api.get('/inventario').expect(200);
+    });
+
+    it('un farmaceutico pasa el control de rol al ajustar lotes', async () => {
+      const respuesta = await contexto
+        .api('farmaceutico')
+        .post('/lotes/1/ajustes')
+        .send({});
+      expect(respuesta.status).toBe(400);
+    });
+  });
+
   describe('movimientos', () => {
     it('responde 401 sin token', () => {
       return request(contexto.app.getHttpServer())

@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import type { Usuario } from '../auth/entities/usuario.entity';
+import { Rol } from '../auth/rol.enum';
+import { Roles } from '../auth/roles.decorator';
 import { UsuarioActual } from '../auth/usuario-actual.decorator';
 import { AlertaService } from './alerta.service';
 import { InventarioService } from './inventario.service';
@@ -29,6 +31,7 @@ export class InventarioController {
     private readonly movimientoService: MovimientoService,
   ) {}
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post('lotes')
   registrarLote(
     @Body() datos: LoteRequestDto,
@@ -37,6 +40,7 @@ export class InventarioController {
     return this.inventarioService.registrarLote(datos, usuario);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Put('lotes/:id')
   actualizarLote(
     @Param('id', ParseIntPipe) id: number,
@@ -45,6 +49,7 @@ export class InventarioController {
     return this.inventarioService.actualizarLote(id, datos);
   }
 
+  @Roles(Rol.Admin, Rol.Farmaceutico)
   @Post('lotes/:id/ajustes')
   ajustarLote(
     @Param('id', ParseIntPipe) id: number,
