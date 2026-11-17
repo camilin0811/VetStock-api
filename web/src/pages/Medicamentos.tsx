@@ -198,8 +198,9 @@ export default function Medicamentos() {
         )}
       </div>
 
+      {/* El dialogo tambien emite close al ocultarse por abrir el formulario o la confirmacion: ahi la seleccion debe conservarse */}
       {!wide && (
-        <Modal open={!!selId && !!sel && !form && !borrando} onClose={() => setSelId(null)} title="Detalle">
+        <Modal open={!!selId && !!sel && !form && !borrando} onClose={() => { if (!form && !borrando) setSelId(null) }} title="Detalle">
           {sel && <Detalle med={sel} escribe={escribe} onEdit={() => setForm('editar')} onDelete={() => setBorrando(true)} />}
         </Modal>
       )}
